@@ -1,0 +1,3 @@
+[submodule "thirdparty/EventLoop"]
+	path = thirdparty/EventLoop
+	url = https://github.com/iveteran/EventLoop.git

@@ -1,0 +1,40 @@
+TARGET_SERVER = switch_server
+TARGET_CLIENT = switch_client
+
+ROOT = ..
+ThirdParty = $(ROOT)/thirdparty
+
+CPPFLAGS = -g -Wall -std=c++0x# -DUSE_SELECT
+CXXFLAGS = -I$(ThirdParty)/EventLoop/include
+
+LDFLAGS = 
+
+DEP_LIBS += \
+           $(ThirdParty)/EventLoop/src/libel.a
+
+CXX      = g++
+RM       = rm -f
+
+TARGET_SERVER_OBJS = switch.o switch_server.o switch_command_handler.o
+TARGET_CLIENT_OBJS = switch_client_main.o switch_client.o
+
+%.o : %.cpp
+	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $<
+
+.PHONY : all clean cleanall rebuild
+
+all: $(TARGET_SERVER) $(TARGET_CLIENT)
+
+$(TARGET_SERVER) : $(TARGET_SERVER_OBJS) $(DEP_LIBS)
+	$(CXX) -o $(TARGET_SERVER) $(TARGET_SERVER_OBJS) $(DEP_LIBS) $(LDFLAGS)
+
+$(TARGET_CLIENT) : $(TARGET_CLIENT_OBJS) $(DEP_LIBS)
+	$(CXX) -o $(TARGET_CLIENT) $(TARGET_CLIENT_OBJS) $(DEP_LIBS) $(LDFLAGS)
+
+rebuild: clean all
+
+clean:
+	@$(RM) *.o *.d
+
+cleanall: clean
+	@$(RM) $(TARGET_SERVER) $(TARGET_CLIENT)
