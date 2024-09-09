@@ -4,8 +4,9 @@ TARGET_CLIENT = switch_client
 ROOT = ..
 ThirdParty = $(ROOT)/thirdparty
 
-CPPFLAGS = -g -Wall -std=c++0x# -DUSE_SELECT
-CXXFLAGS = -I$(ThirdParty)/EventLoop/include
+CPPFLAGS = -g -Wall -std=c++20# -DUSE_SELECT
+CXXFLAGS = -I$(ThirdParty)/EventLoop/include \
+		   -I$(ThirdParty)/json/include
 
 LDFLAGS = 
 
