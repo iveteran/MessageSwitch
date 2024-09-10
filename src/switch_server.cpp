@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stddef.h>
 #include "switch_server.h"
 #include "switch_command_handler.h"
 
@@ -19,7 +20,8 @@ SwitchServer::SwitchServer(const char* host, uint16_t port) :
 HeaderDescriptionPtr SwitchServer::CreateMessageHeaderDescription() {
     auto msg_hdr_desc = std::make_shared<HeaderDescription>();
     msg_hdr_desc->hdr_len = sizeof(CommandMessage);
-    msg_hdr_desc->payload_len_offset = 1;  // jump over the size of cmd field
+    //msg_hdr_desc->payload_len_offset = 2;  // jump over the size of fields cmd and flag
+    msg_hdr_desc->payload_len_offset = offsetof(struct CommandMessage, payload_len);
     msg_hdr_desc->payload_len_bytes = sizeof(CommandMessage::payload_len);
     msg_hdr_desc->is_payload_len_including_self = true;
     return msg_hdr_desc;
@@ -28,17 +30,19 @@ HeaderDescriptionPtr SwitchServer::CreateMessageHeaderDescription() {
 void SwitchServer::OnConnectionReady(TcpConnection* conn)
 {
     printf("[SwitchServer::OnConnectionReady] fd: %d\n", conn->FD());
-    auto ep = std::make_shared<Endpoint>(conn->FD(), conn);
-    context_->endpoints.insert(std::make_pair(conn->FD(), ep));
+    context_->pending_clients.insert(std::make_pair(conn->FD(), conn));
 }
 void SwitchServer::OnConnectionClosed(TcpConnection* conn)
 {
-    printf("[SwitchServer::OnConnectionClosed] fd: %d\n", conn->FD());
-    context_->endpoints.erase(conn->FD());
+    printf("[SwitchServer::OnConnectionClosed] fd: %d, id: %d\n", conn->FD(), conn->ID());
+    context_->admin_clients.erase(conn->ID());
+    context_->endpoints.erase(conn->ID());
+    context_->pending_clients.erase(conn->FD());
 }
 void SwitchServer::OnMessageRecvd(TcpConnection* conn, const Message* msg)
 {
-    printf("[SwitchServer::OnMessageRecvd] fd: %d, payload: %s, length: %lu\n", conn->FD(), msg->Payload(), msg->PayloadSize());
+    printf("[SwitchServer::OnMessageRecvd] fd: %d, id: %d, payload: %s, length: %lu\n",
+            conn->FD(), conn->ID(), msg->Payload(), msg->PayloadSize());
     printf("[SwitchServer::OnMessageRecvd] message size: %lu\n", msg->Size());
     printf("[SwitchServer::OnMessageRecvd] message bytes:\n");
     msg->DumpHex();
@@ -53,31 +57,59 @@ void SwitchServer::HandleCommand(TcpConnection* conn, const Message* msg)
     if (IsMessagePayloadLengthIncludingSelf()) {
         cmdMsg->payload_len -= sizeof(cmdMsg->payload_len);
     }
-    ECommand cmd = (ECommand)cmdMsg->cmd;
 
-    auto iter = context_->endpoints.find(conn->FD());
+    ECommand cmd = (ECommand)cmdMsg->cmd;
+    printf("[SwitchServer::HandleCommand] id: %d\n", conn->ID());
+    printf("[SwitchServer::HandleCommand] cmd: %s(%d)\n", CommandToTag(cmd), (uint8_t)cmd);
+    printf("[SwitchServer::HandleCommand] payload len: %d\n", cmdMsg->payload_len);
+    auto cmdHandler = std::make_shared<CommandHandler>(context_);
+
+    switch (cmd)
+    {
+        case ECommand::ECHO:
+            cmdHandler->handleEcho(conn, cmdMsg, msg->Data());
+            return;
+        case ECommand::REG:
+            cmdHandler->handleRegister(conn, cmdMsg, msg->Data());
+            return;
+        default:
+            break;
+    }
+
+    auto iter = context_->endpoints.find(conn->ID());
     if (iter == context_->endpoints.end()) {
-        fprintf(stderr, "Error: the connection can not to match any endpoint, maybe occurred errors for endpoint managing");
+        fprintf(stderr, "[SwitchServer::HandleCommand] Error: the connection(id: %d) can not to match any endpoint, "
+                "maybe the connection not be registered or occurred errors for endpoint manager\n", conn->ID());
+        conn->Disconnect();
         return;
     }
     auto ep = iter->second;
 
-    auto cmdHandler = std::make_shared<CommandHandler>(context_);
     switch (cmd)
     {
-        case ECommand::ECHO:
-            cmdHandler->handleEcho(ep, cmdMsg, msg->Data());
-            break;
-        case ECommand::REG:
-            cmdHandler->handleRegister(ep, cmdMsg, msg->Data());
-            break;
         case ECommand::FWD:
             cmdHandler->handleForward(ep, cmdMsg, msg->Data());
             break;
         case ECommand::DATA:
             cmdHandler->handleData(ep, cmdMsg, msg->Data());
             break;
+        case ECommand::INFO:
+            cmdHandler->handleInfo(ep, cmdMsg, msg->Data());
+            break;
+        case ECommand::SETUP:
+            cmdHandler->handleSetup(ep, cmdMsg, msg->Data());
+            break;
+        case ECommand::PROXY:
+            cmdHandler->handleProxy(ep, cmdMsg, msg->Data());
+            break;
+        case ECommand::KICKOUT:
+            cmdHandler->handleKickout(ep, cmdMsg, msg->Data());
+            break;
+        case ECommand::RELOAD:
+            cmdHandler->handleReload(ep, cmdMsg, msg->Data());
+            break;
         default:
+            fprintf(stderr, "[SwitchServer::HandleCommand] Error: Unsupported command: %s(%d)\n", CommandToTag(cmd), (uint8_t)cmd);
             break;
     }
 }

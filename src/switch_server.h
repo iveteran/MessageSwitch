@@ -26,6 +26,7 @@ class SwitchServer
     {
         return server_.GetMessageHeaderDescription()->is_payload_len_including_self;
     }
+    uint32_t NodeId() const { return node_id_; }
 
     private:
     HeaderDescriptionPtr CreateMessageHeaderDescription();

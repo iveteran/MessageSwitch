@@ -4,6 +4,8 @@
 #include <map>
 #include <string>
 #include "switch_endpoint.h"
+#include "switch_types.h"
+#include "eventloop.h"
 
 #define DEFAULT_ACCESS_TOKEN "Hello World"
 #define DEFAULT_ADMIN_TOKEN "Foobar2000"
@@ -15,16 +17,19 @@ class SwitchServer;
 
 struct SwitchContext
 {
-    SwitchContext(SwitchServer* server) : switch_server(server) {}
+    SwitchContext(SwitchServer* server) : switch_server(server), born_time(evt_loop::Now()) {}
 
     SwitchServer*                   switch_server;
-    map<int, TcpConnection*>        register_pending_client;
+    map<int, TcpConnection*>        pending_clients;
     map<EndpointId, EndpointPtr>    endpoints;
+    map<EndpointId, EndpointPtr>    admin_clients;
     map<EndpointId, EndpointPtr>    proxy_endpoints;
     map<EndpointId, EndpointPtr>    rproxy_endpoints;
 
-    string  access_token = DEFAULT_ACCESS_TOKEN;
-    string  admin_token = DEFAULT_ADMIN_TOKEN;
+    time_t born_time;
+    string access_code = DEFAULT_ACCESS_TOKEN;
+    string admin_code = DEFAULT_ADMIN_TOKEN;
+    EServingMode serving_mode;
 };
 typedef std::shared_ptr<SwitchContext> SwitchContextPtr;
 

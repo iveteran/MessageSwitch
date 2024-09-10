@@ -10,11 +10,14 @@ public:
 protected:
     void OnMessageRecvd(TcpConnection* conn, const Message* msg);
     void OnConnectionCreated(TcpConnection* conn);
+    void OnConnectionClosed(TcpConnection* conn);
 
     HeaderDescriptionPtr CreateMessageHeaderDescription();
 
+    void RegisterSelf();
     void HandleCommandResult(TcpConnection* conn, CommandMessage* cmdMsg);
 
+    size_t SendCommandMessage(TcpConnection* conn, ECommand cmd, const string& data);
     size_t SendCommandMessage(TcpConnection* conn, ECommand cmd,
             const char* data = NULL, size_t data_len = 0);
     void OnSendingTimer(TimerEvent* timer);

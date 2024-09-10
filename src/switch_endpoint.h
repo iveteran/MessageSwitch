@@ -5,6 +5,8 @@
 #include <set>
 #include <memory>
 #include "switch_message.h"
+#include "switch_types.h"
+#include "tcp_connection.h"
 
 using std::vector;
 using std::set;
@@ -19,12 +21,17 @@ typedef uint32_t EndpointId;
 
 class Endpoint {
 public:
-    Endpoint(EndpointId id, TcpConnection* conn) :
-        id_(id), conn_(conn)
+    Endpoint(EndpointId id, TcpConnection* conn) : conn_(conn)
     {
+        conn_->SetID(id);
     }
 
-    EndpointId Id() const { return id_; }
+    EndpointId Id() const { return conn_->ID(); }
+    void SetId(EndpointId id) { conn_->SetID(id); }
+
+    EEndpointRole GetRole() const { return role_; }
+    void SetRole(EEndpointRole mode) { role_ = mode; }
+
     TcpConnection* Connection() { return conn_; }
 
     const vector<EndpointId>& GetForwardTargets() const
@@ -37,7 +44,7 @@ public:
     }
 
 private:
-    EndpointId          id_;
+    EEndpointRole       role_;
     TcpConnection*      conn_;
     vector<EndpointId>  fwd_targets_;
 

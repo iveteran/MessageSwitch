@@ -20,16 +20,17 @@ public:
     CommandHandler(SwitchContextPtr context) : context_(context)
     {}
 
-    int handleEcho(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
-    int handleRegister(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
+    int handleEcho(TcpConnection* conn, const CommandMessage* cmdMsg, const string& data);
+    int handleRegister(TcpConnection* conn, const CommandMessage* cmdMsg, const string& data);
     int handleForward(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
     int handleData(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
     int handleInfo(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
     int handleSetup(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
     int handleProxy(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
     int handleKickout(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
-    int handleExit(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
+    int handleReload(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
 
+    size_t sendResultMessage(TcpConnection* conn, ECommand cmd, int8_t errcode, const string& data);
     size_t sendResultMessage(TcpConnection* conn, ECommand cmd, int8_t errcode,
             const char* data = NULL, size_t data_len = 0);
 
