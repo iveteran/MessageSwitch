@@ -4,17 +4,37 @@
 #include "switch_command_handler.h"
 
 SwitchServer::SwitchServer(const char* host, uint16_t port) :
-  node_id_(0), server_(host, port, MessageType::CUSTOM)
+    server_(nullptr), node_id_(0)
+{
+    init(host, port);
+}
+
+SwitchServer::SwitchServer(const OptionsPtr& options) :
+    server_(nullptr), node_id_(0), options_(options)
+{
+    if (options->node_id > 0) {
+        node_id_ = options->node_id;
+    }
+    init(options->host.c_str(), options->port);
+}
+
+bool SwitchServer::init(const char* host, uint16_t port)
 {
     context_ = std::make_shared<SwitchContext>(this);
     auto msg_hdr_desc = CreateMessageHeaderDescription();
-    server_.SetMessageHeaderDescription(msg_hdr_desc);
+
+    server_ = std::make_shared<TcpServer>(host, port, MessageType::CUSTOM);
+    server_->SetMessageHeaderDescription(msg_hdr_desc);
 
     TcpCallbacksPtr svr_cbs = std::shared_ptr<TcpCallbacks>(new TcpCallbacks);
     svr_cbs->on_msg_recvd_cb = std::bind(&SwitchServer::OnMessageRecvd, this, std::placeholders::_1, std::placeholders::_2);
     svr_cbs->on_conn_ready_cb = std::bind(&SwitchServer::OnConnectionReady, this, std::placeholders::_1);
     svr_cbs->on_closed_cb = std::bind(&SwitchServer::OnConnectionClosed, this, std::placeholders::_1);
-    server_.SetTcpCallbacks(svr_cbs);
+    server_->SetTcpCallbacks(svr_cbs);
+
+    printf("Context: %s\n", context_->ToString().c_str());
+
+    return true;
 }
 
 HeaderDescriptionPtr SwitchServer::CreateMessageHeaderDescription() {

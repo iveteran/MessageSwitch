@@ -17,8 +17,6 @@ class SwitchServer;
 
 struct SwitchContext
 {
-    SwitchContext(SwitchServer* server) : switch_server(server), born_time(evt_loop::Now()) {}
-
     SwitchServer*                   switch_server;
     map<int, TcpConnection*>        pending_clients;
     map<EndpointId, EndpointPtr>    endpoints;
@@ -30,6 +28,9 @@ struct SwitchContext
     string access_code = DEFAULT_ACCESS_TOKEN;
     string admin_code = DEFAULT_ADMIN_TOKEN;
     EServingMode serving_mode;
+
+    SwitchContext(SwitchServer* server);
+    string ToString() const;
 };
 typedef std::shared_ptr<SwitchContext> SwitchContextPtr;
 

@@ -6,7 +6,8 @@ ThirdParty = $(ROOT)/thirdparty
 
 CPPFLAGS = -g -Wall -std=c++20# -DUSE_SELECT
 CXXFLAGS = -I$(ThirdParty)/EventLoop/include \
-		   -I$(ThirdParty)/json/include
+		   -I$(ThirdParty)/json/include \
+		   -I$(ThirdParty)/argparse/include
 
 LDFLAGS = 
 
@@ -16,7 +17,7 @@ DEP_LIBS += \
 CXX      = g++
 RM       = rm -f
 
-TARGET_SERVER_OBJS = switch.o switch_server.o switch_command_handler.o switch_message.o switch_types.o
+TARGET_SERVER_OBJS = switch.o switch_server.o switch_command_handler.o switch_message.o switch_types.o switch_context.o
 TARGET_CLIENT_OBJS = switch_client_main.o switch_client.o switch_message.o switch_types.o
 
 %.o : %.cpp
