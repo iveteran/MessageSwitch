@@ -1,4 +1,4 @@
-TARGET_SERVER = switch_server
+TARGET_SERVER = switch
 TARGET_CLIENT = switch_client
 
 ROOT = ..
@@ -7,7 +7,8 @@ ThirdParty = $(ROOT)/thirdparty
 CPPFLAGS = -g -Wall -std=c++20# -DUSE_SELECT
 CXXFLAGS = -I$(ThirdParty)/EventLoop/include \
 		   -I$(ThirdParty)/json/include \
-		   -I$(ThirdParty)/argparse/include
+		   -I$(ThirdParty)/argparse/include \
+		   -I$(ThirdParty)/toml11/include
 
 LDFLAGS = 
 
