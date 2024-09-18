@@ -18,6 +18,12 @@ SwitchServer::SwitchServer(const OptionsPtr& options) :
     init(options->host.c_str(), options->port);
 }
 
+void SwitchServer::OnSignal(SignalHandler* sh, uint32_t signo)
+{
+    printf("SwitchServer::Shutdown\n");
+    EV_Singleton->StopLoop();
+}
+
 bool SwitchServer::init(const char* host, uint16_t port)
 {
     context_ = std::make_shared<SwitchContext>(this);

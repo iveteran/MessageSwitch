@@ -15,12 +15,8 @@ class SwitchServer
     SwitchServer(const char* host="0.0.0.0", uint16_t port=10000);
     SwitchServer(const OptionsPtr& options);
     bool init(const char* host, uint16_t port);
+    void OnSignal(SignalHandler* sh, uint32_t signo);
 
-    void OnSignal(SignalHandler* sh, uint32_t signo)
-    {
-        printf("SwitchServer::Shutdown\n");
-        EV_Singleton->StopLoop();
-    }
     HeaderDescriptionPtr GetMessageHeaderDescription() const
     {
         return server_->GetMessageHeaderDescription();
