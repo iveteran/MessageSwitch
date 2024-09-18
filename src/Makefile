@@ -13,7 +13,8 @@ CXXFLAGS = -I$(ThirdParty)/EventLoop/include \
 LDFLAGS = 
 
 DEP_LIBS += \
-           $(ThirdParty)/EventLoop/core/libel.a
+           $(ThirdParty)/EventLoop/core/libel.a \
+           $(ThirdParty)/EventLoop/extensions/console/libconsole.a -lreadline
 
 CXX      = g++
 RM       = rm -f

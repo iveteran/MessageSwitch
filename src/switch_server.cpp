@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stddef.h>
+#include <eventloop/extensions/console.h>
 #include "switch_server.h"
 #include "switch_command_handler.h"
 
@@ -16,11 +17,18 @@ SwitchServer::SwitchServer(const OptionsPtr& options) :
         node_id_ = options->node_id;
     }
     init(options->host.c_str(), options->port);
+
+    Console::Instance()->registerCommand(
+            "clients",
+            "Show number of connected clients",
+            std::bind(&SwitchServer::handleConsoleCommand_Clients, this, std::placeholders::_1)
+            );
 }
 
 void SwitchServer::OnSignal(SignalHandler* sh, uint32_t signo)
 {
     printf("SwitchServer::Shutdown\n");
+    Console::Instance()->destory(); // XXX: MUST call destory of Console manually, otherwise the terminal will be silently always
     EV_Singleton->StopLoop();
 }
 
@@ -74,6 +82,11 @@ void SwitchServer::OnMessageRecvd(TcpConnection* conn, const Message* msg)
     msg->DumpHex();
 
     HandleCommand(conn, msg);
+}
+int SwitchServer::handleConsoleCommand_Clients(const vector<string>& argv)
+{
+    printf("clients: %d\n", server_->GetConnectionNumber());
+    return 0;
 }
 
 void SwitchServer::HandleCommand(TcpConnection* conn, const Message* msg)
