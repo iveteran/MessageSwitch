@@ -4,9 +4,9 @@
 #include <vector>
 #include <set>
 #include <memory>
+#include <eventloop/tcp_connection.h>
 #include "switch_message.h"
 #include "switch_types.h"
-#include "tcp_connection.h"
 
 using std::vector;
 using std::set;

@@ -4,16 +4,16 @@ TARGET_CLIENT = switch_client
 ROOT = ..
 ThirdParty = $(ROOT)/thirdparty
 
-CPPFLAGS = -g -Wall -std=c++20# -DUSE_SELECT
+CPPFLAGS = -g -Wall -std=c++20 # -DUSE_SELECT
 CXXFLAGS = -I$(ThirdParty)/EventLoop/include \
-		   -I$(ThirdParty)/json/include \
-		   -I$(ThirdParty)/argparse/include \
-		   -I$(ThirdParty)/toml11/include
+           -I$(ThirdParty)/json/include \
+           -I$(ThirdParty)/argparse/include \
+           -I$(ThirdParty)/toml11/include
 
 LDFLAGS = 
 
 DEP_LIBS += \
-           $(ThirdParty)/EventLoop/src/libel.a
+           $(ThirdParty)/EventLoop/core/libel.a
 
 CXX      = g++
 RM       = rm -f

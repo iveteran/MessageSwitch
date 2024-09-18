@@ -5,7 +5,6 @@
 #include <string>
 #include "switch_endpoint.h"
 #include "switch_types.h"
-#include "eventloop.h"
 
 #define DEFAULT_ACCESS_TOKEN "Hello World"
 #define DEFAULT_ADMIN_TOKEN "Foobar2000"
