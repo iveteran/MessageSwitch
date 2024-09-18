@@ -20,6 +20,8 @@ int parse_arguments(int argc, char **argv, OptionsPtr& options) {
     program.add_argument("-m", "--mode")
         .help("serving mode")
         .default_value("normal");
+    program.add_argument("-l", "--logfile")
+        .help("log file, default is STDOUT");
     program.add_argument("-a", "--access_code")
         .help("access code for endpoint");
     program.add_argument("-A", "--admin_code")
@@ -43,6 +45,10 @@ int parse_arguments(int argc, char **argv, OptionsPtr& options) {
     cout << "> arguments.node_id: " << options->node_id << endl;
     options->serving_mode = program.get<std::string>("--mode");
     cout << "> arguments.mode: " << options->serving_mode << endl;
+    if (program.is_used("--logfile")) {
+        options->logfile = program.get<std::string>("--logfile");
+        cout << "> arguments.logfile: " << options->logfile << endl;
+    }
     if (program.is_used("--access_code")) {
         options->access_code = program.get<std::string>("--access_code");
         cout << "> arguments.access_code: " << options->access_code << endl;
@@ -87,6 +93,14 @@ int parse_configuration(const string& config_file, OptionsPtr& options) {
             auto serving_mode = server_config.at("mode").as_string();
             cout << "> config.server.mode: " << serving_mode << endl;
             options->serving_mode = serving_mode;
+        }
+
+        if (server_config.contains("logfile")) {
+            auto logfile = server_config.at("logfile").as_string();
+            cout << "> config.server.logfile: " << logfile << endl;
+            if (! logfile.empty()) {
+                options->logfile = logfile;
+            }
         }
     }
     if (config.contains("auth")) {

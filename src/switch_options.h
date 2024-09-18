@@ -13,6 +13,7 @@ struct Options
     string      access_code;
     string      admin_code;
     string      serving_mode;
+    string      logfile;
     string      config_file;
 
     Options() : port(0), node_id(0) {}
@@ -25,6 +26,7 @@ struct Options
         ss << "access_code: " << access_code << ", ";
         ss << "admin_code: " << admin_code << ", ";
         ss << "serving_mode: " << serving_mode << ", ";
+        ss << "logfile: " << logfile << ", ";
         ss << "config_file: " << config_file << ", ";
         ss << "}";
         return ss.str();
