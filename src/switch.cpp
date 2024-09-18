@@ -6,6 +6,8 @@
 int parse_arguments(int argc, char **argv, OptionsPtr& options) {
     argparse::ArgumentParser program("switch");
 
+    program.add_description("Github: https://github.com/iveteran/MessageSwitch");
+
     program.add_argument("-H", "--host")
         .help("listen host")
         .default_value("127.0.0.1");
