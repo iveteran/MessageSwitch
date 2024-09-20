@@ -5,6 +5,7 @@ int main(int argc, char **argv) {
 
   SignalHandler sh(SignalEvent::INT, [&](SignalHandler* sh, uint32_t signo) {
           printf("Shutdown\n");
+          switch_client.Cleanup();
           EV_Singleton->StopLoop();
           });
 
