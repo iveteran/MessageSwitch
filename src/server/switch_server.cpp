@@ -27,17 +27,15 @@ void SwitchServer::OnSignal(SignalHandler* sh, uint32_t signo)
 
 bool SwitchServer::init(const char* host, uint16_t port)
 {
+    InitServer(host, port);
+    InitComponents();
+
+    return true;
+}
+
+void SwitchServer::InitComponents()
+{
     context_ = std::make_shared<SwitchContext>(this);
-    auto msg_hdr_desc = CreateMessageHeaderDescription();
-
-    server_ = std::make_shared<TcpServer>(host, port, MessageType::CUSTOM);
-    server_->SetMessageHeaderDescription(msg_hdr_desc);
-
-    TcpCallbacksPtr svr_cbs = std::shared_ptr<TcpCallbacks>(new TcpCallbacks);
-    svr_cbs->on_msg_recvd_cb = std::bind(&SwitchServer::OnMessageRecvd, this, std::placeholders::_1, std::placeholders::_2);
-    svr_cbs->on_conn_ready_cb = std::bind(&SwitchServer::OnConnectionReady, this, std::placeholders::_1);
-    svr_cbs->on_closed_cb = std::bind(&SwitchServer::OnConnectionClosed, this, std::placeholders::_1);
-    server_->SetTcpCallbacks(svr_cbs);
 
     printf("Context: %s\n", context_->ToString().c_str());
 
@@ -46,8 +44,20 @@ bool SwitchServer::init(const char* host, uint16_t port)
 
     console_ = std::make_shared<SwitchConsole>(this);
     console_->registerCommands();
+}
 
-    return true;
+void SwitchServer::InitServer(const char* host, uint16_t port)
+{
+    auto msg_hdr_desc = CreateMessageHeaderDescription();
+
+    server_ = std::make_shared<TcpServer>(host, port, MessageType::CUSTOM);
+    server_->SetMessageHeaderDescription(msg_hdr_desc);
+
+    auto svr_cbs = std::make_shared<TcpCallbacks>();
+    svr_cbs->on_msg_recvd_cb = std::bind(&SwitchServer::OnMessageRecvd, this, std::placeholders::_1, std::placeholders::_2);
+    svr_cbs->on_conn_ready_cb = std::bind(&SwitchServer::OnConnectionReady, this, std::placeholders::_1);
+    svr_cbs->on_closed_cb = std::bind(&SwitchServer::OnConnectionClosed, this, std::placeholders::_1);
+    server_->SetTcpCallbacks(svr_cbs);
 }
 
 HeaderDescriptionPtr SwitchServer::CreateMessageHeaderDescription() {

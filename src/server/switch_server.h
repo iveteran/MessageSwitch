@@ -16,6 +16,8 @@ class SwitchServer
     SwitchServer(const char* host="0.0.0.0", uint16_t port=10000);
     SwitchServer(const OptionsPtr& options);
     bool init(const char* host, uint16_t port);
+    void InitComponents();
+    void InitServer(const char* host, uint16_t port);
     void OnSignal(SignalHandler* sh, uint32_t signo);
 
     HeaderDescriptionPtr GetMessageHeaderDescription() const
