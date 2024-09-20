@@ -15,6 +15,7 @@ enum class EEndpointRole {
     Undefined,
     Endpoint,
     Admin,
+    Service,
 };
 const char* EndpointRoleToTag(EEndpointRole role);
 EEndpointRole TagToEndpointRole(const std::string& role_str);

@@ -30,6 +30,12 @@ SwitchService::register_endpoint(TcpConnection* conn, const CommandRegister& reg
                 return { errcode, ss.str() };
             }
             break;
+        case EEndpointRole::Service:
+            if (reg_cmd.access_code.empty() || reg_cmd.access_code != context->service_access_code) {
+                return { errcode, ss.str() };
+            }
+            handle_service_point(conn, reg_cmd);
+            break;
         default:
             {
                 std::stringstream ss;

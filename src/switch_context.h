@@ -8,6 +8,7 @@
 
 #define DEFAULT_ACCESS_TOKEN "Hello World"
 #define DEFAULT_ADMIN_TOKEN "Foobar2000"
+#define DEFAULT_SERVICE_ACCESS_TOKEN "GOE works"
 
 using std::map;
 using std::string;
@@ -26,6 +27,7 @@ struct SwitchContext
     time_t born_time;
     string access_code = DEFAULT_ACCESS_TOKEN;
     string admin_code = DEFAULT_ADMIN_TOKEN;
+    string service_access_code = DEFAULT_SERVICE_ACCESS_TOKEN;
     EServingMode serving_mode;
 
     SwitchContext(SwitchServer* server);

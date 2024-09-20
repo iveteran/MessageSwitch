@@ -41,6 +41,9 @@ const char* EndpointRoleToTag(EEndpointRole role) {
         case EEndpointRole::Admin:
             role_str = "admin";
             break;
+        case EEndpointRole::Service:
+            role_str = "service";
+            break;
         default:
             role_str = "undefined";
             break;
@@ -54,6 +57,8 @@ EEndpointRole TagToEndpointRole(const std::string& role_str) {
         role = EEndpointRole::Endpoint;
     } else if (role_str == "admin") {
         role = EEndpointRole::Admin;
+    } else if (role_str == "service") {
+        role = EEndpointRole::Service;
     }
     return role;
 }
