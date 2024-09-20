@@ -1,11 +1,10 @@
 #ifndef _SWITCH_SERVER_H
 #define _SWITCH_SERVER_H
 
-#include "switch_message.h"
-#include "switch_endpoint.h"
+#include "switch_options.h"
 #include "switch_context.h"
 #include "switch_service.h"
-#include "switch_options.h"
+#include "switch_command_handler.h"
 #include <eventloop/el.h>
 
 using namespace evt_loop;
@@ -42,14 +41,13 @@ class SwitchServer
     int handleConsoleCommand_Options(const vector<string>& argv);
     int handleConsoleCommand_Stats(const vector<string>& argv);
 
-    void HandleCommand(TcpConnection* conn, const Message* msg);
-
     private:
     TcpServerPtr server_;
     uint32_t node_id_;
+    OptionsPtr options_;
     SwitchContextPtr context_;
     SwitchServicePtr service_;
-    OptionsPtr options_;
+    CommandHandlerPtr cmd_handler_;
 };
 
 #endif // _SWITCH_SERVER_H

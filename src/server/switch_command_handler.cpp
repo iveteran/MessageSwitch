@@ -33,6 +33,72 @@
     } \
 }
 
+void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
+{
+    CommandMessage* cmdMsg = (CommandMessage*)(msg->Data().data());
+    cmdMsg->payload_len = ntohl(cmdMsg->payload_len);
+    if (context_->switch_server->IsMessagePayloadLengthIncludingSelf()) {
+        cmdMsg->payload_len -= sizeof(cmdMsg->payload_len);
+    }
+
+    ECommand cmd = (ECommand)cmdMsg->cmd;
+    printf("[CommandHandler::HandleCommand] id: %d\n", conn->ID());
+    printf("[CommandHandler::HandleCommand] cmd: %s(%d)\n", CommandToTag(cmd), (uint8_t)cmd);
+    printf("[CommandHandler::HandleCommand] payload len: %d\n", cmdMsg->payload_len);
+
+    switch (cmd)
+    {
+        case ECommand::ECHO:
+            handleEcho(conn, cmdMsg, msg->Data());
+            return;
+        case ECommand::REG:
+            handleRegister(conn, cmdMsg, msg->Data());
+            return;
+        default:
+            break;
+    }
+
+    auto iter = context_->endpoints.find(conn->ID());
+    if (iter == context_->endpoints.end()) {
+        fprintf(stderr, "[CommandHandler::HandleCommand] Error: the connection(id: %d) can not to match any endpoint, "
+                "maybe the connection not be registered or occurred errors for endpoint manager\n", conn->ID());
+        int errcode = 1;
+        string errmsg("the client maybe not be registered");
+        sendResultMessage(conn, cmd, errcode, errmsg);
+        //conn->Disconnect();
+        return;
+    }
+    auto ep = iter->second;
+
+    switch (cmd)
+    {
+        case ECommand::FWD:
+            handleForward(ep, cmdMsg, msg->Data());
+            break;
+        case ECommand::DATA:
+            handleData(ep, cmdMsg, msg->Data());
+            break;
+        case ECommand::INFO:
+            handleInfo(ep, cmdMsg, msg->Data());
+            break;
+        case ECommand::SETUP:
+            handleSetup(ep, cmdMsg, msg->Data());
+            break;
+        case ECommand::PROXY:
+            handleProxy(ep, cmdMsg, msg->Data());
+            break;
+        case ECommand::KICKOUT:
+            handleKickout(ep, cmdMsg, msg->Data());
+            break;
+        case ECommand::RELOAD:
+            handleReload(ep, cmdMsg, msg->Data());
+            break;
+        default:
+            fprintf(stderr, "[CommandHandler::HandleCommand] Error: Unsupported command: %s(%d)\n", CommandToTag(cmd), (uint8_t)cmd);
+            break;
+    }
+}
+
 int CommandHandler::handleEcho(TcpConnection* conn, const CommandMessage* cmdMsg, const string& data)
 {
     const ECommand cmd = (ECommand)cmdMsg->cmd;

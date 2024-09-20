@@ -1,9 +1,11 @@
 #ifndef _SWITCH_OPTIONS_H_
 #define _SWITCH_OPTIONS_H_
 
-#include <cstddef>
-#include <cstdlib>
+#include <string>
+#include <memory>
 #include <sstream>
+
+using std::string;
 
 struct Options
 {

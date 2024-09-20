@@ -24,6 +24,8 @@ public:
         context_(context), service_(service)
     {}
 
+    void handleCommand(TcpConnection* conn, const Message* msg);
+
     int handleEcho(TcpConnection* conn, const CommandMessage* cmdMsg, const string& data);
     int handleRegister(TcpConnection* conn, const CommandMessage* cmdMsg, const string& data);
     int handleForward(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);

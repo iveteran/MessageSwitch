@@ -64,6 +64,7 @@ bool SwitchServer::init(const char* host, uint16_t port)
     printf("Context: %s\n", context_->ToString().c_str());
 
     service_ = std::make_shared<SwitchService>(this);
+    cmd_handler_ = std::make_shared<CommandHandler>(context_, service_);
 
     return true;
 }
@@ -98,7 +99,7 @@ void SwitchServer::OnMessageRecvd(TcpConnection* conn, const Message* msg)
     printf("[SwitchServer::OnMessageRecvd] message bytes:\n");
     printf(msg->DumpHex().c_str());
 
-    HandleCommand(conn, msg);
+    cmd_handler_->handleCommand(conn, msg);
 }
 
 int SwitchServer::handleConsoleCommand_Clients(const vector<string>& argv)
@@ -124,68 +125,4 @@ int SwitchServer::handleConsoleCommand_Stats(const vector<string>& argv)
     string cmd_info_json = cmd_info->encodeToJSON();
     Console::Instance()->put_line("stats: ", cmd_info_json);
     return 0;
-}
-
-void SwitchServer::HandleCommand(TcpConnection* conn, const Message* msg)
-{
-    CommandMessage* cmdMsg = (CommandMessage*)(msg->Data().data());
-    cmdMsg->payload_len = ntohl(cmdMsg->payload_len);
-    if (IsMessagePayloadLengthIncludingSelf()) {
-        cmdMsg->payload_len -= sizeof(cmdMsg->payload_len);
-    }
-
-    ECommand cmd = (ECommand)cmdMsg->cmd;
-    printf("[SwitchServer::HandleCommand] id: %d\n", conn->ID());
-    printf("[SwitchServer::HandleCommand] cmd: %s(%d)\n", CommandToTag(cmd), (uint8_t)cmd);
-    printf("[SwitchServer::HandleCommand] payload len: %d\n", cmdMsg->payload_len);
-    auto cmdHandler = std::make_shared<CommandHandler>(context_, service_);
-
-    switch (cmd)
-    {
-        case ECommand::ECHO:
-            cmdHandler->handleEcho(conn, cmdMsg, msg->Data());
-            return;
-        case ECommand::REG:
-            cmdHandler->handleRegister(conn, cmdMsg, msg->Data());
-            return;
-        default:
-            break;
-    }
-
-    auto iter = context_->endpoints.find(conn->ID());
-    if (iter == context_->endpoints.end()) {
-        fprintf(stderr, "[SwitchServer::HandleCommand] Error: the connection(id: %d) can not to match any endpoint, "
-                "maybe the connection not be registered or occurred errors for endpoint manager\n", conn->ID());
-        conn->Disconnect();
-        return;
-    }
-    auto ep = iter->second;
-
-    switch (cmd)
-    {
-        case ECommand::FWD:
-            cmdHandler->handleForward(ep, cmdMsg, msg->Data());
-            break;
-        case ECommand::DATA:
-            cmdHandler->handleData(ep, cmdMsg, msg->Data());
-            break;
-        case ECommand::INFO:
-            cmdHandler->handleInfo(ep, cmdMsg, msg->Data());
-            break;
-        case ECommand::SETUP:
-            cmdHandler->handleSetup(ep, cmdMsg, msg->Data());
-            break;
-        case ECommand::PROXY:
-            cmdHandler->handleProxy(ep, cmdMsg, msg->Data());
-            break;
-        case ECommand::KICKOUT:
-            cmdHandler->handleKickout(ep, cmdMsg, msg->Data());
-            break;
-        case ECommand::RELOAD:
-            cmdHandler->handleReload(ep, cmdMsg, msg->Data());
-            break;
-        default:
-            fprintf(stderr, "[SwitchServer::HandleCommand] Error: Unsupported command: %s(%d)\n", CommandToTag(cmd), (uint8_t)cmd);
-            break;
-    }
 }
