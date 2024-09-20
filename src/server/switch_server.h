@@ -4,6 +4,7 @@
 #include "switch_options.h"
 #include "switch_context.h"
 #include "switch_service.h"
+#include "switch_console.h"
 #include "switch_command_handler.h"
 #include <eventloop/el.h>
 
@@ -28,6 +29,8 @@ class SwitchServer
     uint32_t NodeId() const { return node_id_; }
     OptionsPtr GetOptions() const { return options_; }
     SwitchContextPtr GetContext() const { return context_; }
+    SwitchServicePtr GetService() const { return service_; }
+    size_t GetClientsTotal() const { return server_->GetConnectionNumber(); }
 
     private:
     HeaderDescriptionPtr CreateMessageHeaderDescription();
@@ -36,17 +39,13 @@ class SwitchServer
     void OnConnectionClosed(TcpConnection* conn);
     void OnMessageRecvd(TcpConnection* conn, const Message* msg);
 
-    int handleConsoleCommand_Clients(const vector<string>& argv);
-    int handleConsoleCommand_Context(const vector<string>& argv);
-    int handleConsoleCommand_Options(const vector<string>& argv);
-    int handleConsoleCommand_Stats(const vector<string>& argv);
-
     private:
     TcpServerPtr server_;
     uint32_t node_id_;
     OptionsPtr options_;
     SwitchContextPtr context_;
     SwitchServicePtr service_;
+    SwitchConsolePtr console_;
     CommandHandlerPtr cmd_handler_;
 };
 
