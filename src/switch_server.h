@@ -4,6 +4,7 @@
 #include "switch_message.h"
 #include "switch_endpoint.h"
 #include "switch_context.h"
+#include "switch_service.h"
 #include "switch_options.h"
 #include <eventloop/el.h>
 
@@ -27,6 +28,7 @@ class SwitchServer
     }
     uint32_t NodeId() const { return node_id_; }
     OptionsPtr GetOptions() const { return options_; }
+    SwitchContextPtr GetContext() const { return context_; }
 
     private:
     HeaderDescriptionPtr CreateMessageHeaderDescription();
@@ -42,6 +44,7 @@ class SwitchServer
     TcpServerPtr server_;
     uint32_t node_id_;
     SwitchContextPtr context_;
+    SwitchServicePtr service_;
     OptionsPtr options_;
 };
 

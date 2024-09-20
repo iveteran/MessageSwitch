@@ -7,6 +7,7 @@
 #include "switch_endpoint.h"
 #include "switch_message.h"
 #include "switch_context.h"
+#include "switch_service.h"
 
 using std::string;
 
@@ -15,9 +16,12 @@ namespace evt_loop {
 }
 using evt_loop::Message;
 
+class CommandRegister;
+
 class CommandHandler {
 public:
-    CommandHandler(SwitchContextPtr context) : context_(context)
+    CommandHandler(SwitchContextPtr context, SwitchServicePtr service) :
+        context_(context), service_(service)
     {}
 
     int handleEcho(TcpConnection* conn, const CommandMessage* cmdMsg, const string& data);
@@ -34,6 +38,7 @@ public:
     size_t sendResultMessage(TcpConnection* conn, ECommand cmd, int8_t errcode,
             const char* data = NULL, size_t data_len = 0);
 
+private:
     // Reverse to network message without header of CommandMessage
     std::pair<size_t, const char*>
         extractMessagePayload(CommandMessage* cmdMsg);
@@ -42,6 +47,7 @@ public:
 
 private:
     SwitchContextPtr context_;
+    SwitchServicePtr service_;
 };
 typedef std::shared_ptr<CommandHandler> CommandHandlerPtr;
 

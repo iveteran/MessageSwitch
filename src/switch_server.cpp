@@ -48,6 +48,8 @@ bool SwitchServer::init(const char* host, uint16_t port)
 
     printf("Context: %s\n", context_->ToString().c_str());
 
+    service_ = std::make_shared<SwitchService>(this);
+
     return true;
 }
 
@@ -79,10 +81,11 @@ void SwitchServer::OnMessageRecvd(TcpConnection* conn, const Message* msg)
             conn->FD(), conn->ID(), msg->Payload(), msg->PayloadSize());
     printf("[SwitchServer::OnMessageRecvd] message size: %lu\n", msg->Size());
     printf("[SwitchServer::OnMessageRecvd] message bytes:\n");
-    msg->DumpHex();
+    printf(msg->DumpHex().c_str());
 
     HandleCommand(conn, msg);
 }
+
 int SwitchServer::handleConsoleCommand_Clients(const vector<string>& argv)
 {
     printf("clients: %d\n", server_->GetConnectionNumber());
@@ -101,7 +104,7 @@ void SwitchServer::HandleCommand(TcpConnection* conn, const Message* msg)
     printf("[SwitchServer::HandleCommand] id: %d\n", conn->ID());
     printf("[SwitchServer::HandleCommand] cmd: %s(%d)\n", CommandToTag(cmd), (uint8_t)cmd);
     printf("[SwitchServer::HandleCommand] payload len: %d\n", cmdMsg->payload_len);
-    auto cmdHandler = std::make_shared<CommandHandler>(context_);
+    auto cmdHandler = std::make_shared<CommandHandler>(context_, service_);
 
     switch (cmd)
     {

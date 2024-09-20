@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 #include "switch_client.h"
-
-#include "nlohmann/json.hpp"
-using json = nlohmann::json;
+#include "command_messages.h"
 
 SwitchClient::SwitchClient(const char* host, uint16_t port) :
     client_id_(0),
@@ -78,18 +76,20 @@ HeaderDescriptionPtr SwitchClient::CreateMessageHeaderDescription()
 
 void SwitchClient::RegisterSelf()
 {
-    json params;
-    params["id"] = client_id_;
-#if 1
-    params["role"] = "endpoint";
-    params["access_code"] = "Hello World";
+    CommandRegister reg_cmd;
+    reg_cmd.id = client_id_;
+#if 0
+    reg_cmd.role = "endpoint";
+    reg_cmd.access_code = "Hello World";
 #else
-    params["role"] = "admin";
-    params["admin_code"] = "Foobar2000";
-    //params["admin_code"] = "my_admin_code";
+    reg_cmd.role = "admin";
+    reg_cmd.admin_code = "Foobar2000";
 #endif
+    //reg_cmd.role = "service";
+    //reg_cmd.access_code = "GOE works";
 
-    auto params_data = params.dump();
+    auto params_data = reg_cmd.encodeToJSON();
+
     SendCommandMessage(client_.Connection().get(), ECommand::REG, params_data);
     printf("Sent REG message, content: %s\n", params_data.c_str());
 }
@@ -120,6 +120,18 @@ void SwitchClient::HandleCommandResult(TcpConnection* conn, CommandMessage* cmdM
             break;
         case ECommand::INFO:
             // TODO
+            {
+                if (errcode == 0) {
+                    CommandInfo cmd_info;
+                    if (cmdMsg->IsJSON()) {
+                        cmd_info.decodeFromJSON(content);
+                    }
+                    printf("cmd_info.uptime: %ld\n", cmd_info.uptime);
+                    printf("cmd_info.endpoints.total: %d\n", cmd_info.endpoints.total);
+                    printf("cmd_info.endpoints.rx_bytes: %d\n", cmd_info.endpoints.rx_bytes);
+                    printf("cmd_info.admin_clients.total: %d\n", cmd_info.admin_clients.total);
+                }
+            }
             break;
         default:
             break;
@@ -138,6 +150,7 @@ size_t SwitchClient::SendCommandMessage(TcpConnection* conn, ECommand cmd,
 
     CommandMessage cmdMsg;
     cmdMsg.cmd = uint8_t(cmd);
+    cmdMsg.SetToJSON();
     uint32_t payload_len = data_len;
     if (client_.GetMessageHeaderDescription()->is_payload_len_including_self) {
         payload_len += sizeof(CommandMessage::payload_len);
@@ -171,9 +184,9 @@ void SwitchClient::OnSendingTimer(TimerEvent* timer)
     printf("[OnSendingTimer] send data\n");
     ECommand cmds[] = {
         //ECommand::FWD,
-        ECommand::DATA,
+        //ECommand::DATA,
         //ECommand::SETUP,
-        //ECommand::INFO,
+        ECommand::INFO,
         //ECommand::KICKOUT,
     };
     for (auto cmd : cmds) {
@@ -188,32 +201,50 @@ void SwitchClient::OnSendingTimer(TimerEvent* timer)
                 break;
             case ECommand::INFO:
                 {
-                    const char* content = R"({"details": true})";
-                    SendCommandMessage(client_.Connection().get(), ECommand::INFO, content, strlen(content));
-                    printf("Sent INFO message, content: %s\n", content);
+                    //const char* content = R"({"is_details": true})";
+                    CommandInfoReq cmd_info_req;
+                    cmd_info_req.is_details = true;
+                    auto content = cmd_info_req.encodeToJSON();
+                    SendCommandMessage(client_.Connection().get(), ECommand::INFO, content);
+                    printf("Sent INFO message, content: %s\n", content.c_str());
                 }
                 break;
             case ECommand::FWD:
                 {
-                    const char* content = R"({"targets": [1, 2]})";
-                    SendCommandMessage(client_.Connection().get(), ECommand::FWD, content, strlen(content));
-                    printf("Sent FWD message, content: %s\n", content);
+                    //const char* content = R"({"targets": [1, 2]})";
+                    CommandForward cmd_fwd;
+                    cmd_fwd.targets.push_back(1);
+                    cmd_fwd.targets.push_back(2);
+                    auto content = cmd_fwd.encodeToJSON();
+                    SendCommandMessage(client_.Connection().get(), ECommand::FWD, content);
+                    printf("Sent FWD message, content: %s\n", content.c_str());
                 }
                 break;
             case ECommand::SETUP:
                 {
                     //const char* content = R"({"new_admin_code": "my_admin_code", "admin_code": "Foobar2000"})";
                     //const char* content = R"({"new_access_code": "my_access_code"})";
-                    const char* content = R"({"mode": "proxy"})";
-                    SendCommandMessage(client_.Connection().get(), ECommand::SETUP, content, strlen(content));
-                    printf("Sent SETUP message, content: %s\n", content);
+                    //const char* content = R"({"mode": "proxy"})";
+                    CommandSetup cmd_setup;
+                    //cmd_setup.new_admin_code = "my_admin_code";
+                    //cmd_setup.admin_code = "Foobar2000";
+
+                    //cmd_setup.new_access_code = "my_access_code";
+
+                    cmd_setup.mode = "proxy";
+                    auto content = cmd_setup.encodeToJSON();
+                    SendCommandMessage(client_.Connection().get(), ECommand::SETUP, content);
+                    printf("Sent SETUP message, content: %s\n", content.c_str());
                 }
                 break;
             case ECommand::KICKOUT:
                 {
-                    const char* content = R"({"targets": [95]})";
-                    SendCommandMessage(client_.Connection().get(), ECommand::KICKOUT, content, strlen(content));
-                    printf("Sent KICKOUT message, content: %s\n", content);
+                    //const char* content = R"({"targets": [95]})";
+                    CommandKickout cmd_kickout;
+                    cmd_kickout.targets.push_back(95);
+                    auto content = cmd_kickout.encodeToJSON();
+                    SendCommandMessage(client_.Connection().get(), ECommand::KICKOUT, content);
+                    printf("Sent KICKOUT message, content: %s\n", content.c_str());
                 }
                 break;
             case ECommand::RELOAD:

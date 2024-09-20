@@ -19,8 +19,8 @@ DEP_LIBS += \
 CXX      = g++
 RM       = rm -f
 
-TARGET_SERVER_OBJS = switch.o switch_server.o switch_command_handler.o switch_message.o switch_types.o switch_context.o
-TARGET_CLIENT_OBJS = switch_client_main.o switch_client.o switch_message.o switch_types.o
+TARGET_SERVER_OBJS = switch.o switch_server.o switch_command_handler.o switch_message.o switch_types.o switch_context.o switch_service.o command_messages.o
+TARGET_CLIENT_OBJS = switch_client_main.o switch_client.o switch_message.o switch_types.o command_messages.o
 
 %.o : %.cpp
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $<
