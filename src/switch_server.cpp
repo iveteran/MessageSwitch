@@ -23,6 +23,21 @@ SwitchServer::SwitchServer(const OptionsPtr& options) :
             "Show number of connected clients",
             std::bind(&SwitchServer::handleConsoleCommand_Clients, this, std::placeholders::_1)
             );
+    Console::Instance()->registerCommand(
+            "options",
+            "Show options of server",
+            std::bind(&SwitchServer::handleConsoleCommand_Options, this, std::placeholders::_1)
+            );
+    Console::Instance()->registerCommand(
+            "context",
+            "Show runtime context of server",
+            std::bind(&SwitchServer::handleConsoleCommand_Context, this, std::placeholders::_1)
+            );
+    Console::Instance()->registerCommand(
+            "stats",
+            "Show runtime statistics of server",
+            std::bind(&SwitchServer::handleConsoleCommand_Stats, this, std::placeholders::_1)
+            );
 }
 
 void SwitchServer::OnSignal(SignalHandler* sh, uint32_t signo)
@@ -88,7 +103,26 @@ void SwitchServer::OnMessageRecvd(TcpConnection* conn, const Message* msg)
 
 int SwitchServer::handleConsoleCommand_Clients(const vector<string>& argv)
 {
-    printf("clients: %d\n", server_->GetConnectionNumber());
+    Console::Instance()->put_line("clients: ", server_->GetConnectionNumber());
+    return 0;
+}
+int SwitchServer::handleConsoleCommand_Options(const vector<string>& argv)
+{
+    Console::Instance()->put_line("options: ", options_->ToString());
+    return 0;
+}
+int SwitchServer::handleConsoleCommand_Context(const vector<string>& argv)
+{
+    Console::Instance()->put_line("context: ", context_->ToString());
+    return 0;
+}
+int SwitchServer::handleConsoleCommand_Stats(const vector<string>& argv)
+{
+    CommandInfoReq cmd_info_req;
+    cmd_info_req.is_details = true;
+    auto cmd_info = service_->get_stats(cmd_info_req);
+    string cmd_info_json = cmd_info->encodeToJSON();
+    Console::Instance()->put_line("stats: ", cmd_info_json);
     return 0;
 }
 

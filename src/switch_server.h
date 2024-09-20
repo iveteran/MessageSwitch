@@ -36,7 +36,11 @@ class SwitchServer
     void OnConnectionReady(TcpConnection* conn);
     void OnConnectionClosed(TcpConnection* conn);
     void OnMessageRecvd(TcpConnection* conn, const Message* msg);
+
     int handleConsoleCommand_Clients(const vector<string>& argv);
+    int handleConsoleCommand_Context(const vector<string>& argv);
+    int handleConsoleCommand_Options(const vector<string>& argv);
+    int handleConsoleCommand_Stats(const vector<string>& argv);
 
     void HandleCommand(TcpConnection* conn, const Message* msg);
 
