@@ -84,11 +84,9 @@ void SwitchServer::OnConnectionClosed(TcpConnection* conn)
 }
 void SwitchServer::OnMessageRecvd(TcpConnection* conn, const Message* msg)
 {
-    printf("[SwitchServer::OnMessageRecvd] fd: %d, id: %d, payload: %s, length: %lu\n",
-            conn->FD(), conn->ID(), msg->Payload(), msg->PayloadSize());
-    printf("[SwitchServer::OnMessageRecvd] message size: %lu\n", msg->Size());
-    printf("[SwitchServer::OnMessageRecvd] message bytes:\n");
-    printf(msg->DumpHex().c_str());
+    printf("[SwitchServer::OnMessageRecvd] fd: %d, id: %d, size: %lu\n", conn->FD(), conn->ID(), msg->Size());
+    printf("[SwitchServer::OnMessageRecvd] message bytes(%lu):\n", msg->Size());
+    cout << msg->DumpHexWithChars(256) << endl;
 
     cmd_handler_->handleCommand(conn, msg);
 }

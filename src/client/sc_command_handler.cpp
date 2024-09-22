@@ -4,6 +4,8 @@
 #include "command_messages.h"
 #include "switch_client.h"
 
+#define DUMP_MAX_BYTES 256
+
 using namespace evt_loop;
 
 
@@ -70,7 +72,7 @@ void SCCommandHandler::SendData(const string& data)
     size_t sent_bytes = SendCommandMessage(ECommand::DATA, data);
     if (sent_bytes > 0) {
         printf("Sent DATA message, content size(%ld):\n", data.size());
-        cout << DumpHex(data) << endl;
+        cout << DumpHexWithChars(data, DUMP_MAX_BYTES) << endl;
     }
 }
 
@@ -153,6 +155,7 @@ void SCCommandHandler::HandleCommandResult(TcpConnection* conn, CommandMessage* 
     printf("content len: %ld\n", content_len);
     if (errcode == 0) {
         printf("content: %s\n", content);
+        //cout << DumpHexWithChars(content, content_len, DUMP_MAX_BYTES) << endl;
     } else {
         printf("error message: %s\n", content);
     }

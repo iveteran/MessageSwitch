@@ -42,6 +42,7 @@ void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
     printf("[CommandHandler::HandleCommand] id: %d\n", conn->ID());
     printf("[CommandHandler::HandleCommand] cmd: %s(%d)\n", CommandToTag(cmd), (uint8_t)cmd);
     printf("[CommandHandler::HandleCommand] payload len: %d\n", cmdMsg->payload_len);
+    cout << DumpHexWithChars(cmdMsg->payload, cmdMsg->payload_len, 256) << endl;
 
     switch (cmd)
     {
@@ -279,11 +280,11 @@ size_t CommandHandler::sendResultMessage(TcpConnection* conn, ECommand cmd, int8
 size_t CommandHandler::sendResultMessage(TcpConnection* conn, ECommand cmd, int8_t errcode,
         const char* data, size_t data_len)
 {
-    if (data) {
-        cout << "[sendResultMessage] response: " << data << endl;
+    if (! data || !data_len) {
+        return 0;
     }
-
-    size_t sent_bytes = 0;
+    printf("[sendResultMessage] response: %ld\n", data_len);
+    cout << DumpHexWithChars(data, data_len, 256) << endl;
 
     CommandMessage cmdMsg;
     cmdMsg.cmd = (uint8_t)cmd;
@@ -296,7 +297,7 @@ size_t CommandHandler::sendResultMessage(TcpConnection* conn, ECommand cmd, int8
     resultMsg.errcode = errcode;
 
     conn->Send((char*)&cmdMsg, sizeof(cmdMsg));
-    sent_bytes += sizeof(cmdMsg);
+    size_t sent_bytes = sizeof(cmdMsg);
     conn->Send((char*)&resultMsg, sizeof(resultMsg));
     sent_bytes += sizeof(resultMsg);
     if (data && data_len > 0) {
