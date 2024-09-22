@@ -1,6 +1,8 @@
 #ifndef _SWITCH_TYPES_H
 #define _SWITCH_TYPES_H
 
+#include <string>
+
 enum class EServingMode {
     Undefined,
     Normal,
@@ -10,15 +12,6 @@ enum class EServingMode {
 };
 const char* ServingModeToTag(EServingMode mode);
 EServingMode TagToServingMode(const std::string& mode_str);
-
-enum class EEndpointRole {
-    Undefined,
-    Endpoint,
-    Admin,
-    Service,
-};
-const char* EndpointRoleToTag(EEndpointRole role);
-EEndpointRole TagToEndpointRole(const std::string& role_str);
 
 enum class EProxyMode {
     Undefined,

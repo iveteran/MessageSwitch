@@ -6,7 +6,7 @@
 #include <memory>
 #include <eventloop/tcp_connection.h>
 #include "switch_message.h"
-#include "switch_types.h"
+#include "endpoint_role.h"
 
 using std::vector;
 using std::set;
