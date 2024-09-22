@@ -15,7 +15,7 @@ LDFLAGS =
 DEP_LIBS += \
 			../common/libswitch_common.a \
            $(ThirdParty)/EventLoop/core/libel.a \
-           $(ThirdParty)/EventLoop/extensions/console/libconsole.a -lreadline
+           $(ThirdParty)/EventLoop/extensions/console/libel_console.a -lreadline \
 
 CXX      = g++
 RM       = rm -f
