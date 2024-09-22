@@ -1,4 +1,6 @@
 #include "switch_message.h"
+#include <eventloop/message.h>
+#include <arpa/inet.h>
 
 const char* CommandToTag(ECommand cmd) {
     const char* cmd_tag = "UNDEFINED";
@@ -41,4 +43,40 @@ const char* CommandToTag(ECommand cmd) {
             break;
     }
     return cmd_tag;
+}
+
+CommandMessage*
+convertMessageToCommandMessage(const Message* msg, bool isMsgPayloadLengthIncludingSelf)
+{
+    CommandMessage* cmdMsg = (CommandMessage*)(msg->Data().data());
+    cmdMsg->payload_len = ntohl(cmdMsg->payload_len);
+    if (isMsgPayloadLengthIncludingSelf) {
+        cmdMsg->payload_len -= sizeof(cmdMsg->payload_len);
+    }
+    return cmdMsg;
+}
+
+// Reverse to network message without header of CommandMessage
+std::pair<size_t, const char*>
+extractMessagePayload(CommandMessage* cmdMsg, bool isMsgPayloadLengthIncludingSelf)
+{
+    char* payload_ptr = cmdMsg->payload;
+    size_t payload_len = cmdMsg->payload_len;
+    if (isMsgPayloadLengthIncludingSelf) {
+        payload_ptr -= sizeof(cmdMsg->payload_len);
+        payload_len += sizeof(cmdMsg->payload_len);
+    }
+    cmdMsg->payload_len = htonl(payload_len);
+    return std::make_pair(payload_len, payload_ptr);
+}
+
+// Reverse to network message with header of CommandMessage
+Message*
+reverseToNetworkMessage(CommandMessage* cmdMsg, bool isMsgPayloadLengthIncludingSelf)
+{
+    if (isMsgPayloadLengthIncludingSelf) {
+        cmdMsg->payload_len += sizeof(cmdMsg->payload_len);
+    }
+    cmdMsg->payload_len = htonl(cmdMsg->payload_len);
+    return (Message*)cmdMsg;
 }

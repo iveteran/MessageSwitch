@@ -122,22 +122,17 @@ size_t SCCommandHandler::SendCommandMessage(TcpConnection* conn, ECommand cmd, c
         return 0;
     }
 
-    size_t sent_bytes = 0;
-
     CommandMessage cmdMsg;
     cmdMsg.cmd = uint8_t(cmd);
     cmdMsg.SetToJSON();
-    size_t payload_len = payload.size();
-    if (client_->GetMessageHeaderDescription()->is_payload_len_including_self) {
-        payload_len += sizeof(CommandMessage::payload_len);
-    }
-    cmdMsg.payload_len = htonl(payload_len);
+    cmdMsg.payload_len = payload.size();
+    reverseToNetworkMessage(&cmdMsg, client_->GetMessageHeaderDescription()->is_payload_len_including_self);
 
     conn->Send((char*)&cmdMsg, sizeof(cmdMsg));
-    sent_bytes += sizeof(cmdMsg);
+    size_t sent_bytes = sizeof(cmdMsg);
     if (! payload.empty()) {
         conn->Send(payload);
-        sent_bytes += payload_len;
+        sent_bytes += payload.size();
     }
 
     return sent_bytes;

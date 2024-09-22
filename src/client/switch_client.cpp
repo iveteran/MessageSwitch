@@ -52,11 +52,9 @@ void SwitchClient::OnMessageRecvd(TcpConnection* conn, const Message* msg)
     printf("[OnMessageRecvd] message bytes:\n");
     cout << msg->DumpHex() << endl;
 
-    CommandMessage* cmdMsg = (CommandMessage*)(msg->Data().data());
-    cmdMsg->payload_len = ntohl(cmdMsg->payload_len);
-    if (client_.GetMessageHeaderDescription()->is_payload_len_including_self) {
-        cmdMsg->payload_len -= sizeof(cmdMsg->payload_len);
-    }
+    CommandMessage* cmdMsg = convertMessageToCommandMessage(msg,
+            client_.GetMessageHeaderDescription()->is_payload_len_including_self);
+
     if (cmdMsg->HasResponseFlag()) {
         cmd_handler_->HandleCommandResult(conn, cmdMsg);
     } else {

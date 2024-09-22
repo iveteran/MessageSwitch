@@ -35,11 +35,8 @@
 
 void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
 {
-    CommandMessage* cmdMsg = (CommandMessage*)(msg->Data().data());
-    cmdMsg->payload_len = ntohl(cmdMsg->payload_len);
-    if (context_->switch_server->IsMessagePayloadLengthIncludingSelf()) {
-        cmdMsg->payload_len -= sizeof(cmdMsg->payload_len);
-    }
+    const string& msgData = msg->Data();
+    auto cmdMsg = convertMessageToCommandMessage(msg, context_->switch_server->IsMessagePayloadLengthIncludingSelf());
 
     ECommand cmd = (ECommand)cmdMsg->cmd;
     printf("[CommandHandler::HandleCommand] id: %d\n", conn->ID());
@@ -49,10 +46,10 @@ void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
     switch (cmd)
     {
         case ECommand::ECHO:
-            handleEcho(conn, cmdMsg, msg->Data());
+            handleEcho(conn, cmdMsg, msgData);
             return;
         case ECommand::REG:
-            handleRegister(conn, cmdMsg, msg->Data());
+            handleRegister(conn, cmdMsg, msgData);
             return;
         default:
             break;
@@ -73,25 +70,25 @@ void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
     switch (cmd)
     {
         case ECommand::FWD:
-            handleForward(ep, cmdMsg, msg->Data());
+            handleForward(ep, cmdMsg, msgData);
             break;
         case ECommand::DATA:
-            handleData(ep, cmdMsg, msg->Data());
+            handleData(ep, cmdMsg, msgData);
             break;
         case ECommand::INFO:
-            handleInfo(ep, cmdMsg, msg->Data());
+            handleInfo(ep, cmdMsg, msgData);
             break;
         case ECommand::SETUP:
-            handleSetup(ep, cmdMsg, msg->Data());
+            handleSetup(ep, cmdMsg, msgData);
             break;
         case ECommand::PROXY:
-            handleProxy(ep, cmdMsg, msg->Data());
+            handleProxy(ep, cmdMsg, msgData);
             break;
         case ECommand::KICKOUT:
-            handleKickout(ep, cmdMsg, msg->Data());
+            handleKickout(ep, cmdMsg, msgData);
             break;
         case ECommand::RELOAD:
-            handleReload(ep, cmdMsg, msg->Data());
+            handleReload(ep, cmdMsg, msgData);
             break;
         default:
             fprintf(stderr, "[CommandHandler::HandleCommand] Error: Unsupported command: %s(%d)\n", CommandToTag(cmd), (uint8_t)cmd);
@@ -149,7 +146,7 @@ int CommandHandler::handleForward(EndpointPtr ep, const CommandMessage* cmdMsg, 
 int CommandHandler::handleData(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
 {
     const ECommand cmd = (ECommand)cmdMsg->cmd;
-    reverseToNetworkMessage((CommandMessage*)cmdMsg);
+    reverseToNetworkMessage((CommandMessage*)cmdMsg, context_->switch_server->IsMessagePayloadLengthIncludingSelf());
 
     auto fwd_targets = ep->GetForwardTargets();
     if (fwd_targets.empty() || fwd_targets[0] == 0) {
@@ -292,11 +289,8 @@ size_t CommandHandler::sendResultMessage(TcpConnection* conn, ECommand cmd, int8
     cmdMsg.cmd = (uint8_t)cmd;
     cmdMsg.SetResponseFlag();
     cmdMsg.SetToJSON();
-    uint32_t payload_len = sizeof(ResultMessage) + data_len;
-    if (context_->switch_server->IsMessagePayloadLengthIncludingSelf()) {
-        payload_len += sizeof(CommandMessage::payload_len);
-    }
-    cmdMsg.payload_len = htonl(payload_len);
+    cmdMsg.payload_len = sizeof(ResultMessage) + data_len;
+    reverseToNetworkMessage(&cmdMsg, context_->switch_server->IsMessagePayloadLengthIncludingSelf());
 
     ResultMessage resultMsg;
     resultMsg.errcode = errcode;
@@ -311,29 +305,4 @@ size_t CommandHandler::sendResultMessage(TcpConnection* conn, ECommand cmd, int8
     }
 
     return sent_bytes;
-}
-
-// Reverse to network message without header of CommandMessage
-std::pair<size_t, const char*>
-    CommandHandler::extractMessagePayload(CommandMessage* cmdMsg)
-{
-    char* payload_ptr = cmdMsg->payload;
-    size_t payload_len = cmdMsg->payload_len;
-    if (context_->switch_server->IsMessagePayloadLengthIncludingSelf()) {
-        payload_ptr -= sizeof(cmdMsg->payload_len);
-        payload_len += sizeof(cmdMsg->payload_len);
-    }
-    cmdMsg->payload_len = htonl(payload_len);
-    return std::make_pair(payload_len, payload_ptr);
-}
-
-// Reverse to network message with header of CommandMessage
-Message* CommandHandler::reverseToNetworkMessage(CommandMessage* cmdMsg)
-{
-    if (context_->switch_server->IsMessagePayloadLengthIncludingSelf()) {
-        cmdMsg->payload_len += sizeof(cmdMsg->payload_len);
-    }
-    cmdMsg->payload_len = htonl(cmdMsg->payload_len);
-    auto msg = (Message*)cmdMsg;
-    return msg;
 }

@@ -41,13 +41,6 @@ public:
             const char* data = NULL, size_t data_len = 0);
 
 private:
-    // Reverse to network message without header of CommandMessage
-    std::pair<size_t, const char*>
-        extractMessagePayload(CommandMessage* cmdMsg);
-    // Reverse to network message with header of CommandMessage
-    Message* reverseToNetworkMessage(CommandMessage* cmdMsg);
-
-private:
     SwitchContextPtr context_;
     SwitchServicePtr service_;
 };

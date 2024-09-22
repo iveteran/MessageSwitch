@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <utility>
 
 #pragma pack(1)
 struct CommandMessage {
@@ -28,6 +29,20 @@ struct CommandMessage {
 
     void ResetCodec() { flag.codec = 0; }
 };
+
+namespace evt_loop {
+    class Message;
+}
+using evt_loop::Message;
+
+CommandMessage*
+convertMessageToCommandMessage(const Message* msg, bool isMsgPayloadLengthIncludingSelf);
+// Reverse to network message without header of CommandMessage
+std::pair<size_t, const char*>
+extractMessagePayload(CommandMessage* cmdMsg, bool isMsgPayloadLengthIncludingSelf);
+// Reverse to network message with header of CommandMessage
+Message*
+reverseToNetworkMessage(CommandMessage* cmdMsg, bool isMsgPayloadLengthIncludingSelf);
 
 struct ResultMessage {
     int8_t errcode;
