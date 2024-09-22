@@ -16,6 +16,7 @@ DEP_LIBS += \
 			../common/libswitch_common.a \
            $(ThirdParty)/EventLoop/core/libel.a \
            $(ThirdParty)/EventLoop/extensions/console/libel_console.a -lreadline \
+           $(ThirdParty)/EventLoop/extensions/aio_api/libel_aio.a -laio \
 
 CXX      = g++
 RM       = rm -f

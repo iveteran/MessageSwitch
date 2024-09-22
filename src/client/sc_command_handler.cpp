@@ -6,86 +6,108 @@
 
 using namespace evt_loop;
 
-void SCCommandHandler::Register()
+
+void SCCommandHandler::Echo(const char* content)
+{
+    size_t sent_bytes = SendCommandMessage(ECommand::ECHO, content);
+
+    if (sent_bytes > 0) {
+        printf("Sent ECHO message, content: %s\n", content);
+    }
+}
+
+void SCCommandHandler::Register(uint32_t ep_id, EEndpointRole ep_role,
+        const string& access_code, const string& admin_code)
 {
     CommandRegister reg_cmd;
-    reg_cmd.id = client_->ID();
-#if 0
-    reg_cmd.role = "endpoint";
-    reg_cmd.access_code = "Hello World";
-#else
-    reg_cmd.role = "admin";
-    reg_cmd.admin_code = "Foobar2000";
-#endif
-    //reg_cmd.role = "service";
-    //reg_cmd.access_code = "GOE works";
+    reg_cmd.id = ep_id > 0 ? ep_id : client_->ID();
 
-    auto params_data = reg_cmd.encodeToJSON();
+    const char* role_str = EndpointRoleToTag(ep_role);
+    reg_cmd.role = role_str;
+    if (! access_code.empty()) {
+        reg_cmd.access_code = access_code;
+    }
+    if (! admin_code.empty()) {
+        reg_cmd.admin_code = admin_code;
+    }
 
-    SendCommandMessage(ECommand::REG, params_data);
-    printf("Sent REG message, content: %s\n", params_data.c_str());
+    auto content = reg_cmd.encodeToJSON();
+    size_t sent_bytes = SendCommandMessage(ECommand::REG, content);
+
+    if (sent_bytes > 0) {
+        printf("Sent REG message, content: %s\n", content.c_str());
+    }
 }
 
-void SCCommandHandler::GetInfo()
+void SCCommandHandler::GetInfo(bool is_details)
 {
-    //const char* content = R"({"is_details": true})";
     CommandInfoReq cmd_info_req;
-    cmd_info_req.is_details = true;
+    cmd_info_req.is_details = is_details;
+
+    //string content(R"({"is_details": true})");
     auto content = cmd_info_req.encodeToJSON();
-    SendCommandMessage(ECommand::INFO, content);
-    printf("Sent INFO message, content: %s\n", content.c_str());
+    size_t sent_bytes = SendCommandMessage(ECommand::INFO, content);
+
+    if (sent_bytes > 0) {
+        printf("Sent INFO message, content: %s\n", content.c_str());
+    }
 }
 
-void SCCommandHandler::SendData()
+void SCCommandHandler::ForwardTargets(const vector<uint32_t>& targets)
 {
-    char content[64] = {0};
-    snprintf(content, sizeof(content), "my data #%d", client_->ID());
-    SendCommandMessage(ECommand::DATA, content);
-    printf("Sent DATA message, content: %s\n", content);
-}
-
-void SCCommandHandler::ForwardData()
-{
-    //const char* content = R"({"targets": [1, 2]})";
+    //string content(R"({"targets": [1, 2]})");
     CommandForward cmd_fwd;
-    cmd_fwd.targets.push_back(1);
-    cmd_fwd.targets.push_back(2);
+    cmd_fwd.targets = targets;
     auto content = cmd_fwd.encodeToJSON();
-    SendCommandMessage(ECommand::FWD, content);
-    printf("Sent FWD message, content: %s\n", content.c_str());
+    size_t sent_bytes = SendCommandMessage(ECommand::FWD, content);
+    if (sent_bytes > 0) {
+        printf("Sent FWD message, content: %s\n", content.c_str());
+    }
 }
 
-void SCCommandHandler::Setup()
+void SCCommandHandler::SendData(const string& data)
 {
-    //const char* content = R"({"new_admin_code": "my_admin_code", "admin_code": "Foobar2000"})";
-    //const char* content = R"({"new_access_code": "my_access_code"})";
-    //const char* content = R"({"mode": "proxy"})";
+    size_t sent_bytes = SendCommandMessage(ECommand::DATA, data);
+    if (sent_bytes > 0) {
+        printf("Sent DATA message, content size(%ld):\n", data.size());
+        cout << DumpHex(data) << endl;
+    }
+}
+
+void SCCommandHandler::Setup(const string& admin_code, const string& new_admin_code,
+        const string& new_access_code, const string& mode)
+{
     CommandSetup cmd_setup;
-    //cmd_setup.new_admin_code = "my_admin_code";
-    //cmd_setup.admin_code = "Foobar2000";
+    cmd_setup.admin_code = admin_code;
+    cmd_setup.new_admin_code = new_admin_code;
+    cmd_setup.new_access_code = new_access_code;
+    cmd_setup.mode = mode;
 
-    //cmd_setup.new_access_code = "my_access_code";
-
-    cmd_setup.mode = "proxy";
     auto content = cmd_setup.encodeToJSON();
-    SendCommandMessage(ECommand::SETUP, content);
-    printf("Sent SETUP message, content: %s\n", content.c_str());
+    size_t sent_bytes = SendCommandMessage(ECommand::SETUP, content);
+    if (sent_bytes > 0) {
+        printf("Sent SETUP message, content: %s\n", content.c_str());
+    }
 }
 
-void SCCommandHandler::Kickout()
+void SCCommandHandler::Kickout(const vector<uint32_t>& targets)
 {
-    //const char* content = R"({"targets": [95]})";
+    //string content(R"({"targets": [95]})");
     CommandKickout cmd_kickout;
-    cmd_kickout.targets.push_back(95);
+    cmd_kickout.targets = targets;
     auto content = cmd_kickout.encodeToJSON();
-    SendCommandMessage(ECommand::KICKOUT, content);
-    printf("Sent KICKOUT message, content: %s\n", content.c_str());
+    size_t sent_bytes = SendCommandMessage(ECommand::KICKOUT, content);
+    if (sent_bytes > 0) {
+        printf("Sent KICKOUT message, content: %s\n", content.c_str());
+    }
 }
 
 void SCCommandHandler::Reload()
 {
-    SendCommandMessage(ECommand::RELOAD, "");
-    printf("Sent RELOAD message\n");
+    size_t sent_bytes = SendCommandMessage(ECommand::RELOAD, "");
+    if (sent_bytes > 0) {
+        printf("Sent RELOAD message\n");
+    }
 }
 
 size_t SCCommandHandler::SendCommandMessage(ECommand cmd, const string& payload)

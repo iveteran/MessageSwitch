@@ -2,9 +2,12 @@
 #define _SC_COMMAND_HANDLER_H
 
 #include "switch_message.h"
+#include "endpoint_role.h"
 
 #include <string>
+#include <vector>
 using std::string;
+using std::vector;
 
 namespace evt_loop {
     class TcpConnection;
@@ -18,20 +21,23 @@ class SCCommandHandler {
     public:
     SCCommandHandler(SwitchClient* client) : client_(client) {}
 
-    void Register();
-    void GetInfo();
-    void SendData();
-    void ForwardData();
-    void Setup();
-    void Kickout();
+    void Echo(const char* context);
+    void Register(uint32_t ep_id, EEndpointRole ep_role, const string& access_code, const string& admin_code);
+    void GetInfo(bool is_details);
+    void ForwardTargets(const vector<uint32_t>& targets);
+    void SendData(const string& data);
+    void Setup(const string& admin_code, const string& new_admin_code,
+            const string& new_access_code, const string& mode);
+    void Kickout(const vector<uint32_t>& targets);
     void Reload();
 
-    void HandleGetInfoResult(CommandMessage* cmdMsg, const string& data);
+    void HandleCommandResult(TcpConnection* conn, CommandMessage* cmdMsg);
 
+    private:
     size_t SendCommandMessage(ECommand cmd, const string& payload);
     size_t SendCommandMessage(TcpConnection* conn, ECommand cmd, const string& payload);
 
-    void HandleCommandResult(TcpConnection* conn, CommandMessage* cmdMsg);
+    void HandleGetInfoResult(CommandMessage* cmdMsg, const string& data);
 
     private:
     SwitchClient* client_;

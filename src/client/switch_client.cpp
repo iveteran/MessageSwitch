@@ -23,7 +23,7 @@ void SwitchClient::Cleanup()
 void SwitchClient::InitComponents()
 {
     cmd_handler_ = new SCCommandHandler(this);
-    console_ = new SCConsole(cmd_handler_);
+    console_ = new SCConsole(client_id_, cmd_handler_);
     console_->registerCommands();
 }
 
@@ -71,9 +71,7 @@ void SwitchClient::OnConnectionCreated(TcpConnection* conn)
 {
     printf("[OnConnectionCreated] connection created, fd: %d\n", conn->FD());
 
-    const char* content = "echo";
-    cmd_handler_->SendCommandMessage(conn, ECommand::ECHO, content);
-    printf("Sent ECHO message, content: %s\n", content);
+    cmd_handler_->Echo("echo");
 }
 void SwitchClient::OnConnectionClosed(TcpConnection* conn)
 {
