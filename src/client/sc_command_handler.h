@@ -32,6 +32,7 @@ class SCCommandHandler {
     void Reload();
 
     void HandleCommandResult(TcpConnection* conn, CommandMessage* cmdMsg);
+    void HandleEndpointData(const Message* msg);
 
     private:
     size_t SendCommandMessage(ECommand cmd, const string& payload);

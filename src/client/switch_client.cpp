@@ -57,8 +57,7 @@ void SwitchClient::OnMessageRecvd(TcpConnection* conn, const Message* msg)
         cmd_handler_->HandleCommandResult(conn, cmdMsg);
     } else {
         if (ECommand(cmdMsg->cmd) == ECommand::DATA) {
-            printf("Received forwarding DATA message:\n");
-            DumpHex(string(msg->Payload(), msg->PayloadSize()));
+            cmd_handler_->HandleEndpointData(msg);
         }
     }
 }

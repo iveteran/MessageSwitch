@@ -189,3 +189,9 @@ void SCCommandHandler::HandleGetInfoResult(CommandMessage* cmdMsg, const string&
     printf("cmd_info.endpoints.rx_bytes: %d\n", cmd_info.endpoints.rx_bytes);
     printf("cmd_info.admin_clients.total: %d\n", cmd_info.admin_clients.total);
 }
+
+void SCCommandHandler::HandleEndpointData(const Message* msg)
+{
+    printf("Received forwarding DATA message(%ld):\n", msg->PayloadSize());
+    cout << DumpHexWithChars(msg->Payload(), msg->PayloadSize(), DUMP_MAX_BYTES) << endl;
+}
