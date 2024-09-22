@@ -124,7 +124,7 @@ int CommandHandler::handleRegister(TcpConnection* conn, const CommandMessage* cm
         cerr << "[handleRegister] Error: " << errmsg << endl;
     }
 
-    sendResultMessage(conn, cmd, errcode);
+    sendResultMessage(conn, cmd, errcode, errmsg);
 
     return errcode;
 }
@@ -141,7 +141,7 @@ int CommandHandler::handleForward(EndpointPtr ep, const CommandMessage* cmdMsg, 
         cerr << "[handleForward] Error: " << errmsg << endl;
     }
 
-    sendResultMessage(ep->Connection(), cmd, errcode);
+    sendResultMessage(ep->Connection(), cmd, errcode, errmsg);
 
     return errcode;
 }
