@@ -46,13 +46,13 @@ int parse_arguments(int argc, char **argv, SCOptionsPtr& options) {
     options->role = program.get<std::string>("--role");
     cout << "> arguments.role: " << options->role << endl;
 
-    if (program.is_used("--logfile")) {
-        options->logfile = program.get<std::string>("--logfile");
-        cout << "> arguments.logfile: " << options->logfile << endl;
-    }
     if (program.is_used("--access_code")) {
         options->access_code = program.get<std::string>("--access_code");
         cout << "> arguments.access_code: " << options->access_code << endl;
+    }
+    if (program.is_used("--logfile")) {
+        options->logfile = program.get<std::string>("--logfile");
+        cout << "> arguments.logfile: " << options->logfile << endl;
     }
     if (program.is_used("--config")) {
         options->config_file = program.get<std::string>("--config");
@@ -139,8 +139,8 @@ int main(int argc, char **argv) {
   SignalHandler sh(SignalEvent::INT,
           [&](SignalHandler* sh, uint32_t signo) {
             printf("Shutdown\n");
-            switch_client.Cleanup();
-            EV_Singleton->StopLoop();
+            // clean and exit
+            switch_client.Exit();
           });
 
   EV_Singleton->StartLoop();

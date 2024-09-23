@@ -12,13 +12,15 @@ public:
     SwitchClient(SCOptions* options);
 
     void Cleanup();
+    void Exit();
+
     uint32_t ID() const { return endpoint_id_; }
 
     HeaderDescriptionPtr GetMessageHeaderDescription() const {
-        return client_->GetMessageHeaderDescription();
+        return client_ ? client_->GetMessageHeaderDescription() : nullptr;
     }
-    TcpConnectionPtr Connection() { return client_->Connection(); }
-    bool IsConnected() const { return client_->IsConnected(); }
+    TcpConnectionPtr Connection() { return client_ ? client_->Connection() : nullptr; }
+    bool IsConnected() const { return client_ && client_->IsConnected(); }
 
     SCOptions* GetOptions() const { return options_; }
 

@@ -8,8 +8,10 @@
 SwitchClient::SwitchClient(const char* host, uint16_t port, uint32_t ep_id) :
     client_(nullptr), endpoint_id_(ep_id)
 {
-    InitComponents();
     InitClient(host, port);
+    InitComponents();
+    client_->Connect();
+
 }
 
 SwitchClient::SwitchClient(SCOptions* options) :
@@ -19,13 +21,32 @@ SwitchClient::SwitchClient(SCOptions* options) :
         endpoint_id_ = options->endpoint_id;
     }
 
-    InitComponents();
     InitClient(options->server_host.c_str(), options->server_port);
+    InitComponents();
+    client_->Connect();
 }
 
 void SwitchClient::Cleanup()
 {
     console_->Destory();
+
+    delete cmd_handler_;
+    cmd_handler_ = nullptr;
+
+    delete console_;
+    console_ = nullptr;
+
+    delete context_;
+    context_ = nullptr;
+
+    delete client_;
+    client_ = nullptr;
+}
+
+void SwitchClient::Exit()
+{
+    Cleanup();
+    EV_Singleton->StopLoop();
 }
 
 void SwitchClient::InitComponents()
@@ -52,7 +73,7 @@ void SwitchClient::InitClient(const char* host, uint16_t port)
     client_->SetTcpCallbacks(client_cbs);
     //client_->EnableKeepAlive(true);
 
-    client_->Connect();
+    //client_->Connect();
 }
 
 void SwitchClient::OnMessageRecvd(TcpConnection* conn, const Message* msg)
