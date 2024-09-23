@@ -278,19 +278,18 @@ size_t CommandHandler::sendResultMessage(TcpConnection* conn, ECommand cmd, int8
 }
 
 size_t CommandHandler::sendResultMessage(TcpConnection* conn, ECommand cmd, int8_t errcode,
-        const char* data, size_t data_len)
+        const char* payload, size_t payload_len)
 {
-    if (! data || !data_len) {
-        return 0;
+    printf("[sendResultMessage] response: %ld\n", payload_len);
+    if (payload_len > 0) {
+        cout << DumpHexWithChars(payload, payload_len, 256) << endl;
     }
-    printf("[sendResultMessage] response: %ld\n", data_len);
-    cout << DumpHexWithChars(data, data_len, 256) << endl;
 
     CommandMessage cmdMsg;
     cmdMsg.cmd = (uint8_t)cmd;
     cmdMsg.SetResponseFlag();
     cmdMsg.SetToJSON();
-    cmdMsg.payload_len = sizeof(ResultMessage) + data_len;
+    cmdMsg.payload_len = sizeof(ResultMessage) + payload_len;
     reverseToNetworkMessage(&cmdMsg, context_->switch_server->IsMessagePayloadLengthIncludingSelf());
 
     ResultMessage resultMsg;
@@ -300,9 +299,9 @@ size_t CommandHandler::sendResultMessage(TcpConnection* conn, ECommand cmd, int8
     size_t sent_bytes = sizeof(cmdMsg);
     conn->Send((char*)&resultMsg, sizeof(resultMsg));
     sent_bytes += sizeof(resultMsg);
-    if (data && data_len > 0) {
-        conn->Send(data, data_len);
-        sent_bytes += sizeof(data_len);
+    if (payload && payload_len > 0) {
+        conn->Send(payload, payload_len);
+        sent_bytes += sizeof(payload_len);
     }
 
     return sent_bytes;
