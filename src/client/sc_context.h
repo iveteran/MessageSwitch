@@ -20,6 +20,7 @@ struct SCContext
     time_t born_time;
     string access_code = DEFAULT_ACCESS_TOKEN;
     EEndpointRole role;
+    bool is_registered;
 
     SCContext(SwitchClient* server);
     string ToString() const;

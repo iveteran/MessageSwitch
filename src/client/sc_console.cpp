@@ -3,6 +3,9 @@
 #include <functional>
 #include "command_messages.h"
 #include "sc_command_handler.h"
+#include "sc_options.h"
+#include "sc_context.h"
+#include "switch_client.h"
 #include <eventloop/extensions/console.h>
 #include <eventloop/extensions/aio_wrapper.h>
 #include <argparse/argparse.hpp>
@@ -81,29 +84,36 @@ void SCConsole::registerCommands()
 
 int SCConsole::handleConsoleCommand_Exit(const vector<string>& argv)
 {
-    raise(SIGINT);  // send self an INT signal
+    //raise(SIGINT);  // send self an INT signal
+    client_->Exit();
     return 0;
 }
 
 int SCConsole::handleConsoleCommand_Reconnect(const vector<string>& argv)
 {
-    Console::Instance()->put_line("reconnect: ", "TODO");
+    if (! client_->IsConnected()) {
+        client_->Reconnect();
+    } else {
+        Console::Instance()->put_line("reconnect: ", "the connection already connected, do nothing.");
+    }
     return 0;
 }
 
 int SCConsole::handleConsoleCommand_Options(const vector<string>& argv)
 {
-    Console::Instance()->put_line("options: ", "TODO");
+    auto options = client_->GetOptions();
+    Console::Instance()->put_line("options: ", options->ToString());
     return 0;
 }
 
 int SCConsole::handleConsoleCommand_Status(const vector<string>& argv)
 {
-    // 1. uptime
+    // 1. context
     // 2. connection status
-    // 3. role
-    // 4. register status
-    Console::Instance()->put_line("status: ", "TODO");
+    // 3. register status
+    Console::Instance()->put_line("context: ", client_->GetContext()->ToString());
+    Console::Instance()->put_line("is connected: ", client_->IsConnected() ? "yes" : "no");
+    Console::Instance()->put_line("is registered: ", client_->GetContext()->is_registered ? "yes" : "no");
     return 0;
 }
 
@@ -131,7 +141,7 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
         .help("the endpoint id of Switch client")
         .scan<'i', uint32_t>()
         .required()
-        .default_value(client_id_);
+        .default_value(client_->ID());
     cmd_ap.add_argument("--role")
         .help("the role of Switch client, values: 1: endpoint, 2: admin, 3: service")
         .scan<'i', int>()

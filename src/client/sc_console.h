@@ -10,12 +10,13 @@
 using std::string;
 using std::vector;
 
+class SwitchClient;
 class SCCommandHandler;
 
 class SCConsole {
     public:
-    SCConsole(uint32_t client_id, SCCommandHandler* cmd_handler) :
-        client_id_(client_id), cmd_handler_(cmd_handler)
+    SCConsole(SwitchClient* client, SCCommandHandler* cmd_handler) :
+        client_(client), cmd_handler_(cmd_handler)
     {}
     void Destory();
 
@@ -36,7 +37,7 @@ class SCConsole {
     int handleConsoleCommand_Reload(const vector<string>& argv);
 
     private:
-    uint32_t client_id_;
+    SwitchClient* client_;
     SCCommandHandler* cmd_handler_;
 };
 using SCConsolePtr = std::shared_ptr<SCConsole>;

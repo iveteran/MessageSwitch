@@ -3,6 +3,7 @@
 using namespace evt_loop;
 
 class SCOptions;
+class SCContext;
 class SCCommandHandler;
 class SCConsole;
 
@@ -21,8 +22,10 @@ public:
     }
     TcpConnectionPtr Connection() { return client_ ? client_->Connection() : nullptr; }
     bool IsConnected() const { return client_ && client_->IsConnected(); }
+    bool Reconnect() { return client_->IsConnected() ? false : client_->Connect(); }
 
     SCOptions* GetOptions() const { return options_; }
+    SCContext* GetContext() const { return context_; }
 
 protected:
     void InitComponents();
@@ -39,6 +42,7 @@ private:
     uint32_t endpoint_id_;
 
     SCOptions* options_;
+    SCContext* context_;
     SCCommandHandler* cmd_handler_;
     SCConsole* console_;
 };

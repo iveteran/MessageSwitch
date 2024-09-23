@@ -4,6 +4,7 @@
 #include "sc_command_handler.h"
 #include "sc_console.h"
 #include "sc_options.h"
+#include "sc_context.h"
 
 SwitchClient::SwitchClient(const char* host, uint16_t port, uint32_t ep_id) :
     client_(nullptr), endpoint_id_(ep_id)
@@ -51,8 +52,11 @@ void SwitchClient::Exit()
 
 void SwitchClient::InitComponents()
 {
+    context_ = new SCContext(this);
+    cout << "Context: " << context_->ToString() << endl;
+
     cmd_handler_ = new SCCommandHandler(this);
-    console_ = new SCConsole(endpoint_id_, cmd_handler_);
+    console_ = new SCConsole(this, cmd_handler_);
     console_->registerCommands();
 }
 

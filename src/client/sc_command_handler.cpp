@@ -3,6 +3,7 @@
 #include <eventloop/tcp_connection.h>
 #include "command_messages.h"
 #include "switch_client.h"
+#include "sc_context.h"
 
 #define DUMP_MAX_BYTES 256
 
@@ -160,6 +161,10 @@ void SCCommandHandler::HandleCommandResult(TcpConnection* conn, CommandMessage* 
     switch (cmd)
     {
         case ECommand::REG:
+            if (errcode == 0) {
+                auto context = client_->GetContext();
+                context->is_registered = true;
+            }
             break;
         case ECommand::INFO:
             if (errcode == 0) {

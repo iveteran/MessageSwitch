@@ -5,7 +5,7 @@
 #include "switch_client.h"
 
 SCContext::SCContext(SwitchClient* client) :
-    switch_client(client), born_time(evt_loop::Now())
+    switch_client(client), born_time(evt_loop::Now()), is_registered(false)
 {
     auto options = switch_client->GetOptions();
     if (! options->access_code.empty()) {
@@ -18,14 +18,16 @@ SCContext::SCContext(SwitchClient* client) :
 
 string SCContext::ToString() const
 {
+    auto msg_hdr_desc = switch_client->GetMessageHeaderDescription();
     std::stringstream ss;
     ss << "{";
     ss << "born_time: " << std::put_time(localtime(&born_time), "%Y-%m-%d %I:%M:%S") << ", ";
     ss << "endpoint_id: " << switch_client->ID() << ", ";
-    ss << "is_connected: " << switch_client->IsConnected() << ", ";
+    ss << "is_connected: " << (switch_client->IsConnected() ? "true" : "false") << ", ";
     ss << "access_code: " << access_code << ", ";
     ss << "role: " << EndpointRoleToTag(role) << ", ";
-    ss << "message_header_description: " << switch_client->GetMessageHeaderDescription()->ToString() << ", ";
+    ss << "is_registered: " << is_registered << ", ";
+    ss << "message_header_description: " << (msg_hdr_desc ? msg_hdr_desc->ToString() : "") << ", ";
     ss << "}";
     return ss.str();
 }
