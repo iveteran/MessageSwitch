@@ -19,6 +19,11 @@ SwitchServer::SwitchServer(const OptionsPtr& options) :
 
 void SwitchServer::OnSignal(SignalHandler* sh, uint32_t signo)
 {
+    Exit();
+}
+
+void SwitchServer::Exit()
+{
     printf("SwitchServer::Shutdown\n");
     // XXX: MUST call destory of Console manually, otherwise the terminal will be silently always
     console_->Destory();

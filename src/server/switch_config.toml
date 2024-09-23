@@ -2,12 +2,13 @@
 
 title = "Configuration of Message Switch"
 
+logfile = "switch.log"
+
 [server]
 host = "0.0.0.0"
 port = 10101
 node_id = 2
 mode = "normal"
-logfile = "switch.log"
 
 [auth]
 access_code = "hello_world"

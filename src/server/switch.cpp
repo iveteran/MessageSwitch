@@ -70,6 +70,14 @@ int parse_arguments(int argc, char **argv, OptionsPtr& options) {
 int parse_configuration(const string& config_file, OptionsPtr& options) {
     const toml::value config = toml::parse(config_file);
 
+    if (config.contains("logfile")) {
+        auto logfile = config.at("logfile").as_string();
+        cout << "> config.logfile: " << logfile << endl;
+        if (! logfile.empty()) {
+            options->logfile = logfile;
+        }
+    }
+
     if (config.contains("server")) {
         auto server_config = config.at("server");
 
@@ -95,14 +103,6 @@ int parse_configuration(const string& config_file, OptionsPtr& options) {
             auto serving_mode = server_config.at("mode").as_string();
             cout << "> config.server.mode: " << serving_mode << endl;
             options->serving_mode = serving_mode;
-        }
-
-        if (server_config.contains("logfile")) {
-            auto logfile = server_config.at("logfile").as_string();
-            cout << "> config.server.logfile: " << logfile << endl;
-            if (! logfile.empty()) {
-                options->logfile = logfile;
-            }
         }
     }
     if (config.contains("auth")) {

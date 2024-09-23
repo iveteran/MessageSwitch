@@ -19,6 +19,7 @@ class SwitchServer
     void InitComponents();
     void InitServer(const char* host, uint16_t port);
     void OnSignal(SignalHandler* sh, uint32_t signo);
+    void Exit();
 
     HeaderDescriptionPtr GetMessageHeaderDescription() const
     {
