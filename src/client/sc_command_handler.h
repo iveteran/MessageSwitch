@@ -22,7 +22,7 @@ class SCCommandHandler {
     SCCommandHandler(SwitchClient* client) : client_(client) {}
 
     void Echo(const char* context);
-    void Register(uint32_t ep_id, EEndpointRole ep_role, const string& access_code, const string& admin_code);
+    void Register(uint32_t ep_id, EEndpointRole ep_role, const string& access_code);
     void GetInfo(bool is_details);
     void ForwardTargets(const vector<uint32_t>& targets);
     void SendData(const string& data);

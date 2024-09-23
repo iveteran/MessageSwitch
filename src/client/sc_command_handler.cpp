@@ -19,7 +19,7 @@ void SCCommandHandler::Echo(const char* content)
 }
 
 void SCCommandHandler::Register(uint32_t ep_id, EEndpointRole ep_role,
-        const string& access_code, const string& admin_code)
+        const string& access_code)
 {
     CommandRegister reg_cmd;
     reg_cmd.id = ep_id > 0 ? ep_id : client_->ID();
@@ -28,9 +28,6 @@ void SCCommandHandler::Register(uint32_t ep_id, EEndpointRole ep_role,
     reg_cmd.role = role_str;
     if (! access_code.empty()) {
         reg_cmd.access_code = access_code;
-    }
-    if (! admin_code.empty()) {
-        reg_cmd.admin_code = admin_code;
     }
 
     auto content = reg_cmd.encodeToJSON();
@@ -76,11 +73,11 @@ void SCCommandHandler::SendData(const string& data)
     }
 }
 
-void SCCommandHandler::Setup(const string& admin_code, const string& new_admin_code,
+void SCCommandHandler::Setup(const string& access_code, const string& new_admin_code,
         const string& new_access_code, const string& mode)
 {
     CommandSetup cmd_setup;
-    cmd_setup.admin_code = admin_code;
+    cmd_setup.access_code = access_code;
     cmd_setup.new_admin_code = new_admin_code;
     cmd_setup.new_access_code = new_access_code;
     cmd_setup.mode = mode;

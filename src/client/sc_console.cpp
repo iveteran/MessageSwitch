@@ -120,7 +120,7 @@ int SCConsole::handleConsoleCommand_Echo(const vector<string>& argv)
 
 int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
 {
-    // ss_register --role <1|2|3> <--access_code <ACCESS_CODE> | --admin_code <ADMIN_CODE>>
+    // ss_register --role <1|2|3> --access_code <ACCESS_CODE>
 
     // The default arguments can be used while disabling the default exit with these arguments.
     // This forth argument to ArgumentParser (exit_on_default_arguments) is a bool flag with a default true value.
@@ -140,8 +140,6 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
     cmd_ap.add_argument("--access_code")
         .help("the access code of Switch client");
         //.default_value("Hello World");
-    cmd_ap.add_argument("--admin_code")
-        .help("the admin code of Switch client");
 
     try {
         cmd_ap.parse_args(argv);
@@ -162,19 +160,21 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
         return -1;
     }
 
-    string access_code, admin_code;
+    string access_code;
     if (cmd_ap.is_used("--access_code")) {
         access_code = cmd_ap.get<string>("--access_code");
     }
-    if (cmd_ap.is_used("--admin_code")) {
-        admin_code = cmd_ap.get<string>("--admin_code");
+
+    if (access_code.empty() && !client_->GetOptions()->access_code.empty()) {
+        access_code = client_->GetOptions()->access_code;
     }
-    if (access_code.empty() && admin_code.empty()) {
-        Console::Instance()->put_line("Wrong argument! --access_code or --admin_code must be given one");
+
+    if (access_code.empty()) {
+        Console::Instance()->put_line("Wrong argument! --access_code is required");
         return -1;
     }
 
-    cmd_handler_->Register(ep_id, EEndpointRole(role), access_code, admin_code);
+    cmd_handler_->Register(ep_id, EEndpointRole(role), access_code);
     return 0;
 }
 
@@ -290,8 +290,8 @@ int SCConsole::handleConsoleCommand_Setup(const vector<string>& argv)
         .help("the new access code to set for Switch server");
     cmd_ap.add_argument("--new_admin_code")
         .help("the new admin code to set for Switch server");
-    cmd_ap.add_argument("--admin_code")
-        .help("the old admin code for checking permission, used for --new_admin_code");
+    cmd_ap.add_argument("--access_code")
+        .help("the old admin access code for checking permission, used for --new_admin_code");
     cmd_ap.add_argument("--mode")
         .help("the mode to set for Switch server");
 
@@ -306,14 +306,14 @@ int SCConsole::handleConsoleCommand_Setup(const vector<string>& argv)
         return 1;
     }
 
-    string new_access_code, new_admin_code, admin_code, new_mode;
+    string new_access_code, new_admin_code, access_code, new_mode;
     if (cmd_ap.is_used("--new_access_code")) {
         new_access_code = cmd_ap.get<string>("--new_access_code");
     }
     if (cmd_ap.is_used("--new_admin_code")) {
         new_admin_code = cmd_ap.get<string>("--new_admin_code");
-        if (cmd_ap.is_used("--admin_code")) {
-            admin_code = cmd_ap.get<string>("--admin_code");
+        if (cmd_ap.is_used("--access_code")) {
+            access_code = cmd_ap.get<string>("--acccess_code");
         } else {
             Console::Instance()->put_line("Wrong argument! Must given admin code for setting new admin code");
             return -1;
@@ -327,7 +327,7 @@ int SCConsole::handleConsoleCommand_Setup(const vector<string>& argv)
         return -1;
     }
 
-    cmd_handler_->Setup(admin_code, new_admin_code, new_access_code, new_mode);
+    cmd_handler_->Setup(access_code, new_admin_code, new_access_code, new_mode);
     return 0;
 }
 

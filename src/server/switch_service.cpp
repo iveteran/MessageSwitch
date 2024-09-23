@@ -8,9 +8,7 @@ SwitchService::register_endpoint(TcpConnection* conn, const CommandRegister& reg
 {
     auto context = switch_server_->GetContext();
 
-    if (reg_cmd.id == 0 || reg_cmd.role.empty() ||
-            (reg_cmd.access_code.empty() && reg_cmd.admin_code.empty())
-       ) {
+    if (reg_cmd.id == 0 || reg_cmd.role.empty() || reg_cmd.access_code.empty()) {
         return { 1, "Missing required parameter(s)" };
     }
 
@@ -26,7 +24,7 @@ SwitchService::register_endpoint(TcpConnection* conn, const CommandRegister& reg
             }
             break;
         case EEndpointRole::Admin:
-            if (reg_cmd.admin_code.empty() || reg_cmd.admin_code != context->admin_code) {
+            if (reg_cmd.access_code.empty() || reg_cmd.access_code != context->admin_code) {
                 return { errcode, ss.str() };
             }
             break;
@@ -121,7 +119,7 @@ SwitchService::setup(const CommandSetup& cmd_setup)
     auto context = switch_server_->GetContext();
 
     if (! cmd_setup.new_admin_code.empty()) {
-        if (cmd_setup.admin_code.empty() || cmd_setup.admin_code != context->admin_code) {
+        if (cmd_setup.access_code.empty() || cmd_setup.access_code != context->admin_code) {
             int8_t errcode = 1;
             string errmsg("Authentication failed");
             return { errcode, errmsg };

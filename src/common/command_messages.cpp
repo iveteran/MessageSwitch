@@ -17,9 +17,6 @@ bool CommandRegister::decodeFromJSON(const string& data) {
     if (params.contains("access_code")) {
         access_code = params["access_code"];
     }
-    if (params.contains("admin_code")) {
-        admin_code = params["admin_code"];
-    }
     return true;
 }
 
@@ -31,9 +28,6 @@ string CommandRegister::encodeToJSON() {
     }
     if (! access_code.empty()) {
         json_obj["access_code"] = access_code;
-    }
-    if (! admin_code.empty()) {
-        json_obj["admin_code"] = admin_code;
     }
     _raw_data = json_obj.dump();
     return _raw_data;
@@ -189,8 +183,8 @@ string CommandInfo::encodeToPB() {
 bool CommandSetup::decodeFromJSON(const string& data) {
     _raw_data = data;
     json params = json::parse(_raw_data);
-    if (params.contains("admin_code")) {
-        admin_code = params["admin_code"];
+    if (params.contains("access_code")) {
+        access_code = params["access_code"];
     }
     if (params.contains("new_admin_code")) {
         new_admin_code = params["new_admin_code"];
@@ -206,8 +200,8 @@ bool CommandSetup::decodeFromJSON(const string& data) {
 
 string CommandSetup::encodeToJSON() {
     json json_obj;
-    if (! admin_code.empty()) {
-        json_obj["admin_code"] = admin_code;
+    if (! access_code.empty()) {
+        json_obj["access_code"] = access_code;
     }
     if (! new_admin_code.empty()) {
         json_obj["new_admin_code"] = new_admin_code;

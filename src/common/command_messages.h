@@ -14,7 +14,6 @@ struct CommandRegister {
     uint32_t id;
     string role;
     string access_code;
-    string admin_code;
     string _raw_data;
 
     bool decodeFromJSON(const string& data);
@@ -79,7 +78,7 @@ struct CommandInfo {
 using CommandInfoPtr = std::shared_ptr<CommandInfo>;
 
 struct CommandSetup {
-    string admin_code;
+    string access_code;
     string new_admin_code;
     string new_access_code;
     string mode;
