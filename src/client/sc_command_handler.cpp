@@ -20,15 +20,19 @@ void SCCommandHandler::Echo(const char* content)
 }
 
 void SCCommandHandler::Register(uint32_t ep_id, EEndpointRole ep_role,
-        const string& access_code)
+        const string& access_code, bool with_token)
 {
     CommandRegister reg_cmd;
-    reg_cmd.id = ep_id > 0 ? ep_id : client_->ID();
+    reg_cmd.id = ep_id > 0 ? ep_id : client_->GetContext()->endpoint_id;
 
     const char* role_str = EndpointRoleToTag(ep_role);
     reg_cmd.role = role_str;
     if (! access_code.empty()) {
         reg_cmd.access_code = access_code;
+    }
+    const string& token = client_->GetContext()->token;
+    if (with_token && !token.empty()) {
+        reg_cmd.token = token;
     }
 
     auto content = reg_cmd.encodeToJSON();
@@ -162,8 +166,7 @@ void SCCommandHandler::HandleCommandResult(TcpConnection* conn, CommandMessage* 
     {
         case ECommand::REG:
             if (errcode == 0) {
-                auto context = client_->GetContext();
-                context->is_registered = true;
+                HandleRegisterResult(cmdMsg, content);
             }
             break;
         case ECommand::INFO:
@@ -173,6 +176,27 @@ void SCCommandHandler::HandleCommandResult(TcpConnection* conn, CommandMessage* 
             break;
         default:
             break;
+    }
+}
+
+void SCCommandHandler::HandleRegisterResult(CommandMessage* cmdMsg, const string& payload)
+{
+    CommandResultRegister reg_result;
+    if (cmdMsg->IsJSON()) {
+        reg_result.decodeFromJSON(payload);
+    } else if (cmdMsg->IsPB()) {
+        reg_result.decodeFromPB(payload);
+    } else {
+        assert(false && "Unsupported message codec");
+    }
+    cout << "endpoint id: " << reg_result.id << endl;
+    cout << "token: " << reg_result.token << endl;
+
+    auto context = client_->GetContext();
+    context->is_registered = true;
+    context->endpoint_id = reg_result.id;
+    if (! reg_result.token.empty()) {
+        context->token = reg_result.token;
     }
 }
 

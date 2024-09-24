@@ -117,12 +117,17 @@ int CommandHandler::handleRegister(TcpConnection* conn, const CommandMessage* cm
     CommandRegister reg_cmd;
     _DECODE_COMMAND_MESSAGE("handleRegister", cmdMsg, reg_cmd, conn);
 
-    auto [errcode, errmsg] = service_->register_endpoint(conn, reg_cmd);
+    auto [errcode, errmsg, reg_result] = service_->register_endpoint(conn, reg_cmd);
     if (! errmsg.empty()) {
         cerr << "[handleRegister] Error: " << errmsg << endl;
     }
 
-    sendResultMessage(conn, cmd, errcode, errmsg);
+    if (reg_result) {
+        string rsp_data = reg_result->encodeToJSON();
+        sendResultMessage(conn, cmd, errcode, rsp_data);
+    } else {
+        sendResultMessage(conn, cmd, errcode, errmsg);
+    }
 
     return errcode;
 }

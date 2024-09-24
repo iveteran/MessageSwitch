@@ -1,15 +1,17 @@
 #include "switch_service.h"
 #include "switch_context.h"
 #include "switch_server.h"
+#include "utils/crypto.h"
+#include "utils/random.h"
 #include <sstream>
 
-tuple<int, string>
+tuple<int, string, CommandResultRegisterPtr>
 SwitchService::register_endpoint(TcpConnection* conn, const CommandRegister& reg_cmd)
 {
     auto context = switch_server_->GetContext();
 
-    if (reg_cmd.id == 0 || reg_cmd.role.empty() || reg_cmd.access_code.empty()) {
-        return { 1, "Missing required parameter(s)" };
+    if (reg_cmd.role.empty() || reg_cmd.access_code.empty()) {
+        return { 1, "Missing required parameter(s)", nullptr };
     }
 
     EEndpointRole role = TagToEndpointRole(reg_cmd.role);
@@ -20,17 +22,17 @@ SwitchService::register_endpoint(TcpConnection* conn, const CommandRegister& reg
     switch (role) {
         case EEndpointRole::Endpoint:
             if (reg_cmd.access_code.empty() || reg_cmd.access_code != context->access_code) {
-                return { errcode, ss.str() };
+                return { errcode, ss.str(), nullptr };
             }
             break;
         case EEndpointRole::Admin:
             if (reg_cmd.access_code.empty() || reg_cmd.access_code != context->admin_code) {
-                return { errcode, ss.str() };
+                return { errcode, ss.str(), nullptr };
             }
             break;
         case EEndpointRole::Service:
             if (reg_cmd.access_code.empty() || reg_cmd.access_code != context->service_access_code) {
-                return { errcode, ss.str() };
+                return { errcode, ss.str(), nullptr };
             }
             handle_service_point(conn, reg_cmd);
             break;
@@ -38,27 +40,64 @@ SwitchService::register_endpoint(TcpConnection* conn, const CommandRegister& reg
             {
                 std::stringstream ss;
                 ss << "Has invalid parameter, role: " << reg_cmd.role;
-                return { errcode, ss.str() };
+                return { errcode, ss.str(), nullptr };
             }
             break;
     }
 
-    uint32_t ep_id = reg_cmd.id;
-    if (ep_id <= 0) {
-        std::stringstream ss;
-        ss << "Has invalid parameter, endpoint id: " << ep_id;
-        return { errcode, ss.str() };
+    EndpointId ep_id = reg_cmd.id;
+    if (ep_id == 0) {
+        ep_id = allocate_endpoint_id();
     }
 
-    auto ep = std::make_shared<Endpoint>(ep_id, conn);
-    ep->SetRole(role);
-    context->endpoints.insert(std::make_pair(ep_id, ep));
-    if (role == EEndpointRole::Admin) {
-        context->admin_clients.insert(std::make_pair(ep_id, ep));
+    auto regResult = std::make_shared<CommandResultRegister>();
+    regResult->id = ep_id;
+
+    auto iter = context->endpoints.find(ep_id);
+    if (iter == context->endpoints.end()) {
+        // new
+        auto ep = std::make_shared<Endpoint>(ep_id, conn);
+        ep->SetRole(role);
+        auto token = generate_token(ep.get());
+        ep->SetToken(token);
+        context->endpoints[ep_id] = ep;
+        if (role == EEndpointRole::Admin) {
+            context->admin_clients[ep_id] = ep;
+        }
+        regResult->token = token;
+    } else {
+        // exists
+        auto exists_ep = iter->second;
+        if (exists_ep->Connection()->FD() != conn->FD()) {
+            if (! reg_cmd.token.empty() && reg_cmd.token == exists_ep->GetToken()) {
+                // kickout
+                kickout_endpoint(exists_ep.get());
+                exists_ep->SetConnection(conn);
+            } else {
+                int errcode = 1;
+                string errmsg("You already registered on another device, is endpoint id correct? or provide the token of last registered");
+                return { errcode, errmsg, nullptr };
+            }
+        }
+
+        if (! reg_cmd.token.empty() && reg_cmd.token == exists_ep->GetToken()) {
+            // update token
+            auto token = generate_token(exists_ep.get());
+            exists_ep->SetToken(token);
+            regResult->token = token;
+        }
+        if (role != exists_ep->GetRole()) {
+            // switch role
+            exists_ep->SetRole(role);
+            if (role == EEndpointRole::Admin) {
+                context->admin_clients[ep_id] = exists_ep;
+            }
+        }
     }
+
     context->pending_clients.erase(conn->FD());
 
-    return { 0, "" };
+    return { 0, "", regResult };
 }
 
 int SwitchService::handle_service_point(TcpConnection* conn, const CommandRegister& reg_cmd)
@@ -169,6 +208,22 @@ SwitchService::kickout_endpoint(const CommandKickout& cmd_kickout)
     return { 0, "" };
 }
 
+EndpointId SwitchService::allocate_endpoint_id()
+{
+    uint32_t ep_id = generate_random_integer();
+    // to find out the generated ep_id whether exists
+    auto context = switch_server_->GetContext();
+    while (context->endpoints.find(ep_id) != context->endpoints.end()) {
+        ep_id = generate_random_integer();  // re-generate
+    }
+    return ep_id;
+}
+string SwitchService::generate_token(Endpoint* ep)
+{
+    stringstream ss;
+    ss << ep->Id() << ":" << generate_random_integer() << ":" << ep->Connection()->FD();
+    return md5(ss.str());
+}
 void SwitchService::kickout_endpoint(Endpoint* ep)
 {
     printf("[handleKickout] kickout endpoint, id: %d, connection (id: %d, fd: %d)\n",

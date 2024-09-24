@@ -31,8 +31,11 @@ public:
 
     EEndpointRole GetRole() const { return role_; }
     void SetRole(EEndpointRole mode) { role_ = mode; }
+    string GetToken() const { return token_; }
+    void SetToken(const string& token) { token_ = token; }
 
     TcpConnection* Connection() { return conn_; }
+    void SetConnection(TcpConnection* conn) { conn_ = conn; }
 
     const vector<EndpointId>& GetForwardTargets() const
     {
@@ -45,6 +48,7 @@ public:
 
 private:
     EEndpointRole       role_;
+    string              token_;
     TcpConnection*      conn_;
     vector<EndpointId>  fwd_targets_;
 

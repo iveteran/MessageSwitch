@@ -14,6 +14,7 @@ struct CommandRegister {
     uint32_t id;
     string role;
     string access_code;
+    string token;
     string _raw_data;
 
     bool decodeFromJSON(const string& data);
@@ -22,6 +23,19 @@ struct CommandRegister {
     bool decodeFromPB(const string& data);
     string encodeToPB();
 };
+
+struct CommandResultRegister {
+    uint32_t id;
+    string token;
+    string _raw_data;
+
+    bool decodeFromJSON(const string& data);
+    string encodeToJSON();
+
+    bool decodeFromPB(const string& data);
+    string encodeToPB();
+};
+using CommandResultRegisterPtr = std::shared_ptr<CommandResultRegister>;
 
 struct CommandForward {
     vector<uint32_t> targets;

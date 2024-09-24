@@ -16,11 +16,12 @@ DEP_LIBS += \
 			../common/libswitch_common.a \
            $(ThirdParty)/EventLoop/core/libel.a \
            $(ThirdParty)/EventLoop/extensions/console/libel_console.a -lreadline \
+           -lcrypto \
 
 CXX      = g++
 RM       = rm -f
 
-SRCDIRS  = . # other sub directories
+SRCDIRS  = . utils # other sub directories
 SRCEXTS  = .cpp
 SOURCES  = $(foreach d,$(SRCDIRS),$(wildcard $(addprefix $(d)/*,$(SRCEXTS))))
 OBJS     = $(foreach x,$(SRCEXTS), $(patsubst %$(x),%.o,$(filter %$(x),$(SOURCES))))

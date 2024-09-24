@@ -6,8 +6,6 @@
 #include <memory>
 #include "endpoint_role.h"
 
-#define DEFAULT_ACCESS_TOKEN "Hello World"
-
 using std::map;
 using std::string;
 
@@ -18,9 +16,11 @@ struct SCContext
     SwitchClient*   switch_client;
 
     time_t born_time;
-    string access_code = DEFAULT_ACCESS_TOKEN;
+    string access_code;
     EEndpointRole role;
     bool is_registered;
+    uint32_t endpoint_id;
+    string token;
 
     SCContext(SwitchClient* server);
     string ToString() const;

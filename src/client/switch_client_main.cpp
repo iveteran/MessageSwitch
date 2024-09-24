@@ -23,7 +23,7 @@ int parse_arguments(int argc, char **argv, SCOptionsPtr& options) {
         .scan<'i', int>();
     program.add_argument("-n", "--endpoint_id")
         .help("endpoint id for Switch")
-        .default_value(1)
+        .default_value(0)
         .scan<'i', int>();
     program.add_argument("-r", "--role")
         .help("endpoint role")

@@ -130,7 +130,7 @@ int SCConsole::handleConsoleCommand_Echo(const vector<string>& argv)
 
 int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
 {
-    // ss_register --role <1|2|3> --access_code <ACCESS_CODE>
+    // ss_register --role <1|2|3> --access_code <ACCESS_CODE> [--with_token]
 
     // The default arguments can be used while disabling the default exit with these arguments.
     // This forth argument to ArgumentParser (exit_on_default_arguments) is a bool flag with a default true value.
@@ -150,6 +150,9 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
     cmd_ap.add_argument("--access_code")
         .help("the access code of Switch client");
         //.default_value("Hello World");
+    cmd_ap.add_argument("--with_token")
+        .help("the token last registered of Switch client")
+        .flag();
 
     try {
         cmd_ap.parse_args(argv);
@@ -184,7 +187,9 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
         return -1;
     }
 
-    cmd_handler_->Register(ep_id, EEndpointRole(role), access_code);
+    bool with_token = cmd_ap.get<bool>("--with_token");
+
+    cmd_handler_->Register(ep_id, EEndpointRole(role), access_code, with_token);
     return 0;
 }
 

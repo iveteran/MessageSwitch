@@ -17,6 +17,9 @@ bool CommandRegister::decodeFromJSON(const string& data) {
     if (params.contains("access_code")) {
         access_code = params["access_code"];
     }
+    if (params.contains("token")) {
+        token = params["token"];
+    }
     return true;
 }
 
@@ -29,6 +32,9 @@ string CommandRegister::encodeToJSON() {
     if (! access_code.empty()) {
         json_obj["access_code"] = access_code;
     }
+    if (! token.empty()) {
+        json_obj["token"] = token;
+    }
     _raw_data = json_obj.dump();
     return _raw_data;
 }
@@ -40,6 +46,40 @@ bool CommandRegister::decodeFromPB(const string& data) {
 }
 
 string CommandRegister::encodeToPB() {
+    assert(false && "Not implemented");
+    return "";
+}
+
+bool CommandResultRegister::decodeFromJSON(const string& data) {
+    _raw_data = data;
+    json params = json::parse(_raw_data);
+
+    if (params.contains("id")) {
+        id = params["id"];
+    }
+    if (params.contains("token")) {
+        token = params["token"];
+    }
+    return true;
+}
+
+string CommandResultRegister::encodeToJSON() {
+    json json_obj;
+    json_obj["id"] = id;
+    if (! token.empty()) {
+        json_obj["token"] = token;
+    }
+    _raw_data = json_obj.dump();
+    return _raw_data;
+}
+
+bool CommandResultRegister::decodeFromPB(const string& data) {
+    assert(false && "Not implemented");
+    _raw_data = data;
+    return false;
+}
+
+string CommandResultRegister::encodeToPB() {
     assert(false && "Not implemented");
     return "";
 }

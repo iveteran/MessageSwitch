@@ -22,7 +22,7 @@ class SCCommandHandler {
     SCCommandHandler(SwitchClient* client) : client_(client) {}
 
     void Echo(const char* content);
-    void Register(uint32_t ep_id, EEndpointRole ep_role, const string& access_code);
+    void Register(uint32_t ep_id, EEndpointRole ep_role, const string& access_code, bool with_token=false);
     void GetInfo(bool is_details);
     void ForwardTargets(const vector<uint32_t>& targets);
     void SendData(const string& data);
@@ -38,6 +38,7 @@ class SCCommandHandler {
     size_t SendCommandMessage(ECommand cmd, const string& payload);
     size_t SendCommandMessage(TcpConnection* conn, ECommand cmd, const string& payload);
 
+    void HandleRegisterResult(CommandMessage* cmdMsg, const string& payload);
     void HandleGetInfoResult(CommandMessage* cmdMsg, const string& data);
 
     private:

@@ -5,6 +5,9 @@
 #include <memory>
 #include <sstream>
 
+#define DEFAULT_ACCESS_TOKEN "Hello World"
+#define DEFAULT_ROLE "endpoint"
+
 using std::string;
 
 struct SCOptions
@@ -12,8 +15,8 @@ struct SCOptions
     string      server_host;
     uint16_t    server_port;
     uint32_t    endpoint_id;
-    string      access_code;
-    string      role;
+    string      access_code = DEFAULT_ACCESS_TOKEN;
+    string      role = DEFAULT_ROLE;
     string      logfile;
     string      config_file;
 
