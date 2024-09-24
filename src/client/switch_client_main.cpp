@@ -2,11 +2,17 @@
 #include "argparse/argparse.hpp"
 #include "toml.hpp"
 #include "sc_options.h"
+#include "version.h"
 
 int parse_arguments(int argc, char **argv, SCOptionsPtr& options) {
-    argparse::ArgumentParser program("switch_client");
+    argparse::ArgumentParser program("switch_client", APP_VERSION);
 
     program.add_description("Github: https://github.com/iveteran/MessageSwitch");
+
+    char version_info[256];
+    snprintf(version_info, sizeof(version_info), "Version: %s, build date: %s\nCopyright: %s",
+            APP_VERSION, APP_BUILD_DATE, APP_COPYRIGHT);
+    program.add_epilog(version_info);
 
     program.add_argument("-H", "--server_host")
         .help("listen host")
