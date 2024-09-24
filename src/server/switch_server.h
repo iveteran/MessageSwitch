@@ -33,6 +33,8 @@ class SwitchServer
     OptionsPtr GetOptions() const { return options_; }
     SwitchContextPtr GetContext() const { return context_; }
     SwitchServicePtr GetService() const { return service_; }
+    CommandHandlerPtr GetCommandHandler() const { return cmd_handler_; }
+
     size_t GetClientsTotal() const { return server_->GetConnectionNumber(); }
 
     private:

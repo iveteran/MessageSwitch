@@ -163,9 +163,17 @@ SwitchService::kickout_endpoint(const CommandKickout& cmd_kickout)
             continue;
         }
         auto target_ep = iter->second;
-        printf("[handleKickout] kickout endpoint, id: %d\n", target_ep->Id());
-        target_ep->Connection()->Disconnect();
+        kickout_endpoint(target_ep.get());
     }
 
     return { 0, "" };
+}
+
+void SwitchService::kickout_endpoint(Endpoint* ep)
+{
+    printf("[handleKickout] kickout endpoint, id: %d, connection (id: %d, fd: %d)\n",
+            ep->Id(), ep->Connection()->ID(), ep->Connection()->FD());
+    auto cmd_handler = switch_server_->GetCommandHandler();
+    cmd_handler->sendResultMessage(ep->Connection(), ECommand::KICKOUT, 0, "Kickout by admin or logged in at another device");
+    ep->Connection()->Disconnect(); // XXX: delay 1 second to do this?
 }

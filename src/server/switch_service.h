@@ -30,6 +30,9 @@ public:
     tuple<int, string> kickout_endpoint(const CommandKickout& cmd_kickout);
 
 private:
+    void kickout_endpoint(Endpoint* ep);
+
+private:
     const SwitchServer* switch_server_;
 };
 using SwitchServicePtr = std::shared_ptr<SwitchService>;
