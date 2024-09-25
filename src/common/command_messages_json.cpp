@@ -39,17 +39,6 @@ string CommandRegister::encodeToJSON() {
     return _raw_data;
 }
 
-bool CommandRegister::decodeFromPB(const string& data) {
-    assert(false && "Not implemented");
-    _raw_data = data;
-    return false;
-}
-
-string CommandRegister::encodeToPB() {
-    assert(false && "Not implemented");
-    return "";
-}
-
 bool CommandResultRegister::decodeFromJSON(const string& data) {
     _raw_data = data;
     json params = json::parse(_raw_data);
@@ -73,17 +62,6 @@ string CommandResultRegister::encodeToJSON() {
     return _raw_data;
 }
 
-bool CommandResultRegister::decodeFromPB(const string& data) {
-    assert(false && "Not implemented");
-    _raw_data = data;
-    return false;
-}
-
-string CommandResultRegister::encodeToPB() {
-    assert(false && "Not implemented");
-    return "";
-}
-
 bool CommandForward::decodeFromJSON(const string& data) {
     _raw_data = data;
     json params = json::parse(_raw_data);
@@ -104,17 +82,6 @@ string CommandForward::encodeToJSON() {
     return _raw_data;
 }
 
-bool CommandForward::decodeFromPB(const string& data) {
-    assert(false && "Not implemented");
-    _raw_data = data;
-    return false;
-}
-
-string CommandForward::encodeToPB() {
-    assert(false && "Not implemented");
-    return "";
-}
-
 bool CommandInfoReq::decodeFromJSON(const string& data) {
     _raw_data = data;
     json params = json::parse(_raw_data);
@@ -130,17 +97,6 @@ string CommandInfoReq::encodeToJSON() {
     json_obj["is_details"] = is_details;
     _raw_data = json_obj.dump();
     return _raw_data;
-}
-
-bool CommandInfoReq::decodeFromPB(const string& data) {
-    assert(false && "Not implemented");
-    _raw_data = data;
-    return false;
-}
-
-string CommandInfoReq::encodeToPB() {
-    assert(false && "Not implemented");
-    return "";
 }
 
 bool CommandInfo::decodeFromJSON(const string& data) {
@@ -209,17 +165,6 @@ string CommandInfo::encodeToJSON() {
     return rsp.dump();
 }
 
-bool CommandInfo::decodeFromPB(const string& data) {
-    assert(false && "Not implemented");
-    _raw_data = data;
-    return false;
-}
-
-string CommandInfo::encodeToPB() {
-    assert(false && "Not implemented");
-    return "";
-}
-
 bool CommandSetup::decodeFromJSON(const string& data) {
     _raw_data = data;
     json params = json::parse(_raw_data);
@@ -256,17 +201,6 @@ string CommandSetup::encodeToJSON() {
     return _raw_data;
 }
 
-bool CommandSetup::decodeFromPB(const string& data) {
-    assert(false && "Not implemented");
-    _raw_data = data;
-    return false;
-}
-
-string CommandSetup::encodeToPB() {
-    assert(false && "Not implemented");
-    return "";
-}
-
 bool CommandKickout::decodeFromJSON(const string& data) {
     _raw_data = data;
     json params = json::parse(_raw_data);
@@ -284,15 +218,4 @@ string CommandKickout::encodeToJSON() {
     }
     _raw_data = json_obj.dump();
     return _raw_data;
-}
-
-bool CommandKickout::decodeFromPB(const string& data) {
-    assert(false && "Not implemented");
-    _raw_data = data;
-    return false;
-}
-
-string CommandKickout::encodeToPB() {
-    assert(false && "Not implemented");
-    return "";
 }
