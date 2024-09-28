@@ -133,7 +133,7 @@ SwitchService::get_stats(const CommandInfoReq& cmd_info_req)
 
     if (cmd_info_req.is_details) {
         cmd_info->details.dummy_arr.push_back(11);
-        for (auto [ep_id, _] : context->endpoints) {
+        for (auto [ep_id, ep] : context->endpoints) {
             cmd_info->details.endpoints[ep_id] = Now() - ep->GetBornTime();
         }
     }
