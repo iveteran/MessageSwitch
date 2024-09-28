@@ -80,7 +80,8 @@ SwitchService::register_endpoint(TcpConnection* conn, const CommandRegister& reg
             }
         }
 
-        if (! reg_cmd.token.empty() && reg_cmd.token == exists_ep->GetToken()) {
+        if ((! reg_cmd.token.empty() && reg_cmd.token == exists_ep->GetToken())
+                || role != exists_ep->GetRole()) {
             // update token
             auto token = generate_token(exists_ep.get());
             exists_ep->SetToken(token);
@@ -92,6 +93,7 @@ SwitchService::register_endpoint(TcpConnection* conn, const CommandRegister& reg
             if (role == EEndpointRole::Admin) {
                 context->admin_clients[ep_id] = exists_ep;
             }
+            regResult->role = EndpointRoleToTag(role);
         }
     }
 
@@ -132,11 +134,46 @@ SwitchService::get_stats(const CommandInfoReq& cmd_info_req)
     if (cmd_info_req.is_details) {
         cmd_info->details.dummy_arr.push_back(11);
         for (auto [ep_id, _] : context->endpoints) {
-            cmd_info->details.endpoints[ep_id] = 22;
+            cmd_info->details.endpoints[ep_id] = Now() - ep->GetBornTime();
         }
     }
 
     return cmd_info;
+}
+
+tuple<int, string, CommandEndpointInfoPtr>
+SwitchService::get_endpoint_stats(const CommandInfoReq& cmd_info_req)
+{
+    if (cmd_info_req.endpoint_id == 0) {
+        return { 1, "Must specify an endpoint id", nullptr };
+    }
+    auto context = switch_server_->GetContext();
+    auto iter = context->endpoints.find(cmd_info_req.endpoint_id);
+    if (iter == context->endpoints.end()) {
+        char errmsg[64];
+        snprintf(errmsg, sizeof(errmsg), "Can not find out the endpoint id: %d", cmd_info_req.endpoint_id);
+        return { 1, errmsg, nullptr };
+    }
+    auto ep = iter->second;
+    auto cmd_ep_info = std::make_shared<CommandEndpointInfo>();
+    cmd_ep_info->id = ep->Id();
+    cmd_ep_info->role = uint8_t(ep->GetRole());
+    cmd_ep_info->uptime = Now() - ep->GetBornTime();
+    std::copy(ep->GetForwardTargets().begin(), ep->GetForwardTargets().end(),
+          std::back_inserter(cmd_ep_info->fwd_targets));
+
+    std::copy(ep->GetSubscriedSources().begin(), ep->GetSubscriedSources().end(),
+          std::back_inserter(cmd_ep_info->subs_sources));
+    std::copy(ep->GetRejectedSources().begin(), ep->GetRejectedSources().end(),
+          std::back_inserter(cmd_ep_info->rej_sources));
+    std::copy(ep->GetSubscriedMessages().begin(), ep->GetSubscriedMessages().end(),
+          std::back_inserter(cmd_ep_info->subs_messages));
+    std::copy(ep->GetRejectedMessages().begin(), ep->GetRejectedMessages().end(),
+          std::back_inserter(cmd_ep_info->rej_messages));
+
+    cmd_ep_info->rx_bytes += ep->Connection()->StatsRxBytes();
+    cmd_ep_info->tx_bytes += ep->Connection()->StatsTxBytes();
+    return { 0, "", cmd_ep_info };
 }
 
 tuple<int, string>
@@ -149,6 +186,91 @@ SwitchService::forward(Endpoint* ep, const CommandForward& cmd_fwd)
     }
 
     ep->SetForwardTargets(cmd_fwd.targets);
+    return { 0, "" };
+}
+
+tuple<int, string>
+SwitchService::unforward(Endpoint* ep, const CommandUnforward& cmd_unfwd)
+{
+    if (cmd_unfwd.targets.empty()) {
+        int8_t errcode = 1;
+        string errmsg("Missing required parameter or the parameter is invalid");
+        return { errcode, errmsg };
+    }
+
+    ep->UnsetForwardTargets(cmd_unfwd.targets);
+    return { 0, "" };
+}
+
+tuple<int, string>
+SwitchService::subscribe(Endpoint* ep, const CommandSubscribe& cmd_sub)
+{
+    if (cmd_sub.sources.empty() && cmd_sub.messages.empty()) {
+        int8_t errcode = 1;
+        string errmsg("Missing required parameter or the parameter is invalid");
+        return { errcode, errmsg };
+    }
+
+    if (!cmd_sub.sources.empty()) {
+        ep->SubscribeSources(cmd_sub.sources);
+    }
+    if (!cmd_sub.messages.empty()) {
+        ep->SubscribeMessages(cmd_sub.messages);
+    }
+    return { 0, "" };
+}
+
+tuple<int, string>
+SwitchService::unsubscribe(Endpoint* ep, const CommandUnsubscribe& cmd_unsub)
+{
+    if (cmd_unsub.sources.empty() && cmd_unsub.messages.empty()) {
+        int8_t errcode = 1;
+        string errmsg("Missing required parameter or the parameter is invalid");
+        return { errcode, errmsg };
+    }
+
+    if (!cmd_unsub.sources.empty()) {
+        ep->UnsubscribeSources(cmd_unsub.sources);
+    }
+    if (!cmd_unsub.messages.empty()) {
+        ep->UnsubscribeMessages(cmd_unsub.messages);
+    }
+    return { 0, "" };
+}
+
+tuple<int, string>
+SwitchService::reject(Endpoint* ep, const CommandReject& cmd_rej)
+{
+    if (cmd_rej.sources.empty() && cmd_rej.messages.empty()) {
+        int8_t errcode = 1;
+        string errmsg("Missing required parameter or the parameter is invalid");
+        return { errcode, errmsg };
+    }
+
+    if (!cmd_rej.sources.empty()) {
+        ep->RejectSources(cmd_rej.sources);
+    }
+    if (!cmd_rej.messages.empty()) {
+        ep->RejectMessages(cmd_rej.messages);
+    }
+    return { 0, "" };
+}
+
+tuple<int, string>
+SwitchService::unreject(Endpoint* ep, const CommandUnreject& cmd_unrej)
+{
+    if (cmd_unrej.sources.empty() && cmd_unrej.messages.empty()) {
+        int8_t errcode = 1;
+        string errmsg("Missing required parameter or the parameter is invalid");
+        return { errcode, errmsg };
+    }
+
+    if (!cmd_unrej.sources.empty()) {
+        ep->UnrejectSources(cmd_unrej.sources);
+    }
+    if (!cmd_unrej.messages.empty()) {
+        ep->UnrejectMessages(cmd_unrej.messages);
+    }
     return { 0, "" };
 }
 

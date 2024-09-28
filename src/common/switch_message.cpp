@@ -14,11 +14,26 @@ const char* CommandToTag(ECommand cmd) {
         case ECommand::FWD:
             cmd_tag = "FWD";
             break;
+        case ECommand::SUB:
+            cmd_tag = "SUB";
+            break;
+        case ECommand::UNSUB:
+            cmd_tag = "UNSUB";
+            break;
+        case ECommand::REJECT:
+            cmd_tag = "REJECT";
+            break;
+        case ECommand::UNREJECT:
+            cmd_tag = "UNREJECT";
+            break;
         case ECommand::DATA:
             cmd_tag = "DATA";
             break;
         case ECommand::INFO:
             cmd_tag = "INFO";
+            break;
+        case ECommand::EP_INFO:
+            cmd_tag = "EP_INFO";
             break;
         case ECommand::SETUP:
             cmd_tag = "SETUP";

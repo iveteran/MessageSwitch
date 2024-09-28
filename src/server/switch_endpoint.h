@@ -18,13 +18,11 @@ namespace evt_loop {
 using evt_loop::TcpConnection;
 
 typedef uint32_t EndpointId;
+typedef uint8_t  MessageId;
 
 class Endpoint {
 public:
-    Endpoint(EndpointId id, TcpConnection* conn) : conn_(conn)
-    {
-        conn_->SetID(id);
-    }
+    Endpoint(EndpointId id, TcpConnection* conn);
 
     EndpointId Id() const { return conn_->ID(); }
     void SetId(EndpointId id) { conn_->SetID(id); }
@@ -36,26 +34,41 @@ public:
 
     TcpConnection* Connection() { return conn_; }
     void SetConnection(TcpConnection* conn) { conn_ = conn; }
+    time_t GetBornTime() const { return born_time_; }
 
-    const vector<EndpointId>& GetForwardTargets() const
-    {
-        return fwd_targets_;
-    }
-    void SetForwardTargets(const vector<EndpointId>& targets)
-    {
-        fwd_targets_ = targets;
-    }
+    const set<EndpointId>& GetForwardTargets() const { return fwd_targets_; }
+    void SetForwardTargets(const vector<EndpointId>& targets);
+    void UnsetForwardTargets(const vector<EndpointId>& targets);
+
+    void SubscribeSources(const vector<EndpointId>& sources);
+    void UnsubscribeSources(const vector<EndpointId>& sources);
+    void RejectSources(const vector<EndpointId>& sources);
+    void UnrejectSources(const vector<EndpointId>& sources);
+    const set<EndpointId>& GetSubscriedSources() const { return subs_sources_; }
+    const set<EndpointId>& GetRejectedSources() const { return rej_sources_; }
+    bool IsRejectedSource(EndpointId ep_id);
+
+    void SubscribeMessages(const vector<MessageId>& messages);
+    void UnsubscribeMessages(const vector<MessageId>& messages);
+    void RejectMessages(const vector<MessageId>& messages);
+    void UnrejectMessages(const vector<MessageId>& messages);
+    const set<MessageId>& GetSubscriedMessages() const { return subs_messages_; }
+    const set<MessageId>& GetRejectedMessages() const { return rej_messages_; }
+    bool IsRejectedMessage(MessageId msg_id);
 
 private:
     EEndpointRole       role_;
     string              token_;
     TcpConnection*      conn_;
-    vector<EndpointId>  fwd_targets_;
+    time_t              born_time_;
+
+    set<EndpointId>     fwd_targets_;
 
     set<EndpointId>     subs_sources_;      // subscribed sources
     set<EndpointId>     rej_sources_;       // rejected sources
-    set<ECommand>       subs_messages_;     // subscribed messages
-    set<ECommand>       rej_messages_;      // rejected messages
+
+    set<MessageId>      subs_messages_;     // subscribed messages
+    set<MessageId>      rej_messages_;      // rejected messages
 
     //map<SessionID, EndpointId> sess_sources_;
 };

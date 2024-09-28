@@ -4,11 +4,11 @@
 #include "command_messages.h"
 #include "switch_client.h"
 #include "sc_context.h"
+#include "utils/time.h"
 
 #define DUMP_MAX_BYTES 256
 
 using namespace evt_loop;
-
 
 void SCCommandHandler::Echo(const char* content)
 {
@@ -43,17 +43,22 @@ void SCCommandHandler::Register(uint32_t ep_id, EEndpointRole ep_role,
     }
 }
 
-void SCCommandHandler::GetInfo(bool is_details)
+void SCCommandHandler::GetInfo(bool is_details, uint32_t ep_id)
 {
+    ECommand cmd = ECommand::INFO;
     CommandInfoReq cmd_info_req;
     cmd_info_req.is_details = is_details;
+    if (ep_id > 0) {
+        cmd_info_req.endpoint_id = ep_id;
+        cmd = ECommand::EP_INFO;
+    }
 
     //string content(R"({"is_details": true})");
     auto content = cmd_info_req.encodeToJSON();
-    size_t sent_bytes = SendCommandMessage(ECommand::INFO, content);
+    size_t sent_bytes = SendCommandMessage(cmd, content);
 
     if (sent_bytes > 0) {
-        printf("Sent INFO message, content: %s\n", content.c_str());
+        printf("Sent INFO/EP_INFO message, content: %s\n", content.c_str());
     }
 }
 
@@ -66,6 +71,50 @@ void SCCommandHandler::ForwardTargets(const vector<uint32_t>& targets)
     size_t sent_bytes = SendCommandMessage(ECommand::FWD, content);
     if (sent_bytes > 0) {
         printf("Sent FWD message, content: %s\n", content.c_str());
+    }
+}
+
+void SCCommandHandler::UnforwardTargets(const vector<uint32_t>& targets)
+{
+    CommandUnforward cmd_unfwd;
+    cmd_unfwd.targets = targets;
+    auto content = cmd_unfwd.encodeToJSON();
+    size_t sent_bytes = SendCommandMessage(ECommand::UNFWD, content);
+    if (sent_bytes > 0) {
+        printf("Sent UNFWD message, content: %s\n", content.c_str());
+    }
+}
+
+void SCCommandHandler::Subscribe(const vector<uint32_t>& sources, const vector<uint8_t>& messages)
+{
+    SubUnsubRejUnrej<CommandSubscribe>(ECommand::SUB, sources, messages);
+}
+
+void SCCommandHandler::Unsubscribe(const vector<uint32_t>& sources, const vector<uint8_t>& messages)
+{
+    SubUnsubRejUnrej<CommandUnsubscribe>(ECommand::UNSUB, sources, messages);
+}
+
+void SCCommandHandler::Reject(const vector<uint32_t>& sources, const vector<uint8_t>& messages)
+{
+    SubUnsubRejUnrej<CommandReject>(ECommand::REJECT, sources, messages);
+}
+
+void SCCommandHandler::Unreject(const vector<uint32_t>& sources, const vector<uint8_t>& messages)
+{
+    SubUnsubRejUnrej<CommandUnreject>(ECommand::UNREJECT, sources, messages);
+}
+
+template<typename T>
+void SCCommandHandler::SubUnsubRejUnrej(ECommand cmd, const vector<uint32_t>& sources, const vector<uint8_t>& messages)
+{
+    T cmd_obj;
+    cmd_obj.sources = sources;
+    cmd_obj.messages = messages;
+    auto content = cmd_obj.encodeToJSON();
+    size_t sent_bytes = SendCommandMessage(cmd, content);
+    if (sent_bytes > 0) {
+        printf("Sent %s message, content: %s\n", CommandToTag(cmd), content.c_str());
     }
 }
 
@@ -174,6 +223,11 @@ void SCCommandHandler::HandleCommandResult(TcpConnection* conn, CommandMessage* 
                 HandleGetInfoResult(cmdMsg, content);
             }
             break;
+        case ECommand::EP_INFO:
+            if (errcode == 0) {
+                HandleGetEndpointInfoResult(cmdMsg, content);
+            }
+            break;
         default:
             break;
     }
@@ -191,12 +245,16 @@ void SCCommandHandler::HandleRegisterResult(CommandMessage* cmdMsg, const string
     }
     cout << "endpoint id: " << reg_result.id << endl;
     cout << "token: " << reg_result.token << endl;
+    cout << "role: " << reg_result.role << endl;
 
     auto context = client_->GetContext();
     context->is_registered = true;
     context->endpoint_id = reg_result.id;
     if (! reg_result.token.empty()) {
         context->token = reg_result.token;
+    }
+    if (! reg_result.role.empty()) {
+        context->role = TagToEndpointRole(reg_result.role);
     }
 }
 
@@ -210,10 +268,23 @@ void SCCommandHandler::HandleGetInfoResult(CommandMessage* cmdMsg, const string&
     } else {
         assert(false && "Unsupported message codec");
     }
-    printf("cmd_info.uptime: %ld\n", cmd_info.uptime);
-    printf("cmd_info.endpoints.total: %d\n", cmd_info.endpoints.total);
-    printf("cmd_info.endpoints.rx_bytes: %d\n", cmd_info.endpoints.rx_bytes);
-    printf("cmd_info.admin_clients.total: %d\n", cmd_info.admin_clients.total);
+    printf("> cmd_info.uptime: %s\n", readable_seconds_delta(cmd_info.uptime).c_str());
+    printf("> cmd_info.endpoints.total: %d\n", cmd_info.endpoints.total);
+    printf("> cmd_info.endpoints.rx_bytes: %d\n", cmd_info.endpoints.rx_bytes);
+    printf("> cmd_info.admin_clients.total: %d\n", cmd_info.admin_clients.total);
+}
+
+void SCCommandHandler::HandleGetEndpointInfoResult(CommandMessage* cmdMsg, const string& data)
+{
+    CommandEndpointInfo cmd_ep_info;
+    if (cmdMsg->IsJSON()) {
+        cmd_ep_info.decodeFromJSON(data);
+    } else if (cmdMsg->IsPB()) {
+        cmd_ep_info.decodeFromPB(data);
+    } else {
+        assert(false && "Unsupported message codec");
+    }
+    printf("> cmd_ep_info.uptime: %s\n", readable_seconds_delta(cmd_ep_info.uptime).c_str());
 }
 
 void SCCommandHandler::HandleEndpointData(const Message* msg)

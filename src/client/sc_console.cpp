@@ -13,6 +13,12 @@
 
 using namespace evt_loop;
 
+template<typename T>
+void duplicate(vector<T>& v) {
+    set<T> s(v.begin(), v.end());
+    v.assign(s.begin(), s.end());
+}
+
 void SCConsole::Destory()
 {
     Console::Instance()->destory();
@@ -64,6 +70,31 @@ void SCConsole::registerCommands()
             "ss_fwd",
             "Send forwarding targets command by Switch server",
             std::bind(&SCConsole::handleConsoleCommand_ForwardTargets, this, std::placeholders::_1)
+            );
+    Console::Instance()->registerCommand(
+            "ss_unfwd",
+            "Send unforwarding targets command by Switch server",
+            std::bind(&SCConsole::handleConsoleCommand_UnforwardTargets, this, std::placeholders::_1)
+            );
+    Console::Instance()->registerCommand(
+            "ss_sub",
+            "Send subscribe command by Switch server",
+            std::bind(&SCConsole::handleConsoleCommand_Subscribe, this, std::placeholders::_1)
+            );
+    Console::Instance()->registerCommand(
+            "ss_unsub",
+            "Send unsubscribe command by Switch server",
+            std::bind(&SCConsole::handleConsoleCommand_Unsubscribe, this, std::placeholders::_1)
+            );
+    Console::Instance()->registerCommand(
+            "ss_reject",
+            "Send reject command by Switch server",
+            std::bind(&SCConsole::handleConsoleCommand_Reject, this, std::placeholders::_1)
+            );
+    Console::Instance()->registerCommand(
+            "ss_unrej",
+            "Send unreject command by Switch server",
+            std::bind(&SCConsole::handleConsoleCommand_Unreject, this, std::placeholders::_1)
             );
     Console::Instance()->registerCommand(
             "ss_setup",
@@ -201,6 +232,11 @@ int SCConsole::handleConsoleCommand_GetInfo(const vector<string>& argv)
     cmd_ap.add_argument("--is_details")
         .help("the flag that if or not to show details information of Switch server")
         .flag();
+    cmd_ap.add_argument("--endpoint")
+        .help("only to get the information of specified endpoint, to get self stats if not specified")
+        .scan<'i', int>()
+        .default_value(-1)
+        .nargs(argparse::nargs_pattern::optional);
 
     try {
         cmd_ap.parse_args(argv);
@@ -214,17 +250,42 @@ int SCConsole::handleConsoleCommand_GetInfo(const vector<string>& argv)
     }
 
     bool is_details = cmd_ap.get<bool>("--is_details");
-    cmd_handler_->GetInfo(is_details);  // TODO: pass callback function
+    uint32_t ep_id = 0;
+    if (cmd_ap.is_used("--endpoint")) {
+        int _ep_id = cmd_ap.get<int>("--endpoint");
+        if (_ep_id == -1) {
+            ep_id = client_->GetContext()->endpoint_id;  // use self endpoint id
+        } else {
+            ep_id = _ep_id;
+        }
+    }
+    cmd_handler_->GetInfo(is_details, ep_id);  // TODO: pass callback function
     return 0;
 }
 
 int SCConsole::handleConsoleCommand_ForwardTargets(const vector<string>& argv)
 {
+    return handleConsoleCommand_SetTargets(argv, "Set",
+            std::bind(&SCCommandHandler::ForwardTargets, cmd_handler_, std::placeholders::_1));
+}
+
+int SCConsole::handleConsoleCommand_UnforwardTargets(const vector<string>& argv)
+{
+    return handleConsoleCommand_SetTargets(argv, "Unset",
+            std::bind(&SCCommandHandler::UnforwardTargets, cmd_handler_, std::placeholders::_1));
+}
+
+int SCConsole::handleConsoleCommand_SetTargets(const vector<string>& argv, const char* desc,
+        const SetTargetsCommandCallback& cmd_handler_callback)
+{
     // ss_fwd --targets <ID#1 ID#2 ...>
-    argparse::ArgumentParser cmd_ap("ss_fwd", "1.0", argparse::default_arguments::help, false);
+    argparse::ArgumentParser cmd_ap(argv[0], "1.0", argparse::default_arguments::help, false);
+
+    char help[128];
+    snprintf(help, sizeof(help), "%s target endpoints for forwarding data", desc);
 
     cmd_ap.add_argument("--targets")
-        .help("Set target endpoints for forwarding data by command ss_data")
+        .help(help)
         .scan<'i', uint32_t>()
         .nargs(argparse::nargs_pattern::at_least_one);
 
@@ -244,7 +305,111 @@ int SCConsole::handleConsoleCommand_ForwardTargets(const vector<string>& argv)
         Console::Instance()->put_line("Wrong argument! the --targets must be more than one value");
         return -1;
     }
-    cmd_handler_->ForwardTargets(targets);
+    duplicate(targets);
+    cmd_handler_callback(targets);
+
+    if (argv[0] == "ss_fwd") {
+        client_->GetContext()->SetForwardTargets(targets);
+    } else if (argv[0] == "ss_unfwd") {
+        client_->GetContext()->RemoveForwardTargets(targets);
+    }
+
+    return 0;
+}
+
+int SCConsole::handleConsoleCommand_Subscribe(const vector<string>& argv)
+{
+    return handleConsoleCommand_SubUnsubRejUnrej(argv, "Subscribe",
+            std::bind(&SCCommandHandler::Subscribe, cmd_handler_, std::placeholders::_1, std::placeholders::_2));
+}
+
+int SCConsole::handleConsoleCommand_Unsubscribe(const vector<string>& argv)
+{
+    return handleConsoleCommand_SubUnsubRejUnrej(argv, "Unsubscribe",
+            std::bind(&SCCommandHandler::Unsubscribe, cmd_handler_, std::placeholders::_1, std::placeholders::_2));
+}
+
+int SCConsole::handleConsoleCommand_Reject(const vector<string>& argv)
+{
+    return handleConsoleCommand_SubUnsubRejUnrej(argv, "Reject",
+            std::bind(&SCCommandHandler::Reject, cmd_handler_, std::placeholders::_1, std::placeholders::_2));
+}
+
+int SCConsole::handleConsoleCommand_Unreject(const vector<string>& argv)
+{
+    return handleConsoleCommand_SubUnsubRejUnrej(argv, "Unreject",
+            std::bind(&SCCommandHandler::Unreject, cmd_handler_, std::placeholders::_1, std::placeholders::_2));
+}
+
+int SCConsole::handleConsoleCommand_SubUnsubRejUnrej(
+        const vector<string>& argv, const char* desc,
+        const SubUnsubRejUnrejCommandCallback& cmd_handler_callback)
+{
+    // <cmd_name> --sources <ID#1 ID#2 ...>
+    argparse::ArgumentParser cmd_ap(argv[0], "1.0", argparse::default_arguments::help, false);
+
+    char help[128];
+    snprintf(help, sizeof(help), "Set sources endpoints to %s", desc);
+    cmd_ap.add_argument("--sources")
+        .help(help)
+        .scan<'i', uint32_t>()
+        .nargs(argparse::nargs_pattern::at_least_one);
+
+    snprintf(help, sizeof(help), "Set messages to %s", desc);
+    cmd_ap.add_argument("--messages")
+        .help(help)
+        .scan<'i', uint8_t>()
+        .nargs(argparse::nargs_pattern::at_least_one);
+
+    try {
+        cmd_ap.parse_args(argv);
+    } catch (const std::exception& err) {
+        std::cerr << err.what() << std::endl;
+        std::cerr << cmd_ap;
+        return -1;
+    }
+    if (cmd_ap.is_used("--help")) {
+        return 1;
+    }
+
+    auto sources = cmd_ap.get<vector<uint32_t>>("--sources");
+    auto messages = cmd_ap.get<vector<uint8_t>>("--messages");
+    if (sources.empty() && messages.empty()) {
+        Console::Instance()->put_line("Wrong argument! the --sources or --messages must be more than one element");
+        return -1;
+    }
+
+    if (argv[0] == "ss_sub") {
+        if (! sources.empty()) {
+            client_->GetContext()->SetSubscribedSources(sources);
+        }
+        if (! messages.empty()) {
+            client_->GetContext()->SetSubscribedMessages(messages);
+        }
+    } else if (argv[0] == "ss_unsub") {
+        if (! sources.empty()) {
+            client_->GetContext()->RemoveSubscribedSources(sources);
+        }
+        if (! messages.empty()) {
+            client_->GetContext()->RemoveSubscribedMessages(messages);
+        }
+    } else if (argv[0] == "ss_reject") {
+        if (! sources.empty()) {
+            client_->GetContext()->SetRejectedSources(sources);
+        }
+        if (! messages.empty()) {
+            client_->GetContext()->SetRejectedMessages(messages);
+        }
+    } else if (argv[0] == "ss_unrej") {
+        if (! sources.empty()) {
+            client_->GetContext()->RemoveRejectedSources(sources);
+        }
+        if (! messages.empty()) {
+            client_->GetContext()->RemoveRejectedMessages(messages);
+        }
+    }
+
+    cmd_handler_callback(sources, messages);
     return 0;
 }
 
@@ -372,6 +537,7 @@ int SCConsole::handleConsoleCommand_Kickout(const vector<string>& argv)
         Console::Instance()->put_line("Wrong argument! the --targets must be more than one value");
         return -1;
     }
+    duplicate(targets);
     cmd_handler_->Kickout(targets);
     return 0;
 }

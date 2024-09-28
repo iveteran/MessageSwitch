@@ -12,7 +12,6 @@ string CommandRegister::encodeToPB() {
     return "";
 }
 
-
 bool CommandResultRegister::decodeFromPB(const string& data) {
     assert(false && "Not implemented");
     _raw_data = data;
@@ -35,6 +34,17 @@ string CommandForward::encodeToPB() {
     return "";
 }
 
+bool CommandSubUnsubRejUnrej::decodeFromPB(const string& data) {
+    assert(false && "Not implemented");
+    _raw_data = data;
+    return false;
+}
+
+string CommandSubUnsubRejUnrej::encodeToPB() {
+    assert(false && "Not implemented");
+    return "";
+}
+
 bool CommandInfoReq::decodeFromPB(const string& data) {
     assert(false && "Not implemented");
     _raw_data = data;
@@ -53,6 +63,17 @@ bool CommandInfo::decodeFromPB(const string& data) {
 }
 
 string CommandInfo::encodeToPB() {
+    assert(false && "Not implemented");
+    return "";
+}
+
+bool CommandEndpointInfo::decodeFromPB(const string& data) {
+    assert(false && "Not implemented");
+    _raw_data = data;
+    return false;
+}
+
+string CommandEndpointInfo::encodeToPB() {
     assert(false && "Not implemented");
     return "";
 }

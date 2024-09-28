@@ -23,8 +23,13 @@ class SCCommandHandler {
 
     void Echo(const char* content);
     void Register(uint32_t ep_id, EEndpointRole ep_role, const string& access_code, bool with_token=false);
-    void GetInfo(bool is_details);
+    void GetInfo(bool is_details, uint32_t ep_id=0);
     void ForwardTargets(const vector<uint32_t>& targets);
+    void UnforwardTargets(const vector<uint32_t>& targets);
+    void Subscribe(const vector<uint32_t>& sources, const vector<uint8_t>& messages);
+    void Unsubscribe(const vector<uint32_t>& sources, const vector<uint8_t>& messages);
+    void Reject(const vector<uint32_t>& sources, const vector<uint8_t>& messages);
+    void Unreject(const vector<uint32_t>& sources, const vector<uint8_t>& messages);
     void SendData(const string& data);
     void Setup(const string& admin_code, const string& new_admin_code,
             const string& new_access_code, const string& mode);
@@ -40,6 +45,10 @@ class SCCommandHandler {
 
     void HandleRegisterResult(CommandMessage* cmdMsg, const string& payload);
     void HandleGetInfoResult(CommandMessage* cmdMsg, const string& data);
+    void HandleGetEndpointInfoResult(CommandMessage* cmdMsg, const string& data);
+
+    template<typename T>
+    void SubUnsubRejUnrej(ECommand cmd, const vector<uint32_t>& sources, const vector<uint8_t>& messages);
 
     private:
     SwitchClient* client_;

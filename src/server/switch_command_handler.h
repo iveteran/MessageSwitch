@@ -29,8 +29,14 @@ public:
     int handleEcho(TcpConnection* conn, const CommandMessage* cmdMsg, const string& data);
     int handleRegister(TcpConnection* conn, const CommandMessage* cmdMsg, const string& data);
     int handleForward(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
+    int handleUnforward(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
+    int handleSubscribe(EndpointPtr ep, const CommandMessage* cmdMsg, const string& msgData);
+    int handleUnsubscribe(EndpointPtr ep, const CommandMessage* cmdMsg, const string& msgData);
+    int handleReject(EndpointPtr ep, const CommandMessage* cmdMsg, const string& msgData);
+    int handleUnreject(EndpointPtr ep, const CommandMessage* cmdMsg, const string& msgData);
     int handleData(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
     int handleInfo(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
+    int handleEndpointInfo(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
     int handleSetup(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
     int handleProxy(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
     int handleKickout(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);

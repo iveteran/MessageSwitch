@@ -12,7 +12,7 @@ CXX      = g++
 RM       = rm -f
 AR       = ar -r
 
-SRCDIRS  = .
+SRCDIRS  = . utils
 SRCEXTS  = .cpp
 SOURCES  = $(foreach d,$(SRCDIRS),$(wildcard $(addprefix $(d)/*,$(SRCEXTS))))
 OBJS     = $(foreach x,$(SRCEXTS), $(patsubst %$(x),%.o,$(filter %$(x),$(SOURCES))))
@@ -27,7 +27,7 @@ $(TARGET) : $(OBJS)
 %.d : %.cpp
 	@$(CXX) -MM -MD $(CXXFLAGS) $<
 
-%.o : %.cpp
+$(OBJDIR)/%.o : %.cpp
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $<
 
 -include $(DEPS)
@@ -37,7 +37,7 @@ all : $(TARGET)
 rebuild: clean all
 
 clean:
-	@$(RM) *.o *.d
+	@$(RM) $(OBJS) *.d
 
 cleanall: clean
 	@$(RM) $(TARGET)

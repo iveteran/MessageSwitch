@@ -10,7 +10,7 @@ struct CommandMessage {
     uint8_t cmd;            // ECommand
     struct {
         uint8_t unused:5;
-        uint8_t codec:2;    // 2 bits, codec of above layer, 0: undefined, 1: json, 2: protobuf, 3: reserved
+        uint8_t codec:2;    // 2 bits, codec of above layer, 0: undefined, 1: json, 2: protobuf, 3: unused
         uint8_t req_rsp:1;  // 1 bit,  request or response,  0: request, 1: response
     } flag;
     uint32_t payload_len;   // payload_len supports including self size
@@ -56,9 +56,16 @@ enum class ECommand : uint8_t {
     UNDEFINED,
     ECHO,
     REG,
-    FWD,
-    DATA,
+    FWD,   // publish targets
+    UNFWD,
+    SUB,
+    UNSUB,
+    REJECT,
+    UNREJECT,
+    DATA,  // publish data
+    SVC,   // service request
     INFO,
+    EP_INFO,
     SETUP,
     PROXY,
     KICKOUT,

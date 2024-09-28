@@ -73,11 +73,29 @@ void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
         case ECommand::FWD:
             handleForward(ep, cmdMsg, msgData);
             break;
+        case ECommand::UNFWD:
+            handleUnforward(ep, cmdMsg, msgData);
+            break;
+        case ECommand::SUB:
+            handleSubscribe(ep, cmdMsg, msgData);
+            break;
+        case ECommand::UNSUB:
+            handleUnsubscribe(ep, cmdMsg, msgData);
+            break;
+        case ECommand::REJECT:
+            handleReject(ep, cmdMsg, msgData);
+            break;
+        case ECommand::UNREJECT:
+            handleUnreject(ep, cmdMsg, msgData);
+            break;
         case ECommand::DATA:
             handleData(ep, cmdMsg, msgData);
             break;
         case ECommand::INFO:
             handleInfo(ep, cmdMsg, msgData);
+            break;
+        case ECommand::EP_INFO:
+            handleEndpointInfo(ep, cmdMsg, msgData);
             break;
         case ECommand::SETUP:
             handleSetup(ep, cmdMsg, msgData);
@@ -149,19 +167,109 @@ int CommandHandler::handleForward(EndpointPtr ep, const CommandMessage* cmdMsg, 
     return errcode;
 }
 
+int CommandHandler::handleUnforward(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
+{
+    const ECommand cmd = (ECommand)cmdMsg->cmd;
+
+    CommandUnforward cmd_unfwd;
+    _DECODE_COMMAND_MESSAGE("handleUnforward", cmdMsg, cmd_unfwd, ep->Connection());
+
+    auto [errcode, errmsg] = service_->unforward(ep.get(), cmd_unfwd);
+    if (! errmsg.empty()) {
+        cerr << "[handleUnforward] Error: " << errmsg << endl;
+    }
+
+    sendResultMessage(ep->Connection(), cmd, errcode, errmsg);
+
+    return errcode;
+}
+
+int CommandHandler::handleSubscribe(EndpointPtr ep, const CommandMessage* cmdMsg, const string& msgData)
+{
+    const ECommand cmd = (ECommand)cmdMsg->cmd;
+
+    CommandSubscribe cmd_sub;
+    _DECODE_COMMAND_MESSAGE("handleSubscribe", cmdMsg, cmd_sub, ep->Connection());
+
+    auto [errcode, errmsg] = service_->subscribe(ep.get(), cmd_sub);
+    if (! errmsg.empty()) {
+        cerr << "[handleSubscribe] Error: " << errmsg << endl;
+    }
+
+    sendResultMessage(ep->Connection(), cmd, errcode, errmsg);
+
+    return errcode;
+}
+
+int CommandHandler::handleUnsubscribe(EndpointPtr ep, const CommandMessage* cmdMsg, const string& msgData)
+{
+    const ECommand cmd = (ECommand)cmdMsg->cmd;
+
+    CommandUnsubscribe cmd_unsub;
+    _DECODE_COMMAND_MESSAGE("handleUnsubscribe", cmdMsg, cmd_unsub, ep->Connection());
+
+    auto [errcode, errmsg] = service_->unsubscribe(ep.get(), cmd_unsub);
+    if (! errmsg.empty()) {
+        cerr << "[handleUnsubscribe] Error: " << errmsg << endl;
+    }
+
+    sendResultMessage(ep->Connection(), cmd, errcode, errmsg);
+
+    return errcode;
+}
+
+int CommandHandler::handleReject(EndpointPtr ep, const CommandMessage* cmdMsg, const string& msgData)
+{
+    const ECommand cmd = (ECommand)cmdMsg->cmd;
+
+    CommandReject cmd_rej;
+    _DECODE_COMMAND_MESSAGE("handleReject", cmdMsg, cmd_rej, ep->Connection());
+
+    auto [errcode, errmsg] = service_->reject(ep.get(), cmd_rej);
+    if (! errmsg.empty()) {
+        cerr << "[handleReject] Error: " << errmsg << endl;
+    }
+
+    sendResultMessage(ep->Connection(), cmd, errcode, errmsg);
+
+    return errcode;
+}
+
+int CommandHandler::handleUnreject(EndpointPtr ep, const CommandMessage* cmdMsg, const string& msgData)
+{
+    const ECommand cmd = (ECommand)cmdMsg->cmd;
+
+    CommandUnreject cmd_unrej;
+    _DECODE_COMMAND_MESSAGE("handleUnreject", cmdMsg, cmd_unrej, ep->Connection());
+
+    auto [errcode, errmsg] = service_->unreject(ep.get(), cmd_unrej);
+    if (! errmsg.empty()) {
+        cerr << "[handleUnreject] Error: " << errmsg << endl;
+    }
+
+    sendResultMessage(ep->Connection(), cmd, errcode, errmsg);
+
+    return errcode;
+}
+
 int CommandHandler::handleData(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
 {
     const ECommand cmd = (ECommand)cmdMsg->cmd;
     reverseToNetworkMessage((CommandMessage*)cmdMsg, context_->switch_server->IsMessagePayloadLengthIncludingSelf());
 
     auto fwd_targets = ep->GetForwardTargets();
-    if (fwd_targets.empty() || fwd_targets[0] == 0) {
+    if (fwd_targets.empty() || fwd_targets.contains(0)) {
         // broadcast
         for (auto iter : context_->endpoints) {
             EndpointId ep_id = iter.first;
             auto target_ep = iter.second;
             if (ep_id == ep->Id()) {
                 // It's self
+                continue;
+            }
+            if (target_ep->IsRejectedSource(ep->Id())) {
+                // Does not reachable, be rejected
+                printf("[handleData] Does not reachable, be rejected, source ep id: %d, target ep id: %d\n", ep->Id(), target_ep->Id());
                 continue;
             }
             printf("[handleData] forward message: size: %ld\n", data.size());
@@ -175,6 +283,11 @@ int CommandHandler::handleData(EndpointPtr ep, const CommandMessage* cmdMsg, con
                 continue;
             }
             auto target_ep = iter->second;
+            if (target_ep->IsRejectedSource(ep->Id())) {
+                // Does not reachable, be rejected
+                printf("[handleData] Does not reachable, be rejected, source ep id: %d, target ep id: %d\n", ep->Id(), target_ep->Id());
+                continue;
+            }
             printf("[handleData] forward message, size: %ld\n", data.size());
             target_ep->Connection()->Send(data);
         }
@@ -206,6 +319,30 @@ int CommandHandler::handleInfo(EndpointPtr ep, const CommandMessage* cmdMsg, con
     string rsp_data = cmd_info->encodeToJSON();
     int8_t errcode = 0;
     sendResultMessage(ep->Connection(), cmd, errcode, rsp_data);
+
+    return 0;
+}
+
+int CommandHandler::handleEndpointInfo(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
+{
+    const ECommand cmd = (ECommand)cmdMsg->cmd;
+
+    CommandInfoReq cmd_info_req;
+    _DECODE_COMMAND_MESSAGE("handleEndpointInfo", cmdMsg, cmd_info_req, ep->Connection());
+
+    if (! (ep->GetRole() == EEndpointRole::Endpoint && cmd_info_req.endpoint_id == ep->Id())) {
+        _CHECK_ROLE_PERMISSION("handleEndpointInfo", ep->GetRole(), EEndpointRole::Admin);
+    }
+
+    int8_t errcode = 0;
+    auto [status, errmsg, cmd_ep_info] = service_->get_endpoint_stats(cmd_info_req);
+    if (status != 0) {
+        errcode = 1;
+        sendResultMessage(ep->Connection(), cmd, errcode, errmsg);
+    } else {
+        string rsp_data = cmd_ep_info->encodeToJSON();
+        sendResultMessage(ep->Connection(), cmd, errcode, rsp_data);
+    }
 
     return 0;
 }

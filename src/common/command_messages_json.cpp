@@ -49,6 +49,9 @@ bool CommandResultRegister::decodeFromJSON(const string& data) {
     if (params.contains("token")) {
         token = params["token"];
     }
+    if (params.contains("role")) {
+        role = params["role"];
+    }
     return true;
 }
 
@@ -57,6 +60,9 @@ string CommandResultRegister::encodeToJSON() {
     json_obj["id"] = id;
     if (! token.empty()) {
         json_obj["token"] = token;
+    }
+    if (! role.empty()) {
+        json_obj["role"] = role;
     }
     _raw_data = json_obj.dump();
     return _raw_data;
@@ -82,6 +88,34 @@ string CommandForward::encodeToJSON() {
     return _raw_data;
 }
 
+bool CommandSubUnsubRejUnrej::decodeFromJSON(const string& data) {
+    _raw_data = data;
+    json params = json::parse(_raw_data);
+
+    if (params["sources"].is_array()) {
+        sources = params["sources"].template get<std::vector<uint32_t>>();
+    }
+    if (params["messages"].is_array()) {
+        messages = params["messages"].template get<std::vector<uint8_t>>();
+    }
+    if (sources.empty() && messages.empty()) {
+        return false;
+    }
+    return true;
+}
+
+string CommandSubUnsubRejUnrej::encodeToJSON() {
+    json json_obj;
+    if (! sources.empty()) {
+        json_obj["sources"] = sources;
+    }
+    if (! messages.empty()) {
+        json_obj["messages"] = messages;
+    }
+    _raw_data = json_obj.dump();
+    return _raw_data;
+}
+
 bool CommandInfoReq::decodeFromJSON(const string& data) {
     _raw_data = data;
     json params = json::parse(_raw_data);
@@ -89,12 +123,18 @@ bool CommandInfoReq::decodeFromJSON(const string& data) {
     if (params.contains("is_details")) {
         is_details = params["is_details"];
     }
+    if (params.contains("endpoint_id")) {
+        endpoint_id = params["endpoint_id"];
+    }
     return true;
 }
 
 string CommandInfoReq::encodeToJSON() {
     json json_obj;
     json_obj["is_details"] = is_details;
+    if (endpoint_id > 0) {
+        json_obj["endpoint_id"] = endpoint_id;
+    }
     _raw_data = json_obj.dump();
     return _raw_data;
 }
@@ -164,6 +204,74 @@ string CommandInfo::encodeToJSON() {
     }
     return rsp.dump();
 }
+
+bool CommandEndpointInfo::decodeFromJSON(const string& data) {
+    _raw_data = data;
+    json params = json::parse(_raw_data);
+
+    if (params.contains("id")) {
+        id = params["id"];
+    }
+    if (params.contains("uptime")) {
+        uptime = params["uptime"];
+    }
+    if (params.contains("role")) {
+        role = params["role"];
+    }
+
+    if (params.contains("fwd_targets") && params["fwd_targets"].is_array()) {
+        fwd_targets = params["fwd_targets"].template get<std::vector<uint32_t>>();
+    }
+    if (params.contains("subs_sources") && params["subs_sources"].is_array()) {
+        subs_sources = params["subs_sources"].template get<std::vector<uint32_t>>();
+    }
+    if (params.contains("rej_sources") && params["rej_sources"].is_array()) {
+        rej_sources = params["rej_sources"].template get<std::vector<uint32_t>>();
+    }
+    if (params.contains("subs_messages") && params["subs_messages"].is_array()) {
+        subs_messages = params["subs_messages"].template get<std::vector<uint8_t>>();
+    }
+    if (params.contains("rej_messages") && params["rej_messages"].is_array()) {
+        rej_messages = params["rej_messages"].template get<std::vector<uint8_t>>();
+    }
+
+    if (params.contains("rx_bytes")) {
+        rx_bytes = params["rx_bytes"];
+    }
+    if (params.contains("tx_bytes")) {
+        tx_bytes = params["tx_bytes"];
+    }
+    return true;
+}
+
+string CommandEndpointInfo::encodeToJSON() {
+    json rsp;
+
+    rsp["id"] = id;
+    rsp["uptime"] = uptime;
+    rsp["role"] = role;
+
+    if (! fwd_targets.empty()) {
+        rsp["fwd_targets"] = fwd_targets;
+    }
+    if (! subs_sources.empty()) {
+        rsp["subs_sources"] = subs_sources;
+    }
+    if (! rej_sources.empty()) {
+        rsp["rej_sources"] = rej_sources;
+    }
+    if (! subs_messages.empty()) {
+        rsp["subs_messages"] = subs_messages;
+    }
+    if (! rej_messages.empty()) {
+        rsp["rej_messages"] = rej_messages;
+    }
+
+    rsp["rx_bytes"] = rx_bytes;
+    rsp["tx_bytes"] = tx_bytes;
+
+    return rsp.dump();
+};
 
 bool CommandSetup::decodeFromJSON(const string& data) {
     _raw_data = data;
