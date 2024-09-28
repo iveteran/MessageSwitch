@@ -8,6 +8,13 @@
 
 using namespace evt_loop;
 
+
+SwitchConsole::SwitchConsole(SwitchServer* ss) : server_(ss)
+{
+    const char* prompt = "Switch> ";
+    Console::Initialize(prompt);
+}
+
 void SwitchConsole::Destory()
 {
     // XXX: MUST call destory of Console manually, otherwise the terminal will be silently always

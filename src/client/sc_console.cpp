@@ -19,6 +19,13 @@ void duplicate(vector<T>& v) {
     v.assign(s.begin(), s.end());
 }
 
+SCConsole::SCConsole(SwitchClient* client, SCCommandHandler* cmd_handler) :
+    client_(client), cmd_handler_(cmd_handler)
+{
+    const char* prompt = "SC> ";
+    Console::Initialize(prompt);
+}
+
 void SCConsole::Destory()
 {
     Console::Instance()->destory();

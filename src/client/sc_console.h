@@ -16,9 +16,7 @@ class SCCommandHandler;
 
 class SCConsole {
     public:
-    SCConsole(SwitchClient* client, SCCommandHandler* cmd_handler) :
-        client_(client), cmd_handler_(cmd_handler)
-    {}
+    SCConsole(SwitchClient* client, SCCommandHandler* cmd_handler);
     void Destory();
 
     void registerCommands();

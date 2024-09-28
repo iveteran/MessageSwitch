@@ -12,7 +12,7 @@ class SwitchServer;
 
 class SwitchConsole {
     public:
-    SwitchConsole(SwitchServer* ss) : server_(ss) {}
+    SwitchConsole(SwitchServer* ss);
     ~SwitchConsole() { Destory(); };
     void Destory();
 
