@@ -74,9 +74,9 @@ void SCConsole::registerCommands()
             std::bind(&SCConsole::handleConsoleCommand_GetInfo, this, std::placeholders::_1)
             );
     Console::Instance()->registerCommand(
-            "ss_data",
+            "ss_publish",
             "Simulate to send custom data to Switch server",
-            std::bind(&SCConsole::handleConsoleCommand_SendData, this, std::placeholders::_1)
+            std::bind(&SCConsole::handleConsoleCommand_Publish, this, std::placeholders::_1)
             );
     Console::Instance()->registerCommand(
             "ss_fwd",
@@ -458,9 +458,9 @@ int SCConsole::handleConsoleCommand_SubUnsubRejUnrej(
     return 0;
 }
 
-int SCConsole::handleConsoleCommand_SendData(const vector<string>& argv)
+int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
 {
-    // ss_data <--data <DATA> | --file <FILENAME> >
+    // ss_publish <--data <DATA> | --file <FILENAME> >
     argparse::ArgumentParser cmd_ap(argv[0], "1.0", argparse::default_arguments::help, false);
 
     cmd_ap.add_argument("--data")
