@@ -255,8 +255,8 @@ int CommandHandler::handleUnreject(EndpointPtr ep, const CommandMessage* cmdMsg,
 int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
 {
     const ECommand cmd = (ECommand)cmdMsg->cmd;
-    reverseToNetworkMessage((CommandMessage*)cmdMsg, context_->switch_server->IsMessagePayloadLengthIncludingSelf());
 
+    vector<EndpointPtr> targets;
     auto fwd_targets = ep->GetForwardTargets();
     if (fwd_targets.empty() || fwd_targets.contains(0)) {
         // broadcast
@@ -272,8 +272,7 @@ int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdM
                 printf("[handlePublishData] Does not reachable, be rejected, source ep id: %d, target ep id: %d\n", ep->Id(), target_ep->Id());
                 continue;
             }
-            printf("[handleData] forward message: size: %ld\n", data.size());
-            target_ep->Connection()->Send(data);
+            targets.push_back(target_ep);
         }
     } else {
         // multicast
@@ -288,9 +287,14 @@ int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdM
                 printf("[handlePublishData] Does not reachable, be rejected, source ep id: %d, target ep id: %d\n", ep->Id(), target_ep->Id());
                 continue;
             }
-            printf("[handleData] forward message, size: %ld\n", data.size());
-            target_ep->Connection()->Send(data);
+            targets.push_back(target_ep);
         }
+    }
+
+    reverseToNetworkMessage((CommandMessage*)cmdMsg, context_->switch_server->IsMessagePayloadLengthIncludingSelf());
+    for (auto target_ep : targets) {
+        printf("[handleService] forward message: size: %ld\n", data.size());
+        target_ep->Connection()->Send(data);
     }
 
     int8_t errcode = 0;
@@ -330,7 +334,7 @@ int CommandHandler::handleEndpointInfo(EndpointPtr ep, const CommandMessage* cmd
     CommandInfoReq cmd_info_req;
     _DECODE_COMMAND_MESSAGE("handleEndpointInfo", cmdMsg, cmd_info_req, ep->Connection());
 
-    if (! (ep->GetRole() == EEndpointRole::Endpoint && cmd_info_req.endpoint_id == ep->Id())) {
+    if (! (ep->GetRole() != EEndpointRole::Admin && cmd_info_req.endpoint_id == ep->Id())) {
         _CHECK_ROLE_PERMISSION("handleEndpointInfo", ep->GetRole(), EEndpointRole::Admin);
     }
 
