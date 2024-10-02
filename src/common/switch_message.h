@@ -14,7 +14,7 @@ struct CommandMessage {
         uint8_t req_rsp:1;  // 1 bit,  request or response,  0: request, 1: response
     } flag;
     uint32_t payload_len;   // payload_len supports including self size
-    char payload[0];        // placehoder field
+    char payload[0];        // placeholder field
  
     CommandMessage() { memset(this, 0, sizeof(*this)); }
 
@@ -29,6 +29,7 @@ struct CommandMessage {
 
     void ResetCodec() { flag.codec = 0; }
 };
+#pragma pack()
 
 namespace evt_loop {
     class Message;
@@ -44,13 +45,14 @@ extractMessagePayload(CommandMessage* cmdMsg, bool isMsgPayloadLengthIncludingSe
 Message*
 reverseToNetworkMessage(CommandMessage* cmdMsg, bool isMsgPayloadLengthIncludingSelf);
 
+#pragma pack(1)
 struct ResultMessage {
     int8_t errcode;
-    char data[0];       // placehoder field
+    char data[0];       // placeholder field
 
     ResultMessage() { memset(this, 0, sizeof(*this)); }
 };
-#pragma pack() 
+#pragma pack()
 
 enum class ECommand : uint8_t {
     UNDEFINED,
