@@ -214,6 +214,9 @@ void SCCommandHandler::HandleCommandResult(TcpConnection* conn, CommandMessage* 
         case ECommand::REG:
             if (errcode == 0) {
                 HandleRegisterResult(cmdMsg, content);
+                client_->GetContext()->register_errmsg = "";
+            } else {
+                client_->GetContext()->register_errmsg = content;
             }
             break;
         case ECommand::INFO:

@@ -28,6 +28,7 @@ string SCContext::ToString() const
     ss << "access_code: " << access_code << ", ";
     ss << "role: " << EndpointRoleToTag(role) << ", ";
     ss << "is_registered: " << is_registered << ", ";
+    ss << "register_errmsg: " << register_errmsg << ", ";
     ss << "token: " << token << ", ";
     ss << "message_header_description: " << (msg_hdr_desc ? msg_hdr_desc->ToString() : "") << ", ";
     ss << "fwd_targets: [";

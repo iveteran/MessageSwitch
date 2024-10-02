@@ -23,6 +23,7 @@ struct SCContext
     string access_code;
     EEndpointRole role;
     bool is_registered;
+    string register_errmsg;
     uint32_t endpoint_id;
     string token;
 
