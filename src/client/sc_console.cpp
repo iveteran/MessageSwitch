@@ -173,7 +173,7 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
     // The default arguments can be used while disabling the default exit with these arguments.
     // This forth argument to ArgumentParser (exit_on_default_arguments) is a bool flag with a default true value.
     // The following call will retain --help and --version, but will not exit when those arguments are used.
-    argparse::ArgumentParser cmd_ap("ss_register", "1.0", argparse::default_arguments::help, false);
+    argparse::ArgumentParser cmd_ap(argv[0], "1.0", argparse::default_arguments::help, false);
 
     cmd_ap.add_argument("--id")
         .help("the endpoint id of Switch client")
@@ -234,7 +234,7 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
 int SCConsole::handleConsoleCommand_GetInfo(const vector<string>& argv)
 {
     // ss_info [--is_details]
-    argparse::ArgumentParser cmd_ap("ss_info", "1.0", argparse::default_arguments::help, false);
+    argparse::ArgumentParser cmd_ap(argv[0], "1.0", argparse::default_arguments::help, false);
 
     cmd_ap.add_argument("--is_details")
         .help("the flag that if or not to show details information of Switch server")
@@ -423,7 +423,7 @@ int SCConsole::handleConsoleCommand_SubUnsubRejUnrej(
 int SCConsole::handleConsoleCommand_SendData(const vector<string>& argv)
 {
     // ss_data <--data <DATA> | --file <FILENAME> >
-    argparse::ArgumentParser cmd_ap("ss_data", "1.0", argparse::default_arguments::help, false);
+    argparse::ArgumentParser cmd_ap(argv[0], "1.0", argparse::default_arguments::help, false);
 
     cmd_ap.add_argument("--data")
         .help("The data be send");
@@ -471,7 +471,7 @@ int SCConsole::handleConsoleCommand_SendData(const vector<string>& argv)
 
 int SCConsole::handleConsoleCommand_Setup(const vector<string>& argv)
 {
-    argparse::ArgumentParser cmd_ap("ss_setup", "1.0", argparse::default_arguments::help, false);
+    argparse::ArgumentParser cmd_ap(argv[0], "1.0", argparse::default_arguments::help, false);
 
     cmd_ap.add_argument("--new_access_code")
         .help("the new access code to set for Switch server");
@@ -521,7 +521,7 @@ int SCConsole::handleConsoleCommand_Setup(const vector<string>& argv)
 int SCConsole::handleConsoleCommand_Kickout(const vector<string>& argv)
 {
     // ss_kickout --targets <ID#1 ID#2 ...>
-    argparse::ArgumentParser cmd_ap("ss_fwd", "1.0", argparse::default_arguments::help, false);
+    argparse::ArgumentParser cmd_ap(argv[0], "1.0", argparse::default_arguments::help, false);
 
     cmd_ap.add_argument("--targets")
         .help("Kickout endpoints with specify targets")

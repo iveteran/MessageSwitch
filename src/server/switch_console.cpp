@@ -65,7 +65,7 @@ int SwitchConsole::handleConsoleCommand_Context(const vector<string>& argv)
 int SwitchConsole::handleConsoleCommand_Stats(const vector<string>& argv)
 {
     // TODO: add sub commands: [--endpoint EP_ID]
-    argparse::ArgumentParser cmd_ap("stats", "1.0", argparse::default_arguments::help, false);
+    argparse::ArgumentParser cmd_ap(argv[0], "1.0", argparse::default_arguments::help, false);
 
     cmd_ap.add_argument("--is_details")
         .help("The flag that whether to show details")
