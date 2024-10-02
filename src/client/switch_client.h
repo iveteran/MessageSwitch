@@ -23,6 +23,9 @@ public:
     TcpConnectionPtr Connection() { return client_ ? client_->Connection() : nullptr; }
     bool IsConnected() const { return client_ && client_->IsConnected(); }
     bool Reconnect() { return client_->IsConnected() ? false : client_->Connect(); }
+    void EnableHeartbeat() { client_->EnableHeartbeat(); }
+    void DisableHeartbeat() { client_->DisableHeartbeat(); }
+    bool IsHeartbeatEnabled() { return client_->IsHeartbeatEnabled(); }
 
     SCOptions* GetOptions() const { return options_; }
     SCContext* GetContext() const { return context_; }

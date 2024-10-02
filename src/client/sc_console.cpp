@@ -44,6 +44,11 @@ void SCConsole::registerCommands()
             std::bind(&SCConsole::handleConsoleCommand_Reconnect, this, std::placeholders::_1)
             );
     Console::Instance()->registerCommand(
+            "heartbeat",
+            "Enable or disable connection heartbeat to Switch server",
+            std::bind(&SCConsole::handleConsoleCommand_Heartbeat, this, std::placeholders::_1)
+            );
+    Console::Instance()->registerCommand(
             "options",
             "Show options of Switch client",
             std::bind(&SCConsole::handleConsoleCommand_Options, this, std::placeholders::_1)
@@ -134,6 +139,39 @@ int SCConsole::handleConsoleCommand_Reconnect(const vector<string>& argv)
     } else {
         Console::Instance()->put_line("reconnect: ", "the connection already connected, do nothing.");
     }
+    return 0;
+}
+
+int SCConsole::handleConsoleCommand_Heartbeat(const vector<string>& argv)
+{
+    argparse::ArgumentParser cmd_ap(argv[0], "1.0", argparse::default_arguments::help, false);
+
+    cmd_ap.add_argument("--on")
+        .help("Enable heartbeat to connection")
+        .flag();
+    cmd_ap.add_argument("--off")
+        .help("Disable heartbeat ot connection")
+        .flag();
+
+    try {
+        cmd_ap.parse_args(argv);
+    } catch (const std::exception& err) {
+        std::cerr << err.what() << std::endl;
+        std::cerr << cmd_ap;
+        return -1;
+    }
+    if (cmd_ap.is_used("--help")) {
+        return 1;
+    }
+
+    if (cmd_ap.is_used("--on")) {
+        client_->EnableHeartbeat();
+    } else if (cmd_ap.is_used("--off")) {
+        client_->DisableHeartbeat();
+    } else {
+        Console::Instance()->put_line("Status: ", (client_->IsHeartbeatEnabled() ? "enabled" : "disabled"));
+    }
+
     return 0;
 }
 

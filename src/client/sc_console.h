@@ -24,6 +24,7 @@ class SCConsole {
     private:
     int handleConsoleCommand_Exit(const vector<string>& argv);
     int handleConsoleCommand_Reconnect(const vector<string>& argv);
+    int handleConsoleCommand_Heartbeat(const vector<string>& argv);
     int handleConsoleCommand_Options(const vector<string>& argv);
     int handleConsoleCommand_Status(const vector<string>& argv);
     int handleConsoleCommand_Echo(const vector<string>& argv);

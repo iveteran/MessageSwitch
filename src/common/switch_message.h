@@ -45,6 +45,9 @@ extractMessagePayload(CommandMessage* cmdMsg, bool isMsgPayloadLengthIncludingSe
 Message*
 reverseToNetworkMessage(CommandMessage* cmdMsg, bool isMsgPayloadLengthIncludingSelf);
 
+CommandMessage createHeartbeatRequest(bool isMsgPayloadLengthIncludingSelf);
+CommandMessage createHeartbeatResponse(bool isMsgPayloadLengthIncludingSelf);
+
 #pragma pack(1)
 struct ResultMessage {
     int8_t errcode;
@@ -73,6 +76,7 @@ enum class ECommand : uint8_t {
     KICKOUT,
     EXIT,
     RELOAD,
+    HEARTBEAT = 254,
     RESULT = 255,
 };
 const char* CommandToTag(ECommand cmd);

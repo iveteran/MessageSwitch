@@ -95,3 +95,22 @@ reverseToNetworkMessage(CommandMessage* cmdMsg, bool isMsgPayloadLengthIncluding
     cmdMsg->payload_len = htonl(cmdMsg->payload_len);
     return (Message*)cmdMsg;
 }
+
+CommandMessage createHeartbeatRequest(bool isMsgPayloadLengthIncludingSelf)
+{
+    CommandMessage msg;
+    msg.cmd = int8_t(ECommand::HEARTBEAT);
+    msg.payload_len = 0;
+    reverseToNetworkMessage(&msg, isMsgPayloadLengthIncludingSelf);
+    return msg;
+}
+
+CommandMessage createHeartbeatResponse(bool isMsgPayloadLengthIncludingSelf)
+{
+    CommandMessage msg;
+    msg.cmd = int8_t(ECommand::HEARTBEAT);
+    msg.SetResponseFlag();
+    msg.payload_len = 0;
+    reverseToNetworkMessage(&msg, isMsgPayloadLengthIncludingSelf);
+    return msg;
+}

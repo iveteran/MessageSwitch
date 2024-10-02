@@ -72,6 +72,10 @@ HeaderDescriptionPtr SwitchServer::CreateMessageHeaderDescription() {
     msg_hdr_desc->payload_len_offset = offsetof(struct CommandMessage, payload_len);
     msg_hdr_desc->payload_len_bytes = sizeof(CommandMessage::payload_len);
     msg_hdr_desc->is_payload_len_including_self = true;
+    auto hb_req = createHeartbeatRequest(msg_hdr_desc->is_payload_len_including_self);
+    msg_hdr_desc->heartbeat_request = string((char*)&hb_req, sizeof(hb_req));
+    auto hb_rsp = createHeartbeatResponse(msg_hdr_desc->is_payload_len_including_self);
+    msg_hdr_desc->heartbeat_response = string((char*)&hb_rsp, sizeof(hb_rsp));
     return msg_hdr_desc;
 }
 
