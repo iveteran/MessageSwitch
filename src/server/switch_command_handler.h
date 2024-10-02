@@ -34,7 +34,7 @@ public:
     int handleUnsubscribe(EndpointPtr ep, const CommandMessage* cmdMsg, const string& msgData);
     int handleReject(EndpointPtr ep, const CommandMessage* cmdMsg, const string& msgData);
     int handleUnreject(EndpointPtr ep, const CommandMessage* cmdMsg, const string& msgData);
-    int handleData(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
+    int handlePublishData(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
     int handleInfo(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
     int handleEndpointInfo(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);
     int handleSetup(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data);

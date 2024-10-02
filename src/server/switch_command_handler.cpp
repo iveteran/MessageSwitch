@@ -88,8 +88,8 @@ void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
         case ECommand::UNREJECT:
             handleUnreject(ep, cmdMsg, msgData);
             break;
-        case ECommand::DATA:
-            handleData(ep, cmdMsg, msgData);
+        case ECommand::PUBLISH:
+            handlePublishData(ep, cmdMsg, msgData);
             break;
         case ECommand::INFO:
             handleInfo(ep, cmdMsg, msgData);
@@ -252,7 +252,7 @@ int CommandHandler::handleUnreject(EndpointPtr ep, const CommandMessage* cmdMsg,
     return errcode;
 }
 
-int CommandHandler::handleData(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
+int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
 {
     const ECommand cmd = (ECommand)cmdMsg->cmd;
     reverseToNetworkMessage((CommandMessage*)cmdMsg, context_->switch_server->IsMessagePayloadLengthIncludingSelf());
@@ -269,7 +269,7 @@ int CommandHandler::handleData(EndpointPtr ep, const CommandMessage* cmdMsg, con
             }
             if (target_ep->IsRejectedSource(ep->Id())) {
                 // Does not reachable, be rejected
-                printf("[handleData] Does not reachable, be rejected, source ep id: %d, target ep id: %d\n", ep->Id(), target_ep->Id());
+                printf("[handlePublishData] Does not reachable, be rejected, source ep id: %d, target ep id: %d\n", ep->Id(), target_ep->Id());
                 continue;
             }
             printf("[handleData] forward message: size: %ld\n", data.size());
@@ -285,7 +285,7 @@ int CommandHandler::handleData(EndpointPtr ep, const CommandMessage* cmdMsg, con
             auto target_ep = iter->second;
             if (target_ep->IsRejectedSource(ep->Id())) {
                 // Does not reachable, be rejected
-                printf("[handleData] Does not reachable, be rejected, source ep id: %d, target ep id: %d\n", ep->Id(), target_ep->Id());
+                printf("[handlePublishData] Does not reachable, be rejected, source ep id: %d, target ep id: %d\n", ep->Id(), target_ep->Id());
                 continue;
             }
             printf("[handleData] forward message, size: %ld\n", data.size());

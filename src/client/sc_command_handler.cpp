@@ -116,11 +116,11 @@ void SCCommandHandler::SubUnsubRejUnrej(ECommand cmd, const vector<uint32_t>& so
     }
 }
 
-void SCCommandHandler::SendData(const string& data)
+void SCCommandHandler::Publish(const string& data)
 {
-    size_t sent_bytes = SendCommandMessage(ECommand::DATA, data);
+    size_t sent_bytes = SendCommandMessage(ECommand::PUBLISH, data);
     if (sent_bytes > 0) {
-        printf("Sent DATA message, content size(%ld):\n", data.size());
+        printf("Sent PUBLISH message, content size(%ld):\n", data.size());
         cout << DumpHexWithChars(data, evt_loop::DUMP_MAX_BYTES) << endl;
     }
 }
@@ -288,8 +288,15 @@ void SCCommandHandler::HandleGetEndpointInfoResult(CommandMessage* cmdMsg, const
     printf("> cmd_ep_info.uptime: %s\n", readable_seconds_delta(cmd_ep_info.uptime).c_str());
 }
 
-void SCCommandHandler::HandleEndpointData(const Message* msg)
+// handle the data that published from other endpoints
+void SCCommandHandler::HandlePublishData(TcpConnection* conn, CommandMessage* cmdMsg)
 {
-    printf("Received forwarding DATA message(%ld):\n", msg->PayloadSize());
-    cout << DumpHexWithChars(msg->Payload(), msg->PayloadSize(), evt_loop::DUMP_MAX_BYTES) << endl;
+    printf("Received forwarding PUBLISH message:\n");
+    ECommand cmd = (ECommand)cmdMsg->cmd;
+    printf("Command message:\n");
+    printf("cmd: %s(%d)\n", CommandToTag(cmd), uint8_t(cmd));
+    printf("svc type: %d\n", cmdMsg->svc_type);
+    printf("payload_len: %d\n", cmdMsg->payload_len);
+
+    cout << DumpHexWithChars(cmdMsg->payload, cmdMsg->payload_len, evt_loop::DUMP_MAX_BYTES) << endl;
 }

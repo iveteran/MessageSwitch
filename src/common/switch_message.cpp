@@ -26,8 +26,8 @@ const char* CommandToTag(ECommand cmd) {
         case ECommand::UNREJECT:
             cmd_tag = "UNREJECT";
             break;
-        case ECommand::DATA:
-            cmd_tag = "DATA";
+        case ECommand::PUBLISH:
+            cmd_tag = "PUBLISH";
             break;
         case ECommand::INFO:
             cmd_tag = "INFO";

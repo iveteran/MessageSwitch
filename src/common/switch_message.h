@@ -67,7 +67,7 @@ enum class ECommand : uint8_t {
     UNSUB,
     REJECT,
     UNREJECT,
-    DATA,  // publish data
+    PUBLISH,    // publish data
     SVC,   // service request
     INFO,
     EP_INFO,

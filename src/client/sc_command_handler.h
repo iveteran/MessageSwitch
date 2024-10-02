@@ -30,14 +30,14 @@ class SCCommandHandler {
     void Unsubscribe(const vector<uint32_t>& sources, const vector<uint8_t>& messages);
     void Reject(const vector<uint32_t>& sources, const vector<uint8_t>& messages);
     void Unreject(const vector<uint32_t>& sources, const vector<uint8_t>& messages);
-    void SendData(const string& data);
+    void Publish(const string& data);
     void Setup(const string& admin_code, const string& new_admin_code,
             const string& new_access_code, const string& mode);
     void Kickout(const vector<uint32_t>& targets);
     void Reload();
 
     void HandleCommandResult(TcpConnection* conn, CommandMessage* cmdMsg);
-    void HandleEndpointData(const Message* msg);
+    void HandlePublishData(TcpConnection* conn, CommandMessage* cmdMsg);
 
     private:
     size_t SendCommandMessage(ECommand cmd, const string& payload);
