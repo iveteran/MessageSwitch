@@ -91,7 +91,7 @@ void SwitchServer::OnMessageRecvd(TcpConnection* conn, const Message* msg)
 {
     printf("[SwitchServer::OnMessageRecvd] fd: %d, id: %d, size: %lu\n", conn->FD(), conn->ID(), msg->Size());
     printf("[SwitchServer::OnMessageRecvd] message bytes(%lu):\n", msg->Size());
-    cout << msg->DumpHexWithChars(256) << endl;
+    cout << msg->DumpHexWithChars(evt_loop::DUMP_MAX_BYTES) << endl;
 
     cmd_handler_->handleCommand(conn, msg);
 }

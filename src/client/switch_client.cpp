@@ -82,9 +82,12 @@ void SwitchClient::InitClient(const char* host, uint16_t port)
 
 void SwitchClient::OnMessageRecvd(TcpConnection* conn, const Message* msg)
 {
-    printf("[OnMessageRecvd] received message, fd: %d, id: %d, size: %lu\n", conn->FD(), conn->ID(), msg->Size());
+    printf("[OnMessageRecvd] received message, fd: %d, id: %d, size: %lu, playload size: %lu\n",
+            conn->FD(), conn->ID(), msg->Size(), msg->PayloadSize());
     printf("[OnMessageRecvd] message bytes:\n");
-    cout << msg->DumpHexWithChars(256) << endl;
+    cout << msg->DumpHexWithChars(evt_loop::DUMP_MAX_BYTES) << endl;
+    //printf("[OnMessageRecvd] message payload bytes:\n");
+    //cout << DumpHexWithChars(msg->Payload(), msg->PayloadSize(), evt_loop::DUMP_MAX_BYTES) << endl;
 
     CommandMessage* cmdMsg = convertMessageToCommandMessage(msg,
             client_->GetMessageHeaderDescription()->is_payload_len_including_self);

@@ -42,7 +42,7 @@ void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
     printf("[CommandHandler::HandleCommand] id: %d\n", conn->ID());
     printf("[CommandHandler::HandleCommand] cmd: %s(%d)\n", CommandToTag(cmd), (uint8_t)cmd);
     printf("[CommandHandler::HandleCommand] payload len: %d\n", cmdMsg->payload_len);
-    cout << DumpHexWithChars(cmdMsg->payload, cmdMsg->payload_len, 256) << endl;
+    cout << DumpHexWithChars(cmdMsg->payload, cmdMsg->payload_len, evt_loop::DUMP_MAX_BYTES) << endl;
 
     switch (cmd)
     {
@@ -424,7 +424,7 @@ size_t CommandHandler::sendResultMessage(TcpConnection* conn, ECommand cmd, int8
 {
     printf("[sendResultMessage] response: %ld\n", payload_len);
     if (payload_len > 0) {
-        cout << DumpHexWithChars(payload, payload_len, 256) << endl;
+        cout << DumpHexWithChars(payload, payload_len, evt_loop::DUMP_MAX_BYTES) << endl;
     }
 
     CommandMessage cmdMsg;

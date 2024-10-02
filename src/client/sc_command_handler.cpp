@@ -6,8 +6,6 @@
 #include "sc_context.h"
 #include "utils/time.h"
 
-#define DUMP_MAX_BYTES 256
-
 using namespace evt_loop;
 
 void SCCommandHandler::Echo(const char* content)
@@ -123,7 +121,7 @@ void SCCommandHandler::SendData(const string& data)
     size_t sent_bytes = SendCommandMessage(ECommand::DATA, data);
     if (sent_bytes > 0) {
         printf("Sent DATA message, content size(%ld):\n", data.size());
-        cout << DumpHexWithChars(data, DUMP_MAX_BYTES) << endl;
+        cout << DumpHexWithChars(data, evt_loop::DUMP_MAX_BYTES) << endl;
     }
 }
 
@@ -206,7 +204,7 @@ void SCCommandHandler::HandleCommandResult(TcpConnection* conn, CommandMessage* 
     printf("content len: %ld\n", content_len);
     if (errcode == 0) {
         printf("content: %s\n", content);
-        //cout << DumpHexWithChars(content, content_len, DUMP_MAX_BYTES) << endl;
+        //cout << DumpHexWithChars(content, content_len, evt_loop::DUMP_MAX_BYTES) << endl;
     } else {
         printf("error message: %s\n", content);
     }
@@ -290,5 +288,5 @@ void SCCommandHandler::HandleGetEndpointInfoResult(CommandMessage* cmdMsg, const
 void SCCommandHandler::HandleEndpointData(const Message* msg)
 {
     printf("Received forwarding DATA message(%ld):\n", msg->PayloadSize());
-    cout << DumpHexWithChars(msg->Payload(), msg->PayloadSize(), DUMP_MAX_BYTES) << endl;
+    cout << DumpHexWithChars(msg->Payload(), msg->PayloadSize(), evt_loop::DUMP_MAX_BYTES) << endl;
 }
