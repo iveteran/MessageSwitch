@@ -482,7 +482,7 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
     string data, data_file;
     if (cmd_ap.is_used("--data")) {
         data = cmd_ap.get<string>("--data");
-        cmd_handler_->SendData(data);
+        cmd_handler_->Publish(data);
     } else {
         if (cmd_ap.is_used("--file")) {
             data_file = cmd_ap.get<string>("--file");
@@ -490,7 +490,7 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
             auto rd_done_cb = [&](int status, const string& data) {
                 printf(">>> read done, status: %d, size: %ld\n", status, data.size());
 
-                cmd_handler_->SendData(data);
+                cmd_handler_->Publish(data);
             };
 
             bool success = AIO.async_read(data_file.c_str(), O_RDONLY, rd_done_cb);
@@ -502,7 +502,7 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
             return -1;
         }
     }
-    //cmd_handler_->SendData(data);
+    //cmd_handler_->Publish(data);
 
     return 0;
 }
