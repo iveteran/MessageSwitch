@@ -10,5 +10,5 @@ port = 10101
 
 [client]
 endpoint_id = 2
-role = "endpoint"
+role = "normal"
 access_code = "hello_world"

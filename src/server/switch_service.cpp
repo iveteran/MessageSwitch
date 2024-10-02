@@ -20,7 +20,7 @@ SwitchService::register_endpoint(TcpConnection* conn, const CommandRegister& reg
     ss << "Authentication failed, role: " << reg_cmd.role;
 
     switch (role) {
-        case EEndpointRole::Endpoint:
+        case EEndpointRole::Normal:
             if (reg_cmd.access_code.empty() || reg_cmd.access_code != context->access_code) {
                 return { errcode, ss.str(), nullptr };
             }

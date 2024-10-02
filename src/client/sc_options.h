@@ -6,7 +6,7 @@
 #include <sstream>
 
 #define DEFAULT_ACCESS_TOKEN "Hello World"
-#define DEFAULT_ROLE "endpoint"
+#define DEFAULT_ROLE "normal"
 
 using std::string;
 

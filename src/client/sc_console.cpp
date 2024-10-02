@@ -181,7 +181,7 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
         .required()
         .default_value(client_->ID());
     cmd_ap.add_argument("--role")
-        .help("the role of Switch client, values: 1: endpoint, 2: admin, 3: service")
+        .help("the role of Switch client, values: 1: normal, 2: admin, 3: service")
         .scan<'i', int>()
         .required()
         .default_value(1);

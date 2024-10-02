@@ -127,7 +127,7 @@ int CommandHandler::handleEcho(TcpConnection* conn, const CommandMessage* cmdMsg
 int CommandHandler::handleRegister(TcpConnection* conn, const CommandMessage* cmdMsg, const string& data)
 {
     // 1) authorize by access token
-    // 2) set endpoint role - endpoint, admin, proxy, rproxy, cluster node
+    // 2) set endpoint role - normal, admin, service, cluster node
     // 3) set endpoint id
 
     const ECommand cmd = (ECommand)cmdMsg->cmd;

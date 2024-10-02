@@ -3,9 +3,9 @@
 
 #include <string>
 
-enum class EEndpointRole {
+enum class EEndpointRole : uint8_t {
     Undefined,
-    Endpoint,
+    Normal,
     Admin,
     Service,
 };

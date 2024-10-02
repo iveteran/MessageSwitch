@@ -27,7 +27,7 @@ int parse_arguments(int argc, char **argv, SCOptionsPtr& options) {
         .scan<'i', int>();
     program.add_argument("-r", "--role")
         .help("endpoint role")
-        .default_value("endpoint");
+        .default_value("normal");
     program.add_argument("-l", "--logfile")
         .help("log file, default is STDOUT");
     program.add_argument("-a", "--access_code")
