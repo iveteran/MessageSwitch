@@ -286,7 +286,7 @@ void SCCommandHandler::HandleGetInfoResult(CommandMessage* cmdMsg, const string&
     printf("> cmd_info.uptime: %s\n", readable_seconds_delta(cmd_info.uptime).c_str());
     printf("> cmd_info.endpoints.total: %d\n", cmd_info.endpoints.total);
     printf("> cmd_info.endpoints.rx_bytes: %d\n", cmd_info.endpoints.rx_bytes);
-    printf("> cmd_info.admin_clients.total: %d\n", cmd_info.admin_clients.total);
+    printf("> cmd_info.admin_endpoints.total: %d\n", cmd_info.admin_endpoints.total);
 }
 
 void SCCommandHandler::HandleGetEndpointInfoResult(CommandMessage* cmdMsg, const string& data)

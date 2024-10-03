@@ -186,13 +186,28 @@ SwitchService::get_stats(const CommandInfoReq& cmd_info_req)
     cmd_info->endpoints.total = context->endpoints.size();
     cmd_info->endpoints.rx_bytes = rx_bytes;
     cmd_info->endpoints.tx_bytes = tx_bytes;
-    cmd_info->admin_clients.total = context->admin_endpoints.size();
+    cmd_info->admin_endpoints.total = context->admin_endpoints.size();
+    cmd_info->normal_endpoints.total = context->normal_endpoints.size();
+    cmd_info->service_endpoints.svc_type_total = context->service_endpoints.size();
+    for (auto [_, svc_eps] : context->service_endpoints) {
+        cmd_info->service_endpoints.svc_ep_total += svc_eps.size();
+    }
     cmd_info->pending_clients.total = context->pending_clients.size();
 
     if (cmd_info_req.is_details) {
-        cmd_info->details.dummy_arr.push_back(11);
         for (auto [ep_id, ep] : context->endpoints) {
-            cmd_info->details.endpoints[ep_id] = Now() - ep->GetBornTime();
+            cmd_info->endpoints.eps[ep_id]["uptime"] = Now() - ep->GetBornTime();
+        }
+        for (auto [ep_id, _] : context->normal_endpoints) {
+            cmd_info->normal_endpoints.eps.push_back(ep_id);
+        }
+        for (auto [ep_id, _] : context->admin_endpoints) {
+            cmd_info->admin_endpoints.eps.push_back(ep_id);
+        }
+        for (auto [svc_type, ep_set] : context->service_endpoints) {
+            for (auto ep : ep_set) {
+                cmd_info->service_endpoints.eps[svc_type].push_back(ep->Id());
+            }
         }
     }
 
@@ -411,5 +426,6 @@ void SwitchService::kickout_endpoint(Endpoint* ep)
             ep->Id(), ep->Connection()->ID(), ep->Connection()->FD());
     auto cmd_handler = switch_server_->GetCommandHandler();
     cmd_handler->sendResultMessage(ep->Connection(), ECommand::KICKOUT, 0, "Kickout by admin or logged in at another device");
+    // XXX: clear endpoints here? or clear them in SwitchServer::OnConnectionClosed?
     ep->Connection()->Disconnect(); // XXX: delay 1 second to do this?
 }

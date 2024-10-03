@@ -92,17 +92,25 @@ struct CommandInfo {
         uint32_t total;
         uint32_t rx_bytes;
         uint32_t tx_bytes;
+        map<uint32_t, map<string, uint32_t>> eps;  // id -> {uptime, ...}
     } endpoints;
     struct {
         uint32_t total;
-    } admin_clients;
+        vector<uint32_t> eps;  // id list
+    } normal_endpoints;
     struct {
         uint32_t total;
-    } pending_clients;
+        vector<uint32_t> eps;  // id list
+    } admin_endpoints;
     struct {
-        vector<uint32_t> dummy_arr;
-        map<uint32_t, uint32_t> endpoints;
-    } details;
+        uint32_t svc_type_total;
+        uint32_t svc_ep_total;
+        map<uint8_t, vector<uint32_t>> eps;  // svc type -> [ep id list]
+    } service_endpoints;
+    struct {
+        uint32_t total;
+        vector<uint32_t> eps;  // id list
+    } pending_clients;
 
     string _raw_data;
 

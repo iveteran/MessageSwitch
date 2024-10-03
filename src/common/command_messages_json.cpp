@@ -175,10 +175,32 @@ bool CommandInfo::decodeFromJSON(const string& data) {
         if (params_endpoints.contains("tx_bytes")) {
             endpoints.tx_bytes = params_endpoints["tx_bytes"];
         }
+        endpoints.eps = params_endpoints["eps"];
     }
-    if (params.contains("admin_clients")) {
-        auto params_admin_clients = params["admin_clients"];
-        admin_clients.total = params_admin_clients["total"];
+    if (params.contains("normal_endpoints")) {
+        auto params_normal_endpoints = params["normal_endpoints"];
+        normal_endpoints.total = params_normal_endpoints["total"];
+        //normal_endpoints.eps = params_normal_endpoints["eps"];
+        for (auto v : params_normal_endpoints["eps"]) {
+            normal_endpoints.eps.push_back(v);
+        }
+    }
+    if (params.contains("admin_endpoints")) {
+        auto params_admin_endpoints = params["admin_endpoints"];
+        admin_endpoints.total = params_admin_endpoints["total"];
+        //admin_endpoints.eps = params_admin_endpoints["eps"];
+        for (auto v : params_admin_endpoints["eps"]) {
+            admin_endpoints.eps.push_back(v);
+        }
+    }
+    if (params.contains("service_endpoints")) {
+        auto params_service_endpoints = params["service_endpoints"];
+        service_endpoints.svc_type_total = params_service_endpoints["svc_type_total"];
+        service_endpoints.svc_ep_total = params_service_endpoints["svc_ep_total"];
+        service_endpoints.eps = params_service_endpoints["eps"];
+        //for (auto v : params_service_endpoints["eps"]) {
+        //    service_endpoints.eps.push_back(v);
+        //}
     }
     if (params.contains("pending_clients")) {
         auto params_pending_clients = params["pending_clients"];
@@ -198,16 +220,33 @@ string CommandInfo::encodeToJSON() {
     rsp["endpoints"]["total"] = endpoints.total;
     rsp["endpoints"]["rx_bytes"] = endpoints.rx_bytes;
     rsp["endpoints"]["tx_bytes"] = endpoints.tx_bytes;
+    //if (! endpoints.eps.empty()) {
+    //    rsp["endpoints"]["eps"] = endpoints.eps;
+    //}
+    for (auto [ep_id, attrs_map] : endpoints.eps) {
+        for (auto [attr_name, attr_value] : attrs_map) {
+            rsp["endpoints"]["eps"][std::to_string(ep_id)][attr_name] = attr_value;
+        }
+    }
 
-    rsp["admin_clients"]["total"] = admin_clients.total;
+    rsp["normal_endpoints"]["total"] = normal_endpoints.total;
+    if (! normal_endpoints.eps.empty()) {
+        rsp["normal_endpoints"]["eps"] = normal_endpoints.eps;
+    }
+    rsp["admin_endpoints"]["total"] = admin_endpoints.total;
+    if (! admin_endpoints.eps.empty()) {
+        rsp["admin_endpoints"]["eps"] = admin_endpoints.eps;
+    }
+    rsp["service_endpoints"]["svc_type_total"] = service_endpoints.svc_type_total;
+    rsp["service_endpoints"]["svc_ep_total"] = service_endpoints.svc_ep_total;
+    //if (! service_endpoints.eps.empty()) {
+    //    rsp["service_endpoints"]["eps"] = service_endpoints.eps;
+    //}
+    for (auto [svc_type, ep_set] : service_endpoints.eps) {
+        rsp["service_endpoints"]["eps"][std::to_string(svc_type)] = ep_set;
+    }
     rsp["pending_clients"]["total"] = pending_clients.total;
 
-    for (auto value : details.dummy_arr) {
-        rsp["details"]["dummy_arr"].push_back(value);
-    }
-    for (auto [ep_id, value] : details.endpoints) {
-        rsp["details"]["endpoints"][std::to_string(ep_id)] = value;
-    }
     return rsp.dump();
 }
 
