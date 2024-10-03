@@ -14,6 +14,7 @@ struct Options
     uint16_t    node_id;
     string      access_code;
     string      admin_code;
+    string      service_access_code;
     string      serving_mode;
     string      logfile;
     string      config_file;
@@ -27,6 +28,7 @@ struct Options
         ss << "node_id: " << node_id << ", ";
         ss << "access_code: " << access_code << ", ";
         ss << "admin_code: " << admin_code << ", ";
+        ss << "service_access_code: " << service_access_code << ", ";
         ss << "serving_mode: " << serving_mode << ", ";
         ss << "logfile: " << logfile << ", ";
         ss << "config_file: " << config_file << ", ";

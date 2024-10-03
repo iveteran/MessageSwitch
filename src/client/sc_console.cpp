@@ -79,6 +79,11 @@ void SCConsole::registerCommands()
             std::bind(&SCConsole::handleConsoleCommand_Publish, this, std::placeholders::_1)
             );
     Console::Instance()->registerCommand(
+            "ss_req_svc",
+            "Request service from Switch server",
+            std::bind(&SCConsole::handleConsoleCommand_RequestService, this, std::placeholders::_1)
+            );
+    Console::Instance()->registerCommand(
             "ss_fwd",
             "Send forwarding targets command by Switch server",
             std::bind(&SCConsole::handleConsoleCommand_ForwardTargets, this, std::placeholders::_1)
@@ -229,6 +234,10 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
     cmd_ap.add_argument("--with_token")
         .help("the token last registered of Switch client")
         .flag();
+    cmd_ap.add_argument("--svc_type")
+        .help("the service type, only used for role is Service")
+        .scan<'i', uint8_t>()
+        .default_value(0);
 
     try {
         cmd_ap.parse_args(argv);
@@ -264,8 +273,12 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
     }
 
     bool with_token = cmd_ap.get<bool>("--with_token");
+    uint8_t svc_type = 0;
+    if (cmd_ap.is_used("--svc_type")) {
+        svc_type = cmd_ap.get<uint8_t>("--svc_type");
+    }
 
-    cmd_handler_->Register(ep_id, EEndpointRole(role), access_code, with_token);
+    cmd_handler_->Register(ep_id, EEndpointRole(role), access_code, with_token, svc_type);
     return 0;
 }
 
@@ -503,6 +516,44 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
         }
     }
     //cmd_handler_->Publish(data);
+
+    return 0;
+}
+
+int SCConsole::handleConsoleCommand_RequestService(const vector<string>& argv)
+{
+    argparse::ArgumentParser cmd_ap(argv[0], "1.0", argparse::default_arguments::help, false);
+
+    cmd_ap.add_argument("--data")
+        .help("The data be send")
+        .default_value(R"({"foo":"bar"})");
+        //.default_value("{foo:bar}");
+    cmd_ap.add_argument("--svc_type")
+        .help("The service type to request")
+        .scan<'i', uint8_t>()
+        .nargs(argparse::nargs_pattern::at_least_one);
+
+    try {
+        cmd_ap.parse_args(argv);
+    } catch (const std::exception& err) {
+        std::cerr << err.what() << std::endl;
+        std::cerr << cmd_ap;
+        return -1;
+    }
+    if (cmd_ap.is_used("--help")) {
+        return 1;
+    }
+
+    uint8_t svc_type = 0;
+    if (cmd_ap.is_used("--svc_type")) {
+        svc_type = cmd_ap.get<uint8_t>("--svc_type");
+    }
+    string data;
+    if (cmd_ap.is_used("--data")) {
+        data = cmd_ap.get<string>("--data");
+    }
+
+    cmd_handler_->RequestService(data, svc_type);
 
     return 0;
 }

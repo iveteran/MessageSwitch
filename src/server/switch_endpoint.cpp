@@ -2,7 +2,7 @@
 #include "eventloop/eventloop.h"
 
 Endpoint::Endpoint(EndpointId id, TcpConnection* conn)
-    : conn_(conn), born_time_(evt_loop::Now())
+    : role_(EEndpointRole::Undefined), conn_(conn), born_time_(evt_loop::Now()), svc_type_(0)
 {
     conn_->SetID(id);
 }

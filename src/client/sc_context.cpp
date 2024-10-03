@@ -6,7 +6,7 @@
 #include "switch_client.h"
 
 SCContext::SCContext(SwitchClient* client) :
-    switch_client(client), born_time(evt_loop::Now()), is_registered(false), endpoint_id(0)
+    switch_client(client), born_time(evt_loop::Now()), svc_type(0), is_registered(false), endpoint_id(0)
 {
     auto options = switch_client->GetOptions();
     if (! options->access_code.empty()) {
@@ -27,6 +27,7 @@ string SCContext::ToString() const
     ss << "is_connected: " << (switch_client->IsConnected() ? "true" : "false") << ", ";
     ss << "access_code: " << access_code << ", ";
     ss << "role: " << EndpointRoleToTag(role) << ", ";
+    ss << "svc_type: " << int(svc_type) << ", ";
     ss << "is_registered: " << is_registered << ", ";
     ss << "register_errmsg: " << register_errmsg << ", ";
     ss << "token: " << token << ", ";

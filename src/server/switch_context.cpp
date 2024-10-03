@@ -13,6 +13,9 @@ SwitchContext::SwitchContext(SwitchServer* server) :
     if (! options->admin_code.empty()) {
         admin_code = options->admin_code;
     }
+    if (! options->service_access_code.empty()) {
+        service_access_code = options->service_access_code;
+    }
     if (! options->serving_mode.empty()) {
         serving_mode = TagToServingMode(options->serving_mode);
     }
@@ -26,8 +29,37 @@ string SwitchContext::ToString() const
     ss << "node_id: " << switch_server->NodeId() << ", ";
     ss << "access_code: " << access_code << ", ";
     ss << "admin_code: " << admin_code << ", ";
+    ss << "service_access_code: " << service_access_code << ", ";
     ss << "serving_mode: " << ServingModeToTag(serving_mode) << ", ";
     ss << "message_header_description: " << switch_server->GetMessageHeaderDescription()->ToString() << ", ";
     ss << "}";
     return ss.str();
+}
+
+void SwitchContext::RemoveEndpoint(EndpointId ep_id)
+{
+    auto iter = endpoints.find(ep_id);
+    if (iter == endpoints.end()) {
+        return;
+    }
+    auto ep = iter->second;
+    switch (ep->GetRole()) {
+        case EEndpointRole::Normal:
+            normal_endpoints.erase(ep->Id());
+            break;
+        case EEndpointRole::Admin:
+            admin_endpoints.erase(ep->Id());
+            break;
+        case EEndpointRole::Service:
+            {
+                auto iter = service_endpoints.find(ep->GetServiceType());
+                if (iter != service_endpoints.end()) {
+                    iter->second.erase(ep);
+                }
+            }
+            break;
+        default:
+            break;
+    }
+    endpoints.erase(iter);
 }

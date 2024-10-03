@@ -34,7 +34,6 @@ SwitchService::register_endpoint(TcpConnection* conn, const CommandRegister& reg
             if (reg_cmd.access_code.empty() || reg_cmd.access_code != context->service_access_code) {
                 return { errcode, ss.str(), nullptr };
             }
-            handle_service_point(conn, reg_cmd);
             break;
         default:
             {
@@ -53,24 +52,40 @@ SwitchService::register_endpoint(TcpConnection* conn, const CommandRegister& reg
     auto regResult = std::make_shared<CommandResultRegister>();
     regResult->id = ep_id;
 
-    auto iter = context->endpoints.find(ep_id);
-    if (iter == context->endpoints.end()) {
+    auto& any_endpoints = context->endpoints;
+    auto iter = any_endpoints.find(ep_id);
+    if (iter == any_endpoints.end()) {
         // new
         auto ep = std::make_shared<Endpoint>(ep_id, conn);
         ep->SetRole(role);
         auto token = generate_token(ep.get());
         ep->SetToken(token);
-        context->endpoints[ep_id] = ep;
-        if (role == EEndpointRole::Admin) {
-            context->admin_clients[ep_id] = ep;
+        any_endpoints[ep_id] = ep;
+        switch (role) {
+            case EEndpointRole::Normal:
+                context->normal_endpoints[ep_id] = ep;
+                break;
+            case EEndpointRole::Admin:
+                context->admin_endpoints[ep_id] = ep;
+                break;
+            case EEndpointRole::Service:
+                //handle_service_point(ep.get(), reg_cmd);
+                ep->SetServiceType(reg_cmd.svc_type);
+                context->service_endpoints[reg_cmd.svc_type].insert(ep);
+                break;
+            default:
+                printf("[Register] Unsupported endpoint role: %d\n", int(role));
+                break;
         }
         regResult->token = token;
+        conn->SetID(ep_id);   // assign endpoint id to connection
     } else {
         // exists
-        auto exists_ep = iter->second;
+        auto& exists_ep = iter->second;
+        auto exists_svc_type = exists_ep->GetServiceType();
         if (exists_ep->Connection()->FD() != conn->FD()) {
             if (! reg_cmd.token.empty() && reg_cmd.token == exists_ep->GetToken()) {
-                // kickout
+                // in difference connection, kickout older
                 kickout_endpoint(exists_ep.get());
                 exists_ep->SetConnection(conn);
             } else {
@@ -89,11 +104,49 @@ SwitchService::register_endpoint(TcpConnection* conn, const CommandRegister& reg
         }
         if (role != exists_ep->GetRole()) {
             // switch role
-            exists_ep->SetRole(role);
-            if (role == EEndpointRole::Admin) {
-                context->admin_clients[ep_id] = exists_ep;
+            switch (exists_ep->GetRole()) {
+                case EEndpointRole::Normal:
+                    context->normal_endpoints.erase(ep_id);
+                    break;
+                case EEndpointRole::Admin:
+                    context->admin_endpoints.erase(ep_id);
+                    break;
+                case EEndpointRole::Service:
+                    context->service_endpoints[exists_svc_type].erase(exists_ep);
+                    if (context->service_endpoints[exists_svc_type].empty()) {
+                        context->service_endpoints.erase(exists_svc_type);
+                    }
+                    break;
+                default:
+                    printf("[Register] Unsupported endpoint role: %d\n", int(exists_ep->GetRole()));
+                    break;
             }
+            switch (role) {
+                case EEndpointRole::Normal:
+                    context->normal_endpoints[ep_id] = exists_ep;
+                    break;
+                case EEndpointRole::Admin:
+                    context->admin_endpoints[ep_id] = exists_ep;
+                    break;
+                case EEndpointRole::Service:
+                    context->service_endpoints[reg_cmd.svc_type].insert(exists_ep);
+                    break;
+                default:
+                    printf("[Register] Unsupported endpoint role: %d\n", int(exists_ep->GetRole()));
+                    break;
+            }
+            exists_ep->SetRole(role);
             regResult->role = EndpointRoleToTag(role);
+        }
+        if (role == EEndpointRole::Service &&
+                reg_cmd.svc_type != exists_svc_type) {
+            // switch service type
+            context->service_endpoints[exists_svc_type].erase(exists_ep);
+            if (context->service_endpoints[exists_svc_type].empty()) {
+                context->service_endpoints.erase(exists_svc_type);
+            }
+            context->service_endpoints[reg_cmd.svc_type].insert(exists_ep);
+            exists_ep->SetServiceType(reg_cmd.svc_type);
         }
     }
 
@@ -102,8 +155,13 @@ SwitchService::register_endpoint(TcpConnection* conn, const CommandRegister& reg
     return { 0, "", regResult };
 }
 
-int SwitchService::handle_service_point(TcpConnection* conn, const CommandRegister& reg_cmd)
+int SwitchService::handle_service_point(const Endpoint* ep, const CommandRegister& reg_cmd)
 {
+    /*
+    auto context = switch_server_->GetContext();
+    context->service_endpoints[reg_cmd.svc_type].insert(ep);
+    ep->SetServiceType(reg_cmd.svc_type);
+    */
     return 0;
 }
 
@@ -128,7 +186,7 @@ SwitchService::get_stats(const CommandInfoReq& cmd_info_req)
     cmd_info->endpoints.total = context->endpoints.size();
     cmd_info->endpoints.rx_bytes = rx_bytes;
     cmd_info->endpoints.tx_bytes = tx_bytes;
-    cmd_info->admin_clients.total = context->admin_clients.size();
+    cmd_info->admin_clients.total = context->admin_endpoints.size();
     cmd_info->pending_clients.total = context->pending_clients.size();
 
     if (cmd_info_req.is_details) {
@@ -159,6 +217,7 @@ SwitchService::get_endpoint_stats(const CommandInfoReq& cmd_info_req)
     cmd_ep_info->id = ep->Id();
     cmd_ep_info->role = uint8_t(ep->GetRole());
     cmd_ep_info->uptime = Now() - ep->GetBornTime();
+    cmd_ep_info->svc_type = ep->GetServiceType();
     std::copy(ep->GetForwardTargets().begin(), ep->GetForwardTargets().end(),
           std::back_inserter(cmd_ep_info->fwd_targets));
 

@@ -18,7 +18,7 @@ void SCCommandHandler::Echo(const char* content)
 }
 
 void SCCommandHandler::Register(uint32_t ep_id, EEndpointRole ep_role,
-        const string& access_code, bool with_token)
+        const string& access_code, bool with_token, uint8_t svc_type)
 {
     CommandRegister reg_cmd;
     reg_cmd.id = ep_id > 0 ? ep_id : client_->GetContext()->endpoint_id;
@@ -32,6 +32,8 @@ void SCCommandHandler::Register(uint32_t ep_id, EEndpointRole ep_role,
     if (with_token && !token.empty()) {
         reg_cmd.token = token;
     }
+    reg_cmd.svc_type = svc_type;
+    client_->GetContext()->svc_type = svc_type;
 
     auto content = reg_cmd.encodeToJSON();
     size_t sent_bytes = SendCommandMessage(ECommand::REG, content);
@@ -125,6 +127,15 @@ void SCCommandHandler::Publish(const string& data)
     }
 }
 
+void SCCommandHandler::RequestService(const string& data, uint8_t svc_type)
+{
+    size_t sent_bytes = SendCommandMessage(ECommand::SVC, data, svc_type);
+    if (sent_bytes > 0) {
+        printf("Sent SVC message, content size(%ld):\n", data.size());
+        cout << DumpHexWithChars(data, evt_loop::DUMP_MAX_BYTES) << endl;
+    }
+}
+
 void SCCommandHandler::Setup(const string& access_code, const string& new_admin_code,
         const string& new_access_code, const string& mode)
 {
@@ -161,12 +172,12 @@ void SCCommandHandler::Reload()
     }
 }
 
-size_t SCCommandHandler::SendCommandMessage(ECommand cmd, const string& payload)
+size_t SCCommandHandler::SendCommandMessage(ECommand cmd, const string& payload, uint8_t svc_type)
 {
-    return SendCommandMessage(client_->Connection().get(), cmd, payload);
+    return SendCommandMessage(client_->Connection().get(), cmd, payload, svc_type);
 }
 
-size_t SCCommandHandler::SendCommandMessage(TcpConnection* conn, ECommand cmd, const string& payload)
+size_t SCCommandHandler::SendCommandMessage(TcpConnection* conn, ECommand cmd, const string& payload, uint8_t svc_type)
 {
     if (! client_->IsConnected()) {
         printf("The connection was disconnected! Do nothing.\n");
@@ -176,6 +187,8 @@ size_t SCCommandHandler::SendCommandMessage(TcpConnection* conn, ECommand cmd, c
     CommandMessage cmdMsg;
     cmdMsg.cmd = uint8_t(cmd);
     cmdMsg.SetToJSON();
+    auto context = client_->GetContext();
+    cmdMsg.svc_type = svc_type > 0 ? svc_type : context->svc_type;
     cmdMsg.payload_len = payload.size();
     reverseToNetworkMessage(&cmdMsg, client_->GetMessageHeaderDescription()->is_payload_len_including_self);
 
@@ -194,6 +207,7 @@ void SCCommandHandler::HandleCommandResult(TcpConnection* conn, CommandMessage* 
     ECommand cmd = (ECommand)cmdMsg->cmd;
     printf("Command result:\n");
     printf("cmd: %s(%d)\n", CommandToTag(cmd), uint8_t(cmd));
+    printf("svc type: %d\n", cmdMsg->svc_type);
     printf("payload_len: %d\n", cmdMsg->payload_len);
 
     ResultMessage* resultMsg = (ResultMessage*)(cmdMsg->payload);
@@ -299,4 +313,10 @@ void SCCommandHandler::HandlePublishData(TcpConnection* conn, CommandMessage* cm
     printf("payload_len: %d\n", cmdMsg->payload_len);
 
     cout << DumpHexWithChars(cmdMsg->payload, cmdMsg->payload_len, evt_loop::DUMP_MAX_BYTES) << endl;
+}
+
+void SCCommandHandler::HandleServiceRequest(TcpConnection* conn, CommandMessage* cmdMsg)
+{
+    HandlePublishData(conn, cmdMsg);
+    // TODO: handle service request
 }

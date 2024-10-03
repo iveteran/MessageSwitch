@@ -87,8 +87,8 @@ void SwitchServer::OnConnectionReady(TcpConnection* conn)
 void SwitchServer::OnConnectionClosed(TcpConnection* conn)
 {
     printf("[SwitchServer::OnConnectionClosed] fd: %d, id: %d\n", conn->FD(), conn->ID());
-    context_->admin_clients.erase(conn->ID());
-    context_->endpoints.erase(conn->ID());
+    // clear endpoint
+    context_->RemoveEndpoint(conn->ID());
     context_->pending_clients.erase(conn->FD());
 }
 void SwitchServer::OnMessageRecvd(TcpConnection* conn, const Message* msg)

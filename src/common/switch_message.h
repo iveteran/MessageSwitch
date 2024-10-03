@@ -13,6 +13,7 @@ struct CommandMessage {
         uint8_t codec:2;    // 2 bits, codec of above layer, 0: undefined, 1: json, 2: protobuf, 3: unused
         uint8_t req_rsp:1;  // 1 bit,  request or response,  0: request, 1: response
     } flag;
+    uint8_t svc_type;       // service type of up layer, 0: undefined, used for service routing
     uint32_t payload_len;   // payload_len supports including self size
     char payload[0];        // placeholder field
  

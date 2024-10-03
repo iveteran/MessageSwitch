@@ -20,6 +20,9 @@ bool CommandRegister::decodeFromJSON(const string& data) {
     if (params.contains("token")) {
         token = params["token"];
     }
+    if (params.contains("svc_type")) {
+        svc_type = params["svc_type"];
+    }
     return true;
 }
 
@@ -34,6 +37,9 @@ string CommandRegister::encodeToJSON() {
     }
     if (! token.empty()) {
         json_obj["token"] = token;
+    }
+    if (svc_type > 0) {
+        json_obj["svc_type"] = svc_type;
     }
     _raw_data = json_obj.dump();
     return _raw_data;
@@ -218,6 +224,9 @@ bool CommandEndpointInfo::decodeFromJSON(const string& data) {
     if (params.contains("role")) {
         role = params["role"];
     }
+    if (params.contains("svc_type")) {
+        svc_type = params["svc_type"];
+    }
 
     if (params.contains("fwd_targets") && params["fwd_targets"].is_array()) {
         fwd_targets = params["fwd_targets"].template get<std::vector<uint32_t>>();
@@ -250,6 +259,7 @@ string CommandEndpointInfo::encodeToJSON() {
     rsp["id"] = id;
     rsp["uptime"] = uptime;
     rsp["role"] = role;
+    rsp["svc_type"] = svc_type;
 
     if (! fwd_targets.empty()) {
         rsp["fwd_targets"] = fwd_targets;

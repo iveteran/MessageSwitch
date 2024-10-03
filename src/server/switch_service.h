@@ -23,7 +23,7 @@ public:
     {}
 
     tuple<int, string, CommandResultRegisterPtr> register_endpoint(TcpConnection* conn, const CommandRegister& cmd_reg);
-    int handle_service_point(TcpConnection* conn, const CommandRegister& reg_cmd);
+    int handle_service_point(const Endpoint* ep, const CommandRegister& reg_cmd);
     CommandInfoPtr get_stats(const CommandInfoReq& cmd_info_req);
     tuple<int, string, CommandEndpointInfoPtr> get_endpoint_stats(const CommandInfoReq& cmd_info_req);
     tuple<int, string> forward(Endpoint* ep, const CommandForward& cmd_fwd);

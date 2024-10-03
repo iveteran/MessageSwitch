@@ -20,4 +20,8 @@ enum class EProxyMode {
     Hash,
 };
 
+using EndpointId = uint32_t;
+using ServiceType = uint8_t;
+using MessageId = uint8_t;
+
 #endif  // _SWITCH_TYPES_H

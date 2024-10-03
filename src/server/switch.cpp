@@ -34,6 +34,8 @@ int parse_arguments(int argc, char **argv, OptionsPtr& options) {
         .help("access code for endpoint");
     program.add_argument("-A", "--admin_code")
         .help("access code for administrator");
+    program.add_argument("-S", "--service_access_code")
+        .help("access code for services");
     program.add_argument("-f", "--config")
         .help("configuration file");
 
@@ -64,6 +66,10 @@ int parse_arguments(int argc, char **argv, OptionsPtr& options) {
     if (program.is_used("--admin_code")) {
         options->admin_code = program.get<std::string>("--admin_code");
         cout << "> arguments.admin_code: " << options->admin_code << endl;
+    }
+    if (program.is_used("--service_access_code")) {
+        options->service_access_code = program.get<std::string>("--service_access_code");
+        cout << "> arguments.service_access_code: " << options->service_access_code << endl;
     }
     if (program.is_used("--config")) {
         options->config_file = program.get<std::string>("--config");
@@ -124,6 +130,12 @@ int parse_configuration(const string& config_file, OptionsPtr& options) {
             auto admin_code = auth_config.at("admin_code").as_string();
             cout << "> config.auth.admin_code: " << admin_code << endl;
             options->admin_code = admin_code;
+        }
+
+        if (auth_config.contains("service_access_code")) {
+            auto service_access_code = auth_config.at("service_access_code").as_string();
+            cout << "> config.auth.service_access_code: " << service_access_code << endl;
+            options->service_access_code = service_access_code;
         }
     }
 

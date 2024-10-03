@@ -97,6 +97,8 @@ void SwitchClient::OnMessageRecvd(TcpConnection* conn, const Message* msg)
     } else {
         if (ECommand(cmdMsg->cmd) == ECommand::PUBLISH) {
             cmd_handler_->HandlePublishData(conn, cmdMsg);
+        } else if (ECommand(cmdMsg->cmd) == ECommand::SVC) {
+            cmd_handler_->HandleServiceRequest(conn, cmdMsg);
         }
     }
 }

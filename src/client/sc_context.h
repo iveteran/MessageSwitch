@@ -22,6 +22,7 @@ struct SCContext
     time_t born_time;
     string access_code;
     EEndpointRole role;
+    uint8_t svc_type;
     bool is_registered;
     string register_errmsg;
     uint32_t endpoint_id;

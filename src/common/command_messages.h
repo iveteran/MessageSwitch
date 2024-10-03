@@ -11,10 +11,11 @@ using std::vector;
 using std::map;
 
 struct CommandRegister {
-    uint32_t id;
+    uint32_t id = 0;
     string role;
     string access_code;
     string token;
+    uint8_t svc_type = 0;
     string _raw_data;
 
     bool decodeFromJSON(const string& data);
@@ -117,6 +118,7 @@ struct CommandEndpointInfo {
     uint32_t id;
     time_t uptime;
     uint8_t role;
+    uint8_t svc_type;
     vector<uint32_t> fwd_targets;
     vector<uint32_t> subs_sources;
     vector<uint32_t> rej_sources;

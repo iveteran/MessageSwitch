@@ -29,6 +29,9 @@ const char* CommandToTag(ECommand cmd) {
         case ECommand::PUBLISH:
             cmd_tag = "PUBLISH";
             break;
+        case ECommand::SVC:
+            cmd_tag = "SVC";
+            break;
         case ECommand::INFO:
             cmd_tag = "INFO";
             break;

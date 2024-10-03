@@ -20,9 +20,11 @@ struct SwitchContext
     SwitchServer*                   switch_server;
     map<int, TcpConnection*>        pending_clients;
     map<EndpointId, EndpointPtr>    endpoints;
-    map<EndpointId, EndpointPtr>    admin_clients;
-    map<EndpointId, EndpointPtr>    proxy_endpoints;
-    map<EndpointId, EndpointPtr>    rproxy_endpoints;
+    map<EndpointId, EndpointPtr>    normal_endpoints;
+    map<EndpointId, EndpointPtr>    admin_endpoints;
+    map<ServiceType, set<EndpointPtr>>  service_endpoints;
+    //map<EndpointId, EndpointPtr>    proxy_endpoints;
+    //map<EndpointId, EndpointPtr>    rproxy_endpoints;
 
     time_t born_time;
     string access_code = DEFAULT_ACCESS_TOKEN;

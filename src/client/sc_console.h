@@ -31,6 +31,7 @@ class SCConsole {
     int handleConsoleCommand_Register(const vector<string>& argv);
     int handleConsoleCommand_GetInfo(const vector<string>& argv);
     int handleConsoleCommand_Publish(const vector<string>& argv);
+    int handleConsoleCommand_RequestService(const vector<string>& argv);
     int handleConsoleCommand_ForwardTargets(const vector<string>& argv);
     int handleConsoleCommand_UnforwardTargets(const vector<string>& argv);
     int handleConsoleCommand_Subscribe(const vector<string>& argv);

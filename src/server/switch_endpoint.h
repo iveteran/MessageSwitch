@@ -7,6 +7,7 @@
 #include <eventloop/tcp_connection.h>
 #include "switch_message.h"
 #include "endpoint_role.h"
+#include "switch_types.h"
 
 using std::vector;
 using std::set;
@@ -16,9 +17,6 @@ namespace evt_loop {
     class TcpConnection;
 }
 using evt_loop::TcpConnection;
-
-typedef uint32_t EndpointId;
-typedef uint8_t  MessageId;
 
 class Endpoint {
 public:
@@ -35,6 +33,8 @@ public:
     TcpConnection* Connection() { return conn_; }
     void SetConnection(TcpConnection* conn) { conn_ = conn; }
     time_t GetBornTime() const { return born_time_; }
+    void SetServiceType(uint8_t svc_type) { svc_type_ = svc_type; }
+    uint8_t GetServiceType() const { return svc_type_; }
 
     const set<EndpointId>& GetForwardTargets() const { return fwd_targets_; }
     void SetForwardTargets(const vector<EndpointId>& targets);
@@ -61,6 +61,7 @@ private:
     string              token_;
     TcpConnection*      conn_;
     time_t              born_time_;
+    uint8_t             svc_type_;           // service type, if role is Service
 
     set<EndpointId>     fwd_targets_;
 

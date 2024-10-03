@@ -41,6 +41,7 @@ void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
     ECommand cmd = (ECommand)cmdMsg->cmd;
     printf("[CommandHandler::HandleCommand] id: %d\n", conn->ID());
     printf("[CommandHandler::HandleCommand] cmd: %s(%d)\n", CommandToTag(cmd), (uint8_t)cmd);
+    printf("[CommandHandler::HandleCommand] svc_type: %d\n", cmdMsg->svc_type);
     printf("[CommandHandler::HandleCommand] payload len: %d\n", cmdMsg->payload_len);
     cout << DumpHexWithChars(cmdMsg->payload, cmdMsg->payload_len, evt_loop::DUMP_MAX_BYTES) << endl;
 
@@ -90,6 +91,9 @@ void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
             break;
         case ECommand::PUBLISH:
             handlePublishData(ep, cmdMsg, msgData);
+            break;
+        case ECommand::SVC:
+            handleService(ep, cmdMsg, msgData);
             break;
         case ECommand::INFO:
             handleInfo(ep, cmdMsg, msgData);
@@ -260,7 +264,7 @@ int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdM
     auto fwd_targets = ep->GetForwardTargets();
     if (fwd_targets.empty() || fwd_targets.contains(0)) {
         // broadcast
-        for (auto iter : context_->endpoints) {
+        for (auto iter : context_->normal_endpoints) {
             EndpointId ep_id = iter.first;
             auto target_ep = iter.second;
             if (ep_id == ep->Id()) {
@@ -277,8 +281,8 @@ int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdM
     } else {
         // multicast
         for (auto ep_id : fwd_targets) {
-            auto iter = context_->endpoints.find(ep_id);
-            if (iter == context_->endpoints.end()) {
+            auto iter = context_->normal_endpoints.find(ep_id);
+            if (iter == context_->normal_endpoints.end()) {
                 continue;
             }
             auto target_ep = iter->second;
@@ -300,6 +304,51 @@ int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdM
     int8_t errcode = 0;
     sendResultMessage(ep->Connection(), cmd, errcode);
 
+    return 0;
+}
+
+int CommandHandler::handleService(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
+{
+    vector<EndpointPtr> targets;
+    uint8_t svc_type = cmdMsg->svc_type;
+
+    auto iter = context_->service_endpoints.find(svc_type);
+    if (iter != context_->service_endpoints.end()) {
+        auto ep_set = iter->second;
+        for (auto target_ep : ep_set) {
+            if (target_ep->IsRejectedSource(ep->Id())) {
+                printf("[handleService] WARN: the source endpoint(%d) be rejected for target endpoint(%d)\n", ep->Id(), target_ep->Id());
+                continue;
+            }
+            //if (! target_ep->IsSubscribedSource(ep->Id())) {
+            //    continue;
+            //}
+            targets.push_back(target_ep);
+            break;
+        }
+    } else {
+        auto iter = context_->service_endpoints.find(0);  // 0: if svc_type is 0 means for all service type
+        if (iter != context_->service_endpoints.end()) {
+            auto ep_set = iter->second;
+            for (auto target_ep : ep_set) {
+                if (target_ep->IsRejectedSource(ep->Id())) {
+                    printf("[handleService] WARN: the source endpoint(%d) be rejected for target endpoint(%d)\n", ep->Id(), target_ep->Id());
+                    continue;
+                }
+                //if (! target_ep->IsSubscribedSource(ep->Id())) {
+                //    continue;
+                //}
+                targets.push_back(target_ep);
+                break;
+            }
+        }
+    }
+
+    reverseToNetworkMessage((CommandMessage*)cmdMsg, context_->switch_server->IsMessagePayloadLengthIncludingSelf());
+    for (auto target_ep : targets) {
+        printf("[handleService] forward message: size: %ld\n", data.size());
+        target_ep->Connection()->Send(data);
+    }
     return 0;
 }
 
