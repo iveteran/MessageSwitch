@@ -95,7 +95,11 @@ void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
             handlePublishData(ep, cmdMsg, msgData);
             break;
         case ECommand::SVC:
-            handleService(ep, cmdMsg, msgData);
+            if (cmdMsg->HasResponseFlag()) {
+                handleServiceResponse(ep, cmdMsg, msgData);
+            } else {
+                handleServiceRequest(ep, cmdMsg, msgData);
+            }
             break;
         case ECommand::INFO:
             handleInfo(ep, cmdMsg, msgData);
@@ -310,12 +314,16 @@ int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdM
     return 0;
 }
 
-int CommandHandler::handleService(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
+int CommandHandler::handleServiceRequest(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
 {
-    uint8_t svc_type = 0;  // TODO
+    const ServiceMessage* svc_msg = cmdMsg->GetServiceMessage();
+    printf("[handleServiceRequest] svc_type: %d\n", svc_msg->svc_type);
+    printf("[handleServiceRequest] svc_cmd: %d\n", svc_msg->svc_cmd);
+    printf("[handleServiceRequest] sess_id: %d\n", svc_msg->sess_id);
+    printf("[handleServiceRequest] source: %d\n", svc_msg->source);
 
     EndpointPtr svc_ep;
-    auto iter = context_->service_endpoints.find(svc_type);
+    auto iter = context_->service_endpoints.find(svc_msg->svc_type);
     if (iter != context_->service_endpoints.end()) {
         auto ep_set = iter->second;
         for (auto ep : ep_set) {
@@ -349,8 +357,42 @@ int CommandHandler::handleService(EndpointPtr ep, const CommandMessage* cmdMsg, 
 
     if (svc_ep) {
         ((CommandMessage*)cmdMsg)->ConvertToNetworkMessage(context_->switch_server->IsMessagePayloadLengthIncludingSelf());
-        printf("[handleService] forward message: size: %ld\n", data.size());
+        printf("[handleServiceRequest] forward message: size: %ld\n", data.size());
         svc_ep->Connection()->Send(data);
+    } else {
+        // respond error message
+        ResultMessage result_msg;
+        result_msg.errcode = 1;
+        string errmsg("Can not find service");
+
+        auto rspCmdMsg = ((CommandMessage*)cmdMsg);
+        rspCmdMsg->SetResponseFlag();
+        rspCmdMsg->SetPayloadLen(sizeof(ServiceMessage) + sizeof(ResultMessage) + errmsg.size());
+        rspCmdMsg->ConvertToNetworkMessage(context_->switch_server->IsMessagePayloadLengthIncludingSelf());
+
+        ep->Connection()->Send(rspCmdMsg->Data(), rspCmdMsg->HeaderSize());
+        ep->Connection()->Send((char*)svc_msg, sizeof(ServiceMessage));
+        ep->Connection()->Send((char*)&result_msg, sizeof(result_msg));
+        ep->Connection()->Send(errmsg);
+    }
+    return 0;
+}
+
+int CommandHandler::handleServiceResponse(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
+{
+    const ServiceMessage* svc_msg = cmdMsg->GetServiceMessage();
+    printf("[handleServiceResponse] svc_type: %d\n", svc_msg->svc_type);
+    printf("[handleServiceResponse] svc_cmd: %d\n", svc_msg->svc_cmd);
+    printf("[handleServiceResponse] sess_id: %d\n", svc_msg->sess_id);
+    printf("[handleServiceResponse] source: %d\n", svc_msg->source);
+
+    auto iter = context_->endpoints.find(svc_msg->source);
+    if (iter != context_->endpoints.end()) {
+        auto source_ep = iter->second;
+        ((CommandMessage*)cmdMsg)->ConvertToNetworkMessage(context_->switch_server->IsMessagePayloadLengthIncludingSelf());
+        source_ep->Connection()->Send(data);
+    } else {
+        printf("[handleServiceResponse] Error: can not find service request source: %d\n", svc_msg->source);
     }
     return 0;
 }

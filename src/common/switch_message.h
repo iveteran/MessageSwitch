@@ -38,6 +38,16 @@ const char* CommandToTag(ECommand cmd);
 
 using payload_size_t = uint16_t;
 
+// for CommandMessage.cmd equals ECommand::SVC
+#pragma pack(1)
+struct ServiceMessage {
+    uint8_t svc_type = 0;   // service type, used for service routing, 0: all, others defined by Services
+    uint16_t svc_cmd = 0;   // defined by Services
+    uint32_t sess_id = 0;   // session id of request/response
+    uint32_t source  = 0;   // requester id (endpoint id)
+};
+#pragma pack()
+
 #pragma pack(1)
 struct ResultMessage {
     int8_t errcode = 0;
@@ -56,7 +66,7 @@ struct CommandMessage {
         uint8_t req_rsp:1 = 0;  // 1 bit,  request or response,  0: request, 1: response
     } flag_;
     payload_size_t payload_len_ = 0;    // payload_len, XXX: does not including self size
-    char payload_[0];                   // placeholder field
+    char payload_[0];                   // placeholder field, ServiceMessage or payload
 
     public:
     // Member methods
@@ -89,6 +99,7 @@ struct CommandMessage {
         return data;
     }
 
+    const ServiceMessage* GetServiceMessage() const;
     const ResultMessage* GetResultMessage() const;
     size_t GetResultMessageContentSize() const;
     Message* ConvertToNetworkMessage(bool isMsgPayloadLengthIncludingSelf);

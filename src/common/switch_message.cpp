@@ -70,6 +70,14 @@ CommandMessage::Payload() const
 {
     auto payload_len = payload_len_;
     auto payload = (char*)payload_;
+    switch ((ECommand)(cmd_)) {
+        case ECommand::SVC:
+            payload += sizeof(ServiceMessage);
+            payload_len -= sizeof(ServiceMessage);
+            break;
+        default:
+            break;
+    }
     return { payload, payload_len };
 }
 
@@ -77,6 +85,12 @@ payload_size_t CommandMessage::PayloadLen() const
 {
     auto [_, payload_len] = Payload();
     return payload_len;
+}
+
+const ServiceMessage*
+CommandMessage::GetServiceMessage() const
+{
+    return ECommand(cmd_) == ECommand::SVC ? (const ServiceMessage*)(payload_) : nullptr;
 }
 
 const ResultMessage*

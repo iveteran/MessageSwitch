@@ -129,9 +129,16 @@ void SCCommandHandler::Publish(const string& data)
 
 void SCCommandHandler::RequestService(const string& data, uint8_t svc_type)
 {
-    size_t sent_bytes = SendCommandMessage(ECommand::SVC, data, svc_type);
+    ServiceMessage svc_msg;
+    svc_msg.svc_type = svc_type;
+    svc_msg.svc_cmd = 1;
+    svc_msg.sess_id = 10;
+    svc_msg.source = client_->GetContext()->endpoint_id;
+    //svc_msg.svc_type = svc_type > 0 ? svc_type : client_->GetContext()->svc_type;
+    string svc_msg_bytes((char*)&svc_msg, sizeof(svc_msg));
+    size_t sent_bytes = SendCommandMessage(ECommand::SVC, data, svc_msg_bytes);
+    printf("Sent SVC message, content size(%ld):\n", data.size());
     if (sent_bytes > 0) {
-        printf("Sent SVC message, content size(%ld):\n", data.size());
         cout << DumpHexWithChars(data, evt_loop::DUMP_MAX_BYTES) << endl;
     }
 }
@@ -172,12 +179,12 @@ void SCCommandHandler::Reload()
     }
 }
 
-size_t SCCommandHandler::SendCommandMessage(ECommand cmd, const string& payload, uint8_t svc_type)
+size_t SCCommandHandler::SendCommandMessage(ECommand cmd, const string& payload, const string& hdr_ext)
 {
-    return SendCommandMessage(client_->Connection().get(), cmd, payload, svc_type);
+    return SendCommandMessage(client_->Connection().get(), cmd, payload, hdr_ext);
 }
 
-size_t SCCommandHandler::SendCommandMessage(TcpConnection* conn, ECommand cmd, const string& payload, uint8_t svc_type)
+size_t SCCommandHandler::SendCommandMessage(TcpConnection* conn, ECommand cmd, const string& payload, const string& hdr_ext)
 {
     if (! client_->IsConnected()) {
         printf("The connection was disconnected! Do nothing.\n");
@@ -187,15 +194,25 @@ size_t SCCommandHandler::SendCommandMessage(TcpConnection* conn, ECommand cmd, c
     CommandMessage cmdMsg;
     cmdMsg.SetCommand(cmd);
     cmdMsg.SetToJSON();
-    cmdMsg.SetPayloadLen(payload.size());
+    cmdMsg.SetPayloadLen(payload.size() + hdr_ext.size());
     cmdMsg.ConvertToNetworkMessage(client_->GetMessageHeaderDescription()->is_payload_len_including_self);
+    cout << "Send command message bytes size: " << sizeof(cmdMsg) << endl;
+    cout << "Send command message bytes:" << endl;
+    cout << DumpHex(string((char*)&cmdMsg, sizeof(cmdMsg))) << endl;
 
     conn->Send((char*)&cmdMsg, sizeof(cmdMsg));
     size_t sent_bytes = sizeof(cmdMsg);
+    if (! hdr_ext.empty()) {
+        conn->Send(hdr_ext);
+        sent_bytes += hdr_ext.size();
+        cout << DumpHex(hdr_ext) << endl;
+    }
     if (! payload.empty()) {
         conn->Send(payload);
         sent_bytes += payload.size();
+        cout << DumpHex(payload) << endl;
     }
+    cout << "Send command message total bytes size: " << sent_bytes << endl;
 
     return sent_bytes;
 }
@@ -238,6 +255,11 @@ void SCCommandHandler::HandleCommandResult(TcpConnection* conn, CommandMessage* 
         case ECommand::EP_INFO:
             if (errcode == 0) {
                 HandleGetEndpointInfoResult(cmdMsg, content);
+            }
+            break;
+        case ECommand::SVC:
+            if (errcode == 0) {
+                HandleServiceResult(cmdMsg, content);
             }
             break;
         default:
@@ -314,6 +336,49 @@ void SCCommandHandler::HandlePublishData(TcpConnection* conn, CommandMessage* cm
 
 void SCCommandHandler::HandleServiceRequest(TcpConnection* conn, CommandMessage* cmdMsg)
 {
-    HandlePublishData(conn, cmdMsg);
-    // TODO: handle service request
+    printf("Received SVC reqeust message:\n");
+    ECommand cmd = cmdMsg->Command();
+    printf("Command message:\n");
+    printf("cmd: %s(%d)\n", CommandToTag(cmd), uint8_t(cmd));
+    printf("payload_len: %d\n", cmdMsg->PayloadLen());
+
+    auto svc_msg = cmdMsg->GetServiceMessage();
+    if (svc_msg) {
+        printf("svc type: %d\n", svc_msg->svc_type);
+        printf("svc cmd: %d\n", svc_msg->svc_cmd);
+        printf("sess_id: %d\n", svc_msg->sess_id);
+        printf("source: %d\n", svc_msg->source);
+    }
+
+    ResultMessage result_msg;
+    result_msg.errcode = 0;
+    string rsp_payload(R"({"svc": "result"})");
+
+    cmdMsg->SetResponseFlag();
+    cmdMsg->SetPayloadLen(sizeof(ServiceMessage) + sizeof(ResultMessage) + rsp_payload.size());
+    cmdMsg->ConvertToNetworkMessage(client_->GetMessageHeaderDescription()->is_payload_len_including_self);
+
+    conn->Send(cmdMsg->Data(), cmdMsg->HeaderSize());
+    conn->Send((char*)svc_msg, sizeof(ServiceMessage));
+    conn->Send((char*)&result_msg, sizeof(result_msg));
+    conn->Send(rsp_payload);
+
+    // TODO: handle service request, handle by svc_msg->svc_cmd
+}
+
+void SCCommandHandler::HandleServiceResult(CommandMessage* cmdMsg, const string& content)
+{
+    printf("Received SVC response message:\n");
+    ECommand cmd = cmdMsg->Command();
+    printf("Command message:\n");
+    printf("cmd: %s(%d)\n", CommandToTag(cmd), uint8_t(cmd));
+    printf("payload_len: %d\n", cmdMsg->PayloadLen());
+
+    auto svc_msg = cmdMsg->GetServiceMessage();
+    if (svc_msg) {
+        printf("svc type: %d\n", svc_msg->svc_type);
+        printf("svc cmd: %d\n", svc_msg->svc_cmd);
+        printf("sess_id: %d\n", svc_msg->sess_id);
+        printf("source: %d\n", svc_msg->source);
+    }
 }

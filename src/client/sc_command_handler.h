@@ -42,12 +42,13 @@ class SCCommandHandler {
     void HandleServiceRequest(TcpConnection* conn, CommandMessage* cmdMsg);
 
     private:
-    size_t SendCommandMessage(ECommand cmd, const string& payload, uint8_t svc_type=0);
-    size_t SendCommandMessage(TcpConnection* conn, ECommand cmd, const string& payload, uint8_t svc_type=0);
+    size_t SendCommandMessage(ECommand cmd, const string& payload, const string& hdr_ext="");
+    size_t SendCommandMessage(TcpConnection* conn, ECommand cmd, const string& payload, const string& hdr_ext="");
 
     void HandleRegisterResult(CommandMessage* cmdMsg, const string& payload);
     void HandleGetInfoResult(CommandMessage* cmdMsg, const string& data);
     void HandleGetEndpointInfoResult(CommandMessage* cmdMsg, const string& data);
+    void HandleServiceResult(CommandMessage* cmdMsg, const string& content);
 
     template<typename T>
     void SubUnsubRejUnrej(ECommand cmd, const vector<uint32_t>& sources, const vector<uint8_t>& messages);
