@@ -34,6 +34,8 @@ struct SwitchContext
 
     SwitchContext(SwitchServer* server);
     string ToString() const;
+
+    void RemoveEndpoint(EndpointId ep_id);
 };
 typedef std::shared_ptr<SwitchContext> SwitchContextPtr;
 
