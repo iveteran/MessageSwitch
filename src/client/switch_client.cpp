@@ -89,15 +89,15 @@ void SwitchClient::OnMessageRecvd(TcpConnection* conn, const Message* msg)
     //printf("[OnMessageRecvd] message payload bytes:\n");
     //cout << DumpHexWithChars(msg->Payload(), msg->PayloadSize(), evt_loop::DUMP_MAX_BYTES) << endl;
 
-    CommandMessage* cmdMsg = convertMessageToCommandMessage(msg,
+    auto cmdMsg = CommandMessage::FromNetworkMessage(msg,
             client_->GetMessageHeaderDescription()->is_payload_len_including_self);
 
     if (cmdMsg->HasResponseFlag()) {
         cmd_handler_->HandleCommandResult(conn, cmdMsg);
     } else {
-        if (ECommand(cmdMsg->cmd) == ECommand::PUBLISH) {
+        if (cmdMsg->Command() == ECommand::PUBLISH) {
             cmd_handler_->HandlePublishData(conn, cmdMsg);
-        } else if (ECommand(cmdMsg->cmd) == ECommand::SVC) {
+        } else if (cmdMsg->Command() == ECommand::SVC) {
             cmd_handler_->HandleServiceRequest(conn, cmdMsg);
         }
     }
@@ -117,14 +117,13 @@ void SwitchClient::OnConnectionClosed(TcpConnection* conn)
 HeaderDescriptionPtr SwitchClient::CreateMessageHeaderDescription()
 {
     auto msg_hdr_desc = std::make_shared<HeaderDescription>();
-    msg_hdr_desc->hdr_len = sizeof(CommandMessage);
-    //msg_hdr_desc->payload_len_offset = 2;  // jump over the size of fields cmd and flag
-    msg_hdr_desc->payload_len_offset = offsetof(struct CommandMessage, payload_len);
-    msg_hdr_desc->payload_len_bytes = sizeof(CommandMessage::payload_len);
+    msg_hdr_desc->hdr_len = CommandMessage::HeaderSize();
+    msg_hdr_desc->payload_len_offset = CommandMessage::OffsetOfPayloadLen();
+    msg_hdr_desc->payload_len_bytes = CommandMessage::PayloadLenBytes();
     msg_hdr_desc->is_payload_len_including_self = true;
-    auto hb_req = createHeartbeatRequest(msg_hdr_desc->is_payload_len_including_self);
-    msg_hdr_desc->heartbeat_request = string((char*)&hb_req, sizeof(hb_req));
-    auto hb_rsp = createHeartbeatResponse(msg_hdr_desc->is_payload_len_including_self);
-    msg_hdr_desc->heartbeat_response = string((char*)&hb_rsp, sizeof(hb_rsp));
+    auto hb_req = CommandMessage::CreateHeartbeatRequest();
+    msg_hdr_desc->heartbeat_request.assign(hb_req.Data(), hb_req.Size());
+    auto hb_rsp = CommandMessage::CreateHeartbeatResponse();
+    msg_hdr_desc->heartbeat_response.assign(hb_rsp.Data(), hb_rsp.Size());
     return msg_hdr_desc;
 }

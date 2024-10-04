@@ -4,8 +4,9 @@
 #include "command_messages.h"
 
 #define _DECODE_COMMAND_MESSAGE(func_name, cmd_msg, cmd_obj, conn) { \
-    if (cmd_msg->payload_len > 0) { \
-        string payload(cmd_msg->payload, cmd_msg->payload_len); \
+    auto [_payload, _payload_len] = cmd_msg->Payload(); \
+    if (_payload_len > 0) { \
+        string payload(_payload, _payload_len); \
         if (cmd_msg->IsJSON()) { \
             cmd_obj.decodeFromJSON(payload); \
         } else if (cmd_msg->IsPB()) { \
@@ -36,14 +37,15 @@
 void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
 {
     const string& msgData = msg->Data();
-    auto cmdMsg = convertMessageToCommandMessage(msg, context_->switch_server->IsMessagePayloadLengthIncludingSelf());
+    auto cmdMsg = CommandMessage::FromNetworkMessage(msg,
+            context_->switch_server->IsMessagePayloadLengthIncludingSelf());
 
-    ECommand cmd = (ECommand)cmdMsg->cmd;
+    ECommand cmd = cmdMsg->Command();
     printf("[CommandHandler::HandleCommand] id: %d\n", conn->ID());
     printf("[CommandHandler::HandleCommand] cmd: %s(%d)\n", CommandToTag(cmd), (uint8_t)cmd);
-    printf("[CommandHandler::HandleCommand] svc_type: %d\n", cmdMsg->svc_type);
-    printf("[CommandHandler::HandleCommand] payload len: %d\n", cmdMsg->payload_len);
-    cout << DumpHexWithChars(cmdMsg->payload, cmdMsg->payload_len, evt_loop::DUMP_MAX_BYTES) << endl;
+    auto [payload, payload_len] = cmdMsg->Payload();
+    printf("[CommandHandler::HandleCommand] payload len: %d\n", payload_len);
+    cout << DumpHexWithChars(payload, payload_len, evt_loop::DUMP_MAX_BYTES) << endl;
 
     switch (cmd)
     {
@@ -121,9 +123,10 @@ void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
 
 int CommandHandler::handleEcho(TcpConnection* conn, const CommandMessage* cmdMsg, const string& data)
 {
-    const ECommand cmd = (ECommand)cmdMsg->cmd;
+    const ECommand cmd = cmdMsg->Command();
     int8_t errcode = 0;
-    sendResultMessage(conn, cmd, errcode, cmdMsg->payload, cmdMsg->payload_len);
+    auto [payload, payload_len] = cmdMsg->Payload();
+    sendResultMessage(conn, cmd, errcode, payload, payload_len);
 
     return 0;
 }
@@ -134,7 +137,7 @@ int CommandHandler::handleRegister(TcpConnection* conn, const CommandMessage* cm
     // 2) set endpoint role - normal, admin, service, cluster node
     // 3) set endpoint id
 
-    const ECommand cmd = (ECommand)cmdMsg->cmd;
+    const ECommand cmd = cmdMsg->Command();
 
     CommandRegister reg_cmd;
     _DECODE_COMMAND_MESSAGE("handleRegister", cmdMsg, reg_cmd, conn);
@@ -156,7 +159,7 @@ int CommandHandler::handleRegister(TcpConnection* conn, const CommandMessage* cm
 
 int CommandHandler::handleForward(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
 {
-    const ECommand cmd = (ECommand)cmdMsg->cmd;
+    const ECommand cmd = cmdMsg->Command();
 
     CommandForward cmd_fwd;
     _DECODE_COMMAND_MESSAGE("handleForward", cmdMsg, cmd_fwd, ep->Connection());
@@ -173,7 +176,7 @@ int CommandHandler::handleForward(EndpointPtr ep, const CommandMessage* cmdMsg, 
 
 int CommandHandler::handleUnforward(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
 {
-    const ECommand cmd = (ECommand)cmdMsg->cmd;
+    const ECommand cmd = cmdMsg->Command();
 
     CommandUnforward cmd_unfwd;
     _DECODE_COMMAND_MESSAGE("handleUnforward", cmdMsg, cmd_unfwd, ep->Connection());
@@ -190,7 +193,7 @@ int CommandHandler::handleUnforward(EndpointPtr ep, const CommandMessage* cmdMsg
 
 int CommandHandler::handleSubscribe(EndpointPtr ep, const CommandMessage* cmdMsg, const string& msgData)
 {
-    const ECommand cmd = (ECommand)cmdMsg->cmd;
+    const ECommand cmd = cmdMsg->Command();
 
     CommandSubscribe cmd_sub;
     _DECODE_COMMAND_MESSAGE("handleSubscribe", cmdMsg, cmd_sub, ep->Connection());
@@ -207,7 +210,7 @@ int CommandHandler::handleSubscribe(EndpointPtr ep, const CommandMessage* cmdMsg
 
 int CommandHandler::handleUnsubscribe(EndpointPtr ep, const CommandMessage* cmdMsg, const string& msgData)
 {
-    const ECommand cmd = (ECommand)cmdMsg->cmd;
+    const ECommand cmd = cmdMsg->Command();
 
     CommandUnsubscribe cmd_unsub;
     _DECODE_COMMAND_MESSAGE("handleUnsubscribe", cmdMsg, cmd_unsub, ep->Connection());
@@ -224,7 +227,7 @@ int CommandHandler::handleUnsubscribe(EndpointPtr ep, const CommandMessage* cmdM
 
 int CommandHandler::handleReject(EndpointPtr ep, const CommandMessage* cmdMsg, const string& msgData)
 {
-    const ECommand cmd = (ECommand)cmdMsg->cmd;
+    const ECommand cmd = cmdMsg->Command();
 
     CommandReject cmd_rej;
     _DECODE_COMMAND_MESSAGE("handleReject", cmdMsg, cmd_rej, ep->Connection());
@@ -241,7 +244,7 @@ int CommandHandler::handleReject(EndpointPtr ep, const CommandMessage* cmdMsg, c
 
 int CommandHandler::handleUnreject(EndpointPtr ep, const CommandMessage* cmdMsg, const string& msgData)
 {
-    const ECommand cmd = (ECommand)cmdMsg->cmd;
+    const ECommand cmd = cmdMsg->Command();
 
     CommandUnreject cmd_unrej;
     _DECODE_COMMAND_MESSAGE("handleUnreject", cmdMsg, cmd_unrej, ep->Connection());
@@ -258,7 +261,7 @@ int CommandHandler::handleUnreject(EndpointPtr ep, const CommandMessage* cmdMsg,
 
 int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
 {
-    const ECommand cmd = (ECommand)cmdMsg->cmd;
+    const ECommand cmd = cmdMsg->Command();
 
     vector<EndpointPtr> targets;
     auto fwd_targets = ep->GetForwardTargets();
@@ -295,9 +298,9 @@ int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdM
         }
     }
 
-    reverseToNetworkMessage((CommandMessage*)cmdMsg, context_->switch_server->IsMessagePayloadLengthIncludingSelf());
+    ((CommandMessage*)cmdMsg)->ConvertToNetworkMessage(context_->switch_server->IsMessagePayloadLengthIncludingSelf());
     for (auto target_ep : targets) {
-        printf("[handleService] forward message: size: %ld\n", data.size());
+        printf("[handlePublishData] forward message: size: %ld\n", data.size());
         target_ep->Connection()->Send(data);
     }
 
@@ -310,7 +313,7 @@ int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdM
 int CommandHandler::handleService(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
 {
     vector<EndpointPtr> targets;
-    uint8_t svc_type = cmdMsg->svc_type;
+    uint8_t svc_type = 0;  // TODO
 
     auto iter = context_->service_endpoints.find(svc_type);
     if (iter != context_->service_endpoints.end()) {
@@ -344,7 +347,7 @@ int CommandHandler::handleService(EndpointPtr ep, const CommandMessage* cmdMsg, 
         }
     }
 
-    reverseToNetworkMessage((CommandMessage*)cmdMsg, context_->switch_server->IsMessagePayloadLengthIncludingSelf());
+    ((CommandMessage*)cmdMsg)->ConvertToNetworkMessage(context_->switch_server->IsMessagePayloadLengthIncludingSelf());
     for (auto target_ep : targets) {
         printf("[handleService] forward message: size: %ld\n", data.size());
         target_ep->Connection()->Send(data);
@@ -361,7 +364,7 @@ int CommandHandler::handleInfo(EndpointPtr ep, const CommandMessage* cmdMsg, con
     // 5) command stats
     // *) other context info
 
-    const ECommand cmd = (ECommand)cmdMsg->cmd;
+    const ECommand cmd = cmdMsg->Command();
 
     _CHECK_ROLE_PERMISSION("handleInfo", ep->GetRole(), EEndpointRole::Admin);
 
@@ -378,7 +381,7 @@ int CommandHandler::handleInfo(EndpointPtr ep, const CommandMessage* cmdMsg, con
 
 int CommandHandler::handleEndpointInfo(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
 {
-    const ECommand cmd = (ECommand)cmdMsg->cmd;
+    const ECommand cmd = cmdMsg->Command();
 
     CommandInfoReq cmd_info_req;
     _DECODE_COMMAND_MESSAGE("handleEndpointInfo", cmdMsg, cmd_info_req, ep->Connection());
@@ -407,7 +410,7 @@ int CommandHandler::handleSetup(EndpointPtr ep, const CommandMessage* cmdMsg, co
     // 2) set/generate endpoint access token
     // 3) -- set serving mode
 
-    const ECommand cmd = (ECommand)cmdMsg->cmd;
+    const ECommand cmd = cmdMsg->Command();
 
     _CHECK_ROLE_PERMISSION("handleSetup", ep->GetRole(), EEndpointRole::Admin);
 
@@ -433,7 +436,7 @@ int CommandHandler::handleKickout(EndpointPtr ep, const CommandMessage* cmdMsg, 
 {
     // 1) kickout endpoint(s)
 
-    const ECommand cmd = (ECommand)cmdMsg->cmd;
+    const ECommand cmd = cmdMsg->Command();
 
     _CHECK_ROLE_PERMISSION("handleKickout", ep->GetRole(), EEndpointRole::Admin);
 
@@ -452,7 +455,7 @@ int CommandHandler::handleKickout(EndpointPtr ep, const CommandMessage* cmdMsg, 
 
 int CommandHandler::handleReload(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
 {
-    const ECommand cmd = (ECommand)cmdMsg->cmd;
+    const ECommand cmd = cmdMsg->Command();
 
     if (ep->GetRole() != EEndpointRole::Admin) {
         int8_t errcode = 1;
@@ -481,11 +484,11 @@ size_t CommandHandler::sendResultMessage(TcpConnection* conn, ECommand cmd, int8
     }
 
     CommandMessage cmdMsg;
-    cmdMsg.cmd = (uint8_t)cmd;
+    cmdMsg.SetCommand(cmd);
     cmdMsg.SetResponseFlag();
     cmdMsg.SetToJSON();
-    cmdMsg.payload_len = sizeof(ResultMessage) + payload_len;
-    reverseToNetworkMessage(&cmdMsg, context_->switch_server->IsMessagePayloadLengthIncludingSelf());
+    cmdMsg.SetPayloadLen(sizeof(ResultMessage) + payload_len);
+    cmdMsg.ConvertToNetworkMessage(context_->switch_server->IsMessagePayloadLengthIncludingSelf());
 
     ResultMessage resultMsg;
     resultMsg.errcode = errcode;

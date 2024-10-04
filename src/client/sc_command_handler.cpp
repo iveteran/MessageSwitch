@@ -185,12 +185,10 @@ size_t SCCommandHandler::SendCommandMessage(TcpConnection* conn, ECommand cmd, c
     }
 
     CommandMessage cmdMsg;
-    cmdMsg.cmd = uint8_t(cmd);
+    cmdMsg.SetCommand(cmd);
     cmdMsg.SetToJSON();
-    auto context = client_->GetContext();
-    cmdMsg.svc_type = svc_type > 0 ? svc_type : context->svc_type;
-    cmdMsg.payload_len = payload.size();
-    reverseToNetworkMessage(&cmdMsg, client_->GetMessageHeaderDescription()->is_payload_len_including_self);
+    cmdMsg.SetPayloadLen(payload.size());
+    cmdMsg.ConvertToNetworkMessage(client_->GetMessageHeaderDescription()->is_payload_len_including_self);
 
     conn->Send((char*)&cmdMsg, sizeof(cmdMsg));
     size_t sent_bytes = sizeof(cmdMsg);
@@ -204,17 +202,16 @@ size_t SCCommandHandler::SendCommandMessage(TcpConnection* conn, ECommand cmd, c
 
 void SCCommandHandler::HandleCommandResult(TcpConnection* conn, CommandMessage* cmdMsg)
 {
-    ECommand cmd = (ECommand)cmdMsg->cmd;
+    ECommand cmd = cmdMsg->Command();
     printf("Command result:\n");
     printf("cmd: %s(%d)\n", CommandToTag(cmd), uint8_t(cmd));
-    printf("svc type: %d\n", cmdMsg->svc_type);
-    printf("payload_len: %d\n", cmdMsg->payload_len);
 
-    ResultMessage* resultMsg = (ResultMessage*)(cmdMsg->payload);
+    auto resultMsg = cmdMsg->GetResultMessage();
     int8_t errcode = resultMsg->errcode;
-    char* content = resultMsg->data;
+    const char* content = resultMsg->data;
     printf("errcode: %d\n", errcode);
-    size_t content_len = cmdMsg->payload_len - sizeof(ResultMessage);
+
+    size_t content_len = cmdMsg->GetResultMessageContentSize();
     printf("content len: %ld\n", content_len);
     if (errcode == 0) {
         printf("content: %s\n", content);
@@ -306,13 +303,13 @@ void SCCommandHandler::HandleGetEndpointInfoResult(CommandMessage* cmdMsg, const
 void SCCommandHandler::HandlePublishData(TcpConnection* conn, CommandMessage* cmdMsg)
 {
     printf("Received forwarding PUBLISH message:\n");
-    ECommand cmd = (ECommand)cmdMsg->cmd;
+    ECommand cmd = cmdMsg->Command();
     printf("Command message:\n");
     printf("cmd: %s(%d)\n", CommandToTag(cmd), uint8_t(cmd));
-    printf("svc type: %d\n", cmdMsg->svc_type);
-    printf("payload_len: %d\n", cmdMsg->payload_len);
+    auto [payload, payload_len] = cmdMsg->Payload();
+    printf("payload_len: %d\n", payload_len);
 
-    cout << DumpHexWithChars(cmdMsg->payload, cmdMsg->payload_len, evt_loop::DUMP_MAX_BYTES) << endl;
+    cout << DumpHexWithChars(payload, payload_len, evt_loop::DUMP_MAX_BYTES) << endl;
 }
 
 void SCCommandHandler::HandleServiceRequest(TcpConnection* conn, CommandMessage* cmdMsg)
