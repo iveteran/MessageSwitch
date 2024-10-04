@@ -477,7 +477,8 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
     argparse::ArgumentParser cmd_ap(argv[0], "1.0", argparse::default_arguments::help, false);
 
     cmd_ap.add_argument("--data")
-        .help("The data be send");
+        .help("The data to send")
+        .default_value(R"({"foo":"bar"})");
     cmd_ap.add_argument("--file")
         .help("The data reading from file be send");
 
@@ -525,9 +526,8 @@ int SCConsole::handleConsoleCommand_RequestService(const vector<string>& argv)
     argparse::ArgumentParser cmd_ap(argv[0], "1.0", argparse::default_arguments::help, false);
 
     cmd_ap.add_argument("--data")
-        .help("The data be send")
+        .help("The data to send")
         .default_value(R"({"foo":"bar"})");
-        //.default_value("{foo:bar}");
     cmd_ap.add_argument("--svc_type")
         .help("The service type to request")
         .scan<'i', uint8_t>()
