@@ -312,45 +312,45 @@ int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdM
 
 int CommandHandler::handleService(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
 {
-    vector<EndpointPtr> targets;
     uint8_t svc_type = 0;  // TODO
 
+    EndpointPtr svc_ep;
     auto iter = context_->service_endpoints.find(svc_type);
     if (iter != context_->service_endpoints.end()) {
         auto ep_set = iter->second;
-        for (auto target_ep : ep_set) {
-            if (target_ep->IsRejectedSource(ep->Id())) {
-                printf("[handleService] WARN: the source endpoint(%d) be rejected for target endpoint(%d)\n", ep->Id(), target_ep->Id());
+        for (auto ep : ep_set) {
+            if (ep->IsRejectedSource(ep->Id())) {
+                printf("[handleServiceRequest] WARN: the source endpoint(%d) be rejected for target endpoint(%d)\n", ep->Id(), ep->Id());
                 continue;
             }
-            //if (! target_ep->IsSubscribedSource(ep->Id())) {
+            //if (! ep->IsSubscribedSource(ep->Id())) {
             //    continue;
             //}
-            targets.push_back(target_ep);
+            svc_ep = ep;
             break;
         }
     } else {
         auto iter = context_->service_endpoints.find(0);  // 0: if svc_type is 0 means for all service type
         if (iter != context_->service_endpoints.end()) {
             auto ep_set = iter->second;
-            for (auto target_ep : ep_set) {
-                if (target_ep->IsRejectedSource(ep->Id())) {
-                    printf("[handleService] WARN: the source endpoint(%d) be rejected for target endpoint(%d)\n", ep->Id(), target_ep->Id());
+            for (auto ep : ep_set) {
+                if (ep->IsRejectedSource(ep->Id())) {
+                    printf("[handleServiceRequest] WARN: the source endpoint(%d) be rejected for target endpoint(%d)\n", ep->Id(), ep->Id());
                     continue;
                 }
-                //if (! target_ep->IsSubscribedSource(ep->Id())) {
+                //if (! ep->IsSubscribedSource(ep->Id())) {
                 //    continue;
                 //}
-                targets.push_back(target_ep);
+                svc_ep = ep;
                 break;
             }
         }
     }
 
-    ((CommandMessage*)cmdMsg)->ConvertToNetworkMessage(context_->switch_server->IsMessagePayloadLengthIncludingSelf());
-    for (auto target_ep : targets) {
+    if (svc_ep) {
+        ((CommandMessage*)cmdMsg)->ConvertToNetworkMessage(context_->switch_server->IsMessagePayloadLengthIncludingSelf());
         printf("[handleService] forward message: size: %ld\n", data.size());
-        target_ep->Connection()->Send(data);
+        svc_ep->Connection()->Send(data);
     }
     return 0;
 }
