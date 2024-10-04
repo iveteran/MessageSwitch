@@ -5,6 +5,35 @@
 #include <cstring>
 #include <utility>
 
+namespace evt_loop {
+    class Message;
+}
+using evt_loop::Message;
+
+enum class ECommand : uint8_t {
+    UNDEFINED,
+    ECHO,
+    REG,
+    FWD,   // publish targets
+    UNFWD,
+    SUB,
+    UNSUB,
+    REJECT,
+    UNREJECT,
+    PUBLISH,    // publish data
+    SVC,   // service request
+    INFO,
+    EP_INFO,
+    SETUP,
+    PROXY,
+    KICKOUT,
+    EXIT,
+    RELOAD,
+    HEARTBEAT = 254,
+    RESULT = 255,
+};
+const char* CommandToTag(ECommand cmd);
+
 #pragma pack(1)
 struct CommandMessage {
     uint8_t cmd;            // ECommand
@@ -32,11 +61,6 @@ struct CommandMessage {
 };
 #pragma pack()
 
-namespace evt_loop {
-    class Message;
-}
-using evt_loop::Message;
-
 CommandMessage*
 convertMessageToCommandMessage(const Message* msg, bool isMsgPayloadLengthIncludingSelf);
 // Reverse to network message without header of CommandMessage
@@ -57,29 +81,5 @@ struct ResultMessage {
     ResultMessage() { memset(this, 0, sizeof(*this)); }
 };
 #pragma pack()
-
-enum class ECommand : uint8_t {
-    UNDEFINED,
-    ECHO,
-    REG,
-    FWD,   // publish targets
-    UNFWD,
-    SUB,
-    UNSUB,
-    REJECT,
-    UNREJECT,
-    PUBLISH,    // publish data
-    SVC,   // service request
-    INFO,
-    EP_INFO,
-    SETUP,
-    PROXY,
-    KICKOUT,
-    EXIT,
-    RELOAD,
-    HEARTBEAT = 254,
-    RESULT = 255,
-};
-const char* CommandToTag(ECommand cmd);
 
 #endif  // _SWITCH_MESSAGE_H_
