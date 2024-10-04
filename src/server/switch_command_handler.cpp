@@ -92,6 +92,7 @@ void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
             handleUnreject(ep, cmdMsg, msgData);
             break;
         case ECommand::PUBLISH:
+        case ECommand::PUBLISH_2:
             handlePublishData(ep, cmdMsg, msgData);
             break;
         case ECommand::SVC:
@@ -265,6 +266,16 @@ int CommandHandler::handleUnreject(EndpointPtr ep, const CommandMessage* cmdMsg,
 
 int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
 {
+    auto pub_msg = cmdMsg->GetPublishingMessage();
+    if (pub_msg) {
+        printf("[handlePublishData] source: %d\n", pub_msg->source);
+        printf("[handlePublishData] n_targets: %d\n", pub_msg->n_targets);
+        for (int i=0; i<pub_msg->n_targets; i++) {
+            printf("%d, ", pub_msg->targets[i]);
+        }
+        printf("\n");
+    }
+
     const ECommand cmd = cmdMsg->Command();
 
     vector<EndpointPtr> targets;

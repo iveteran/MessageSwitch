@@ -118,11 +118,23 @@ void SCCommandHandler::SubUnsubRejUnrej(ECommand cmd, const vector<uint32_t>& so
     }
 }
 
-void SCCommandHandler::Publish(const string& data)
+void SCCommandHandler::Publish(const string& data, const vector<uint32_t> targets)
 {
-    size_t sent_bytes = SendCommandMessage(ECommand::PUBLISH, data);
+    auto cmd = ECommand::PUBLISH;
+    string pub_msg_bytes;
+    if (! targets.empty()) {
+        cmd = ECommand::PUBLISH_2;
+        PublishingMessage pub_msg;
+        pub_msg.source = client_->GetContext()->endpoint_id;
+        pub_msg.n_targets = targets.size();
+
+        pub_msg_bytes.append((char*)&pub_msg, sizeof(pub_msg));
+        pub_msg_bytes.append((char*)targets.data(), targets.size() * sizeof(targets[0]));
+    }
+
+    size_t sent_bytes = SendCommandMessage(cmd, data, pub_msg_bytes);
     if (sent_bytes > 0) {
-        printf("Sent PUBLISH message, content size(%ld):\n", data.size());
+        printf("Sent PUBLISH/PUBLISH_2 message, content size(%ld):\n", data.size());
         cout << DumpHexWithChars(data, evt_loop::DUMP_MAX_BYTES) << endl;
     }
 }
@@ -324,12 +336,22 @@ void SCCommandHandler::HandleGetEndpointInfoResult(CommandMessage* cmdMsg, const
 // handle the data that published from other endpoints
 void SCCommandHandler::HandlePublishData(TcpConnection* conn, CommandMessage* cmdMsg)
 {
-    printf("Received forwarding PUBLISH message:\n");
+    printf("Received forwarding PUBLISH/PUBLISH_2 message:\n");
     ECommand cmd = cmdMsg->Command();
     printf("Command message:\n");
     printf("cmd: %s(%d)\n", CommandToTag(cmd), uint8_t(cmd));
     auto [payload, payload_len] = cmdMsg->Payload();
     printf("payload_len: %d\n", payload_len);
+
+    auto pub_msg = cmdMsg->GetPublishingMessage();
+    if (pub_msg) {
+        printf("source: %d\n", pub_msg->source);
+        printf("n_targets: %d\n", pub_msg->n_targets);
+        for (int i=0; i<pub_msg->n_targets; i++) {
+            printf("%d, ", pub_msg->targets[i]);
+        }
+        printf("\n");
+    }
 
     cout << DumpHexWithChars(payload, payload_len, evt_loop::DUMP_MAX_BYTES) << endl;
 }

@@ -23,6 +23,7 @@ enum class ECommand : uint8_t {
     REJECT,
     UNREJECT,
     PUBLISH,    // publish data
+    PUBLISH_2,  // publish data to targets
     SVC,   // service request
     INFO,
     EP_INFO,
@@ -48,6 +49,15 @@ struct ServiceMessage {
 };
 #pragma pack()
 
+// for CommandMessage.cmd equals ECommand::PUBLISH_2
+#pragma pack(1)
+struct PublishingMessage {
+    uint32_t source    = 0;     // source endpoint id
+    uint16_t n_targets = 0;     // number of targets
+    uint32_t targets[0];        // more than one element
+};
+#pragma pack()
+
 #pragma pack(1)
 struct ResultMessage {
     int8_t errcode = 0;
@@ -66,7 +76,7 @@ struct CommandMessage {
         uint8_t req_rsp:1 = 0;  // 1 bit,  request or response,  0: request, 1: response
     } flag_;
     payload_size_t payload_len_ = 0;    // payload_len, XXX: does not including self size
-    char payload_[0];                   // placeholder field, ServiceMessage or payload
+    char payload_[0];                   // placeholder field, ServiceMessage, PublishingMessage or payload
 
     public:
     // Member methods
@@ -99,6 +109,7 @@ struct CommandMessage {
         return data;
     }
 
+    const PublishingMessage* GetPublishingMessage() const;
     const ServiceMessage* GetServiceMessage() const;
     const ResultMessage* GetResultMessage() const;
     size_t GetResultMessageContentSize() const;

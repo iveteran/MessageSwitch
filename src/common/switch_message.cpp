@@ -31,6 +31,9 @@ const char* CommandToTag(ECommand cmd) {
         case ECommand::PUBLISH:
             cmd_tag = "PUBLISH";
             break;
+        case ECommand::PUBLISH_2:
+            cmd_tag = "PUBLISH_2";
+            break;
         case ECommand::SVC:
             cmd_tag = "SVC";
             break;
@@ -71,6 +74,16 @@ CommandMessage::Payload() const
     auto payload_len = payload_len_;
     auto payload = (char*)payload_;
     switch ((ECommand)(cmd_)) {
+        case ECommand::PUBLISH_2:
+            if (! HasResponseFlag()) {  // is not response
+                payload += sizeof(PublishingMessage);
+                payload_len -= sizeof(PublishingMessage);
+                auto pub_msg = (PublishingMessage*)payload;
+                size_t targets_bytes = pub_msg->n_targets * sizeof(PublishingMessage::targets);
+                payload += targets_bytes;
+                payload_len -= targets_bytes;
+            }
+            break;
         case ECommand::SVC:
             payload += sizeof(ServiceMessage);
             payload_len -= sizeof(ServiceMessage);
@@ -85,6 +98,12 @@ payload_size_t CommandMessage::PayloadLen() const
 {
     auto [_, payload_len] = Payload();
     return payload_len;
+}
+
+const PublishingMessage*
+CommandMessage::GetPublishingMessage() const
+{
+    return ECommand(cmd_) == ECommand::PUBLISH_2 ? (const PublishingMessage*)(payload_) : nullptr;
 }
 
 const ServiceMessage*

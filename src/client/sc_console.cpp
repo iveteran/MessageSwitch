@@ -480,7 +480,11 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
         .help("The data to send")
         .default_value(R"({"foo":"bar"})");
     cmd_ap.add_argument("--file")
-        .help("The data reading from file be send");
+        .help("The data reading from file to send");
+    cmd_ap.add_argument("--targets")
+        .help("The target endpoints to send")
+        .scan<'i', uint32_t>()
+        .nargs(argparse::nargs_pattern::at_least_one);
 
     try {
         cmd_ap.parse_args(argv);
@@ -493,10 +497,18 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
         return 1;
     }
 
+    vector<uint32_t> targets;
+    if (cmd_ap.is_used("--targets")) {
+        targets = cmd_ap.get<vector<uint32_t>>("--targets");
+        if (! targets.empty()) {
+            duplicate(targets);
+        }
+    }
+
     string data, data_file;
     if (cmd_ap.is_used("--data")) {
         data = cmd_ap.get<string>("--data");
-        cmd_handler_->Publish(data);
+        cmd_handler_->Publish(data, targets);
     } else {
         if (cmd_ap.is_used("--file")) {
             data_file = cmd_ap.get<string>("--file");
@@ -504,7 +516,7 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
             auto rd_done_cb = [&](int status, const string& data) {
                 printf(">>> read done, status: %d, size: %ld\n", status, data.size());
 
-                cmd_handler_->Publish(data);
+                cmd_handler_->Publish(data, targets);
             };
 
             bool success = AIO.async_read(data_file.c_str(), O_RDONLY, rd_done_cb);
@@ -516,7 +528,6 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
             return -1;
         }
     }
-    //cmd_handler_->Publish(data);
 
     return 0;
 }
