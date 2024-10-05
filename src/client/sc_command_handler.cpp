@@ -23,8 +23,7 @@ void SCCommandHandler::Register(uint32_t ep_id, EEndpointRole ep_role,
     CommandRegister reg_cmd;
     reg_cmd.id = ep_id > 0 ? ep_id : client_->GetContext()->endpoint_id;
 
-    const char* role_str = EndpointRoleToTag(ep_role);
-    reg_cmd.role = role_str;
+    reg_cmd.role = (uint8_t)ep_role;
     if (! access_code.empty()) {
         reg_cmd.access_code = access_code;
     }
@@ -34,6 +33,7 @@ void SCCommandHandler::Register(uint32_t ep_id, EEndpointRole ep_role,
     }
     reg_cmd.svc_type = svc_type;
     client_->GetContext()->svc_type = svc_type;
+    client_->GetContext()->role = ep_role;
 
     auto content = reg_cmd.encodeToJSON();
     size_t sent_bytes = SendCommandMessage(ECommand::REG, content);
@@ -299,9 +299,7 @@ void SCCommandHandler::HandleRegisterResult(CommandMessage* cmdMsg, const string
     if (! reg_result.token.empty()) {
         context->token = reg_result.token;
     }
-    if (! reg_result.role.empty()) {
-        context->role = TagToEndpointRole(reg_result.role);
-    }
+    context->role = (EEndpointRole)reg_result.role;
 }
 
 void SCCommandHandler::HandleGetInfoResult(CommandMessage* cmdMsg, const string& data)

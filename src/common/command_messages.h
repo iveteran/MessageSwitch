@@ -12,7 +12,7 @@ using std::map;
 
 struct CommandRegister {
     uint32_t id = 0;
-    string role;
+    uint8_t role;
     string access_code;
     string token;
     uint8_t svc_type = 0;
@@ -28,7 +28,7 @@ struct CommandRegister {
 struct CommandResultRegister {
     uint32_t id;
     string token;
-    string role;
+    uint8_t role;
     string _raw_data;
 
     bool decodeFromJSON(const string& data);

@@ -29,7 +29,7 @@ bool CommandRegister::decodeFromJSON(const string& data) {
 string CommandRegister::encodeToJSON() {
     json json_obj;
     json_obj["id"] = id;
-    if (! role.empty()) {
+    if (role > 0) {
         json_obj["role"] = role;
     }
     if (! access_code.empty()) {
@@ -67,7 +67,7 @@ string CommandResultRegister::encodeToJSON() {
     if (! token.empty()) {
         json_obj["token"] = token;
     }
-    if (! role.empty()) {
+    if (role > 0) {
         json_obj["role"] = role;
     }
     _raw_data = json_obj.dump();

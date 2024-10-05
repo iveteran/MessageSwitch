@@ -10,11 +10,11 @@ SwitchService::register_endpoint(TcpConnection* conn, const CommandRegister& reg
 {
     auto context = switch_server_->GetContext();
 
-    if (reg_cmd.role.empty() || reg_cmd.access_code.empty()) {
+    if (reg_cmd.role == 0 || reg_cmd.role >= (uint8_t)EEndpointRole::COUNT || reg_cmd.access_code.empty()) {
         return { 1, "Missing required parameter(s)", nullptr };
     }
 
-    EEndpointRole role = TagToEndpointRole(reg_cmd.role);
+    EEndpointRole role = (EEndpointRole)reg_cmd.role;
     int8_t errcode = 1;
     std::stringstream ss;
     ss << "Authentication failed, role: " << reg_cmd.role;
@@ -136,7 +136,7 @@ SwitchService::register_endpoint(TcpConnection* conn, const CommandRegister& reg
                     break;
             }
             exists_ep->SetRole(role);
-            regResult->role = EndpointRoleToTag(role);
+            regResult->role = (uint8_t)role;
         }
         if (role == EEndpointRole::Service &&
                 reg_cmd.svc_type != exists_svc_type) {
@@ -230,7 +230,7 @@ SwitchService::get_endpoint_stats(const CommandInfoReq& cmd_info_req)
     auto ep = iter->second;
     auto cmd_ep_info = std::make_shared<CommandEndpointInfo>();
     cmd_ep_info->id = ep->Id();
-    cmd_ep_info->role = uint8_t(ep->GetRole());
+    cmd_ep_info->role = (uint8_t)(ep->GetRole());
     cmd_ep_info->uptime = Now() - ep->GetBornTime();
     cmd_ep_info->svc_type = ep->GetServiceType();
     std::copy(ep->GetForwardTargets().begin(), ep->GetForwardTargets().end(),
