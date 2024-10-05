@@ -33,6 +33,7 @@ public:
     tuple<int, string> unsubscribe(Endpoint* ep, const CommandUnsubscribe& cmd_unsub);
     tuple<int, string> reject(Endpoint* ep, const CommandReject& cmd_rej);
     tuple<int, string> unreject(Endpoint* ep, const CommandUnreject& cmd_unrej);
+    bool is_forwarding_allowed(const Endpoint* source_ep, const Endpoint* target_ep, MessageId msg_type=0);
     tuple<int, string> setup(const CommandSetup& cmd_setup);
     tuple<int, string> kickout_endpoint(const CommandKickout& cmd_kickout);
 

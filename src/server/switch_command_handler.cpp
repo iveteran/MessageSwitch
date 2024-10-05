@@ -283,15 +283,8 @@ int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdM
     if (fwd_targets.empty() || fwd_targets.contains(0)) {
         // broadcast
         for (auto iter : context_->normal_endpoints) {
-            EndpointId ep_id = iter.first;
             auto target_ep = iter.second;
-            if (ep_id == ep->Id()) {
-                // It's self
-                continue;
-            }
-            if (target_ep->IsRejectedSource(ep->Id())) {
-                // Does not reachable, be rejected
-                printf("[handlePublishData] Does not reachable, be rejected, source ep id: %d, target ep id: %d\n", ep->Id(), target_ep->Id());
+            if (! service_->is_forwarding_allowed(ep.get(), target_ep.get())) {
                 continue;
             }
             targets.push_back(target_ep);
@@ -304,9 +297,7 @@ int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdM
                 continue;
             }
             auto target_ep = iter->second;
-            if (target_ep->IsRejectedSource(ep->Id())) {
-                // Does not reachable, be rejected
-                printf("[handlePublishData] Does not reachable, be rejected, source ep id: %d, target ep id: %d\n", ep->Id(), target_ep->Id());
+            if (! service_->is_forwarding_allowed(ep.get(), target_ep.get())) {
                 continue;
             }
             targets.push_back(target_ep);
@@ -320,7 +311,9 @@ int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdM
     }
 
     int8_t errcode = 0;
-    sendResultMessage(ep->Connection(), cmd, errcode);
+    char result[64];
+    snprintf(result, sizeof(result), "{\"total\": %ld}", targets.size());
+    sendResultMessage(ep->Connection(), cmd, errcode, result, strlen(result));
 
     return 0;
 }
@@ -333,34 +326,27 @@ int CommandHandler::handleServiceRequest(EndpointPtr ep, const CommandMessage* c
     printf("[handleServiceRequest] sess_id: %d\n", svc_msg->sess_id);
     printf("[handleServiceRequest] source: %d\n", svc_msg->source);
 
+    auto svc_cmd = svc_msg->svc_cmd;
     EndpointPtr svc_ep;
     auto iter = context_->service_endpoints.find(svc_msg->svc_type);
     if (iter != context_->service_endpoints.end()) {
         auto ep_set = iter->second;
-        for (auto ep : ep_set) {
-            if (ep->IsRejectedSource(ep->Id())) {
-                printf("[handleServiceRequest] WARN: the source endpoint(%d) be rejected for target endpoint(%d)\n", ep->Id(), ep->Id());
+        for (auto target_ep : ep_set) {
+            if (! service_->is_forwarding_allowed(ep.get(), target_ep.get(), svc_cmd)) {
                 continue;
             }
-            //if (! ep->IsSubscribedSource(ep->Id())) {
-            //    continue;
-            //}
-            svc_ep = ep;
+            svc_ep = target_ep;
             break;
         }
     } else {
         auto iter = context_->service_endpoints.find(0);  // 0: if svc_type is 0 means for all service type
         if (iter != context_->service_endpoints.end()) {
             auto ep_set = iter->second;
-            for (auto ep : ep_set) {
-                if (ep->IsRejectedSource(ep->Id())) {
-                    printf("[handleServiceRequest] WARN: the source endpoint(%d) be rejected for target endpoint(%d)\n", ep->Id(), ep->Id());
+            for (auto target_ep : ep_set) {
+                if (! service_->is_forwarding_allowed(ep.get(), target_ep.get(), svc_cmd)) {
                     continue;
                 }
-                //if (! ep->IsSubscribedSource(ep->Id())) {
-                //    continue;
-                //}
-                svc_ep = ep;
+                svc_ep = target_ep;
                 break;
             }
         }
@@ -531,7 +517,7 @@ size_t CommandHandler::sendResultMessage(TcpConnection* conn, ECommand cmd, int8
 size_t CommandHandler::sendResultMessage(TcpConnection* conn, ECommand cmd, int8_t errcode,
         const char* payload, size_t payload_len)
 {
-    printf("[sendResultMessage] response: %ld\n", payload_len);
+    printf("[sendResultMessage] response, payload len: %ld\n", payload_len);
     if (payload_len > 0) {
         cout << DumpHexWithChars(payload, payload_len, evt_loop::DUMP_MAX_BYTES) << endl;
     }

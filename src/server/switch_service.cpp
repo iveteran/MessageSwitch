@@ -348,6 +348,43 @@ SwitchService::unreject(Endpoint* ep, const CommandUnreject& cmd_unrej)
     return { 0, "" };
 }
 
+bool SwitchService::is_forwarding_allowed(const Endpoint* source_ep, const Endpoint* target_ep, MessageId msg_type)
+{
+    if (source_ep->Id() == target_ep->Id()) {
+        return false;
+    }
+
+    bool is_allowed = true;
+    if (target_ep->IsRejectedSource(source_ep->Id())) {
+        // check source blacklist
+        printf("[handlePublishData] the endpoint in blacklist of target,"
+                " be rejected, source ep id: %d, target ep id: %d\n",
+                source_ep->Id(), target_ep->Id());
+        is_allowed = false;
+    } else if (! target_ep->IsSubscribedSource(source_ep->Id())) {
+        // check source whitelist
+        printf("[handlePublishData] the endpoint not in whitelist of target,"
+                " be rejected, source ep id: %d, target ep id: %d\n",
+                source_ep->Id(), target_ep->Id());
+        is_allowed = false;
+    } else if (msg_type > 0) {
+        if (target_ep->IsRejectedMessage(msg_type)) {
+            // check message type blacklist
+            printf("[handlePublishData] the message type(%d) in blacklist of target,"
+                    " be rejected, source ep id: %d, target ep id: %d\n",
+                    msg_type, source_ep->Id(), target_ep->Id());
+            is_allowed = false;
+        } else if (! target_ep->IsSubscribedMessage(msg_type)) {
+            // check message type whitelist
+            printf("[handlePublishData] the message type(%d) not in whitelist of target,"
+                    " be rejected, source ep id: %d, target ep id: %d\n",
+                    msg_type, source_ep->Id(), target_ep->Id());
+            is_allowed = false;
+        }
+    }
+    return is_allowed;
+}
+
 tuple<int, string>
 SwitchService::setup(const CommandSetup& cmd_setup)
 {
