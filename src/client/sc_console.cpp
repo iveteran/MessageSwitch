@@ -225,7 +225,7 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
         .default_value(client_->ID());
     cmd_ap.add_argument("--role")
         .help("the role of Switch client, values: 1: normal, 2: admin, 3: service")
-        .scan<'i', RoleId>()
+        .scan<'i', int>()
         .required()
         .default_value(1);
     cmd_ap.add_argument("--access_code")
@@ -236,7 +236,7 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
         .flag();
     cmd_ap.add_argument("--svc_type")
         .help("the service type, only used for role is Service")
-        .scan<'i', ServiceType>()
+        .scan<'i', int>()
         .default_value(0);
 
     try {
@@ -252,7 +252,7 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
 
     EndpointId ep_id = cmd_ap.get<EndpointId>("--id");
 
-    RoleId role = cmd_ap.get<RoleId>("--role");
+    RoleId role = cmd_ap.get<int>("--role");
     if (role == (RoleId)EEndpointRole::Undefined || role >= (RoleId)EEndpointRole::COUNT) {
         Console::Instance()->put_line("Wrong argument! the role must be given");
         return -1;
@@ -275,7 +275,7 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
     bool with_token = cmd_ap.get<bool>("--with_token");
     ServiceType svc_type = 0;
     if (cmd_ap.is_used("--svc_type")) {
-        svc_type = cmd_ap.get<ServiceType>("--svc_type");
+        svc_type = cmd_ap.get<int>("--svc_type");
     }
 
     cmd_handler_->Register(ep_id, EEndpointRole(role), access_code, with_token, svc_type);
@@ -292,7 +292,7 @@ int SCConsole::handleConsoleCommand_GetInfo(const vector<string>& argv)
         .flag();
     cmd_ap.add_argument("--endpoint")
         .help("only to get the information of specified endpoint, to get self stats if not specified")
-        .scan<'i', int32_t>()
+        .scan<'i', int>()
         .default_value(-1)
         .nargs(argparse::nargs_pattern::optional);
 
@@ -310,7 +310,7 @@ int SCConsole::handleConsoleCommand_GetInfo(const vector<string>& argv)
     bool is_details = cmd_ap.get<bool>("--is_details");
     EndpointId ep_id = 0;
     if (cmd_ap.is_used("--endpoint")) {
-        int32_t _ep_id = cmd_ap.get<EndpointId>("--endpoint");
+        int _ep_id = cmd_ap.get<int>("--endpoint");
         if (_ep_id == -1) {
             ep_id = client_->GetContext()->endpoint_id;  // use self endpoint id
         } else {
