@@ -39,19 +39,23 @@ void Endpoint::UnrejectSources(const vector<EndpointId>& sources)
     }
 }
 
-bool Endpoint::IsRejectedSource(EndpointId src_ep_id)
+bool Endpoint::IsSubscribedSource(EndpointId src_ep_id) const
+{
+    if (! subs_sources_.empty()) {
+        // 如果有白名单，不在白名单的拒绝
+        auto iter = subs_sources_.find(src_ep_id);
+        if (iter == subs_sources_.end()) {
+            return false;
+        }
+    }
+    return true;
+}
+bool Endpoint::IsRejectedSource(EndpointId src_ep_id) const
 {
     if (! rej_sources_.empty()) {
         // 如果有黑名单，在黑名单的拒绝
         auto iter = rej_sources_.find(src_ep_id);
         if (iter != rej_sources_.end()) {
-            return true;
-        }
-    }
-    if (! subs_sources_.empty()) {
-        // 如果有白名单，不在白名单的拒绝
-        auto iter = subs_sources_.find(src_ep_id);
-        if (iter == subs_sources_.end()) {
             return true;
         }
     }
@@ -78,19 +82,23 @@ void Endpoint::UnrejectMessages(const vector<MessageId>& messages)
         rej_messages_.erase(elem);
     }
 }
-bool Endpoint::IsRejectedMessage(MessageId msg_id)
+bool Endpoint::IsSubscribedMessage(MessageId msg_id) const
+{
+    if (! subs_messages_.empty()) {
+        // 如果有白名单，不在白名单的拒绝
+        auto iter = subs_messages_.find(msg_id);
+        if (iter == subs_messages_.end()) {
+            return false;
+        }
+    }
+    return true;
+}
+bool Endpoint::IsRejectedMessage(MessageId msg_id) const
 {
     if (! rej_messages_.empty()) {
         // 如果有黑名单，在黑名单的拒绝
         auto iter = rej_messages_.find(msg_id);
         if (iter != rej_messages_.end()) {
-            return true;
-        }
-    }
-    if (! subs_messages_.empty()) {
-        // 如果有白名单，不在白名单的拒绝
-        auto iter = subs_messages_.find(msg_id);
-        if (iter == subs_messages_.end()) {
             return true;
         }
     }

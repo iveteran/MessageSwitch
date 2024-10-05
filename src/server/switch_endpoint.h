@@ -46,7 +46,8 @@ public:
     void UnrejectSources(const vector<EndpointId>& sources);
     const set<EndpointId>& GetSubscriedSources() const { return subs_sources_; }
     const set<EndpointId>& GetRejectedSources() const { return rej_sources_; }
-    bool IsRejectedSource(EndpointId ep_id);
+    bool IsSubscribedSource(EndpointId src_ep_id) const;
+    bool IsRejectedSource(EndpointId src_ep_id) const;
 
     void SubscribeMessages(const vector<MessageId>& messages);
     void UnsubscribeMessages(const vector<MessageId>& messages);
@@ -54,7 +55,8 @@ public:
     void UnrejectMessages(const vector<MessageId>& messages);
     const set<MessageId>& GetSubscriedMessages() const { return subs_messages_; }
     const set<MessageId>& GetRejectedMessages() const { return rej_messages_; }
-    bool IsRejectedMessage(MessageId msg_id);
+    bool IsSubscribedMessage(MessageId msg_id) const;
+    bool IsRejectedMessage(MessageId msg_id) const;
 
 private:
     EEndpointRole       role_;
