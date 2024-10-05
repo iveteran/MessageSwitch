@@ -92,8 +92,10 @@ void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
             handleUnreject(ep, cmdMsg, msgData);
             break;
         case ECommand::PUBLISH:
-        case ECommand::PUBLISH_2:
             handlePublishData(ep, cmdMsg, msgData);
+            break;
+        case ECommand::PUBLISH_2:
+            handlePublishDataToTargets(ep, cmdMsg, msgData);
             break;
         case ECommand::SVC:
             if (cmdMsg->HasResponseFlag()) {
@@ -266,16 +268,6 @@ int CommandHandler::handleUnreject(EndpointPtr ep, const CommandMessage* cmdMsg,
 
 int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
 {
-    auto pub_msg = cmdMsg->GetPublishingMessage();
-    if (pub_msg) {
-        printf("[handlePublishData] source: %d\n", pub_msg->source);
-        printf("[handlePublishData] n_targets: %d\n", pub_msg->n_targets);
-        for (int i=0; i<pub_msg->n_targets; i++) {
-            printf("%d, ", pub_msg->targets[i]);
-        }
-        printf("\n");
-    }
-
     const ECommand cmd = cmdMsg->Command();
 
     vector<EndpointPtr> targets;
@@ -307,6 +299,58 @@ int CommandHandler::handlePublishData(EndpointPtr ep, const CommandMessage* cmdM
     ((CommandMessage*)cmdMsg)->ConvertToNetworkMessage(context_->switch_server->IsMessagePayloadLengthIncludingSelf());
     for (auto target_ep : targets) {
         printf("[handlePublishData] forward message: size: %ld\n", data.size());
+        target_ep->Connection()->Send(data);
+    }
+
+    int8_t errcode = 0;
+    char result[64];
+    snprintf(result, sizeof(result), "{\"total\": %ld}", targets.size());
+    sendResultMessage(ep->Connection(), cmd, errcode, result, strlen(result));
+
+    return 0;
+}
+
+int CommandHandler::handlePublishDataToTargets(EndpointPtr ep, const CommandMessage* cmdMsg, const string& data)
+{
+    const ECommand cmd = cmdMsg->Command();
+
+    auto pub_msg = cmdMsg->GetPublishingMessage();
+    if (! pub_msg) {
+        return handlePublishData(ep, cmdMsg, data);
+    }
+
+    printf("[handlePublishDataToTargets] msg_type: %d\n", pub_msg->msg_type);
+    printf("[handlePublishDataToTargets] source: %d\n", pub_msg->source);
+    printf("[handlePublishDataToTargets] n_targets: %d\n", pub_msg->n_targets);
+    for (int i=0; i<pub_msg->n_targets; i++) {
+        printf("%d, ", pub_msg->targets[i]);
+    }
+    printf("\n");
+
+    MessageId msg_type = pub_msg->msg_type;
+    vector<EndpointPtr> targets;
+
+    if (pub_msg->n_targets > 0) {
+        for (int i=0; i<pub_msg->n_targets; i++) {
+            auto ep_id = pub_msg->targets[i];
+            auto iter = context_->normal_endpoints.find(ep_id);
+            if (iter == context_->normal_endpoints.end()) {
+                continue;
+            }
+            auto target_ep = iter->second;
+            if (! service_->is_forwarding_allowed(ep.get(), target_ep.get(), msg_type)) {
+                continue;
+            }
+            targets.push_back(target_ep);
+        }
+    } else {
+        return handlePublishData(ep, cmdMsg, data);
+    }
+
+    ((CommandMessage*)cmdMsg)->ConvertToNetworkMessage(context_->switch_server->IsMessagePayloadLengthIncludingSelf());
+    for (auto target_ep : targets) {
+        printf("[handlePublishDataToTargets] forward message: source: %d -> target: %d, size: %ld\n",
+                ep->Id(), target_ep->Id(), data.size());
         target_ep->Connection()->Send(data);
     }
 
@@ -360,7 +404,7 @@ int CommandHandler::handleServiceRequest(EndpointPtr ep, const CommandMessage* c
         // respond error message
         ResultMessage result_msg;
         result_msg.errcode = 1;
-        string errmsg("Can not find service");
+        string errmsg("Can not find service or request is not allowed");
 
         auto rspCmdMsg = ((CommandMessage*)cmdMsg);
         rspCmdMsg->SetResponseFlag();
