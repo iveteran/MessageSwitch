@@ -72,7 +72,7 @@ int SwitchConsole::handleConsoleCommand_Stats(const vector<string>& argv)
         .flag();
     cmd_ap.add_argument("--endpoint")
         .help("Get stats of specified endpoint")
-        .scan<'i', uint32_t>()
+        .scan<'i', EndpointId>()
         .nargs(1);
 
     try {
@@ -90,7 +90,7 @@ int SwitchConsole::handleConsoleCommand_Stats(const vector<string>& argv)
     CommandInfoReq cmd_info_req;
     cmd_info_req.is_details = cmd_ap.get<bool>("--is_details");
     if (cmd_ap.is_used("--endpoint")) {
-        uint32_t ep_id = cmd_ap.get<uint32_t>("--endpoint");
+        EndpointId ep_id = cmd_ap.get<EndpointId>("--endpoint");
         if (ep_id > 0) {
             cmd_info_req.endpoint_id = ep_id;
         }
