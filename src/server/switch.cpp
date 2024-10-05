@@ -24,7 +24,7 @@ int parse_arguments(int argc, char **argv, OptionsPtr& options) {
     program.add_argument("-n", "--node_id")
         .help("node id for cluster")
         .default_value(1)
-        .scan<'i', EndpointId>();
+        .scan<'i', int>();
     program.add_argument("-m", "--mode")
         .help("serving mode")
         .default_value("normal");
@@ -51,7 +51,7 @@ int parse_arguments(int argc, char **argv, OptionsPtr& options) {
     cout << "> arguments.host: " << options->host << endl;
     options->port = program.get<int>("--port");
     cout << "> arguments.port: " << options->port << endl;
-    options->node_id = program.get<EndpointId>("--node_id");
+    options->node_id = program.get<int>("--node_id");
     cout << "> arguments.node_id: " << options->node_id << endl;
     options->serving_mode = program.get<std::string>("--mode");
     cout << "> arguments.mode: " << options->serving_mode << endl;
