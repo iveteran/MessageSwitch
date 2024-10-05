@@ -173,7 +173,7 @@ CommandMessage::FromNetworkMessage(const Message* msg, bool isMsgPayloadLengthIn
 CommandMessage CommandMessage::CreateHeartbeatRequest()
 {
     CommandMessage msg;
-    msg.cmd_ = uint8_t(ECommand::HEARTBEAT);
+    msg.cmd_ = (command_t)ECommand::HEARTBEAT;
     msg.payload_len_ = 0;
     return msg;
 }
@@ -181,7 +181,7 @@ CommandMessage CommandMessage::CreateHeartbeatRequest()
 CommandMessage CommandMessage::CreateHeartbeatResponse()
 {
     CommandMessage msg;
-    msg.cmd_ = uint8_t(ECommand::HEARTBEAT);
+    msg.cmd_ = (command_t)ECommand::HEARTBEAT;
     msg.SetResponseFlag();
     msg.payload_len_ = 0;
     return msg;

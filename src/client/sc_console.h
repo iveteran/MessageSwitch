@@ -42,11 +42,11 @@ class SCConsole {
     int handleConsoleCommand_Kickout(const vector<string>& argv);
     int handleConsoleCommand_Reload(const vector<string>& argv);
 
-    using SetTargetsCommandCallback = std::function<void (const vector<uint32_t>&)>;
+    using SetTargetsCommandCallback = std::function<void (const vector<EndpointId>&)>;
     int handleConsoleCommand_SetTargets(const vector<string>& argv, const char* desc,
             const SetTargetsCommandCallback& cmd_handler_callback);
 
-    using SubUnsubRejUnrejCommandCallback = std::function<void (const vector<uint32_t>&, const vector<uint8_t>&)>;
+    using SubUnsubRejUnrejCommandCallback = std::function<void (const vector<EndpointId>&, const vector<MessageId>&)>;
     int handleConsoleCommand_SubUnsubRejUnrej(const vector<string>& argv, const char* desc,
             const SubUnsubRejUnrejCommandCallback& cmd_handler_callback);
 

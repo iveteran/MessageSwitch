@@ -8,6 +8,7 @@ enum class EEndpointRole : uint8_t {
     Normal,
     Admin,
     Service,
+    COUNT,
 };
 const char* EndpointRoleToTag(EEndpointRole role);
 EEndpointRole TagToEndpointRole(const std::string& role_str);

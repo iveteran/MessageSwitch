@@ -22,19 +22,19 @@ class SCCommandHandler {
     SCCommandHandler(SwitchClient* client) : client_(client) {}
 
     void Echo(const char* content);
-    void Register(uint32_t ep_id, EEndpointRole ep_role, const string& access_code, bool with_token=false, uint8_t svc_type=0);
-    void GetInfo(bool is_details, uint32_t ep_id=0);
-    void ForwardTargets(const vector<uint32_t>& targets);
-    void UnforwardTargets(const vector<uint32_t>& targets);
-    void Subscribe(const vector<uint32_t>& sources, const vector<uint8_t>& messages);
-    void Unsubscribe(const vector<uint32_t>& sources, const vector<uint8_t>& messages);
-    void Reject(const vector<uint32_t>& sources, const vector<uint8_t>& messages);
-    void Unreject(const vector<uint32_t>& sources, const vector<uint8_t>& messages);
-    void Publish(const string& data, const vector<uint32_t> targets={});
-    void RequestService(const string& data, uint8_t svc_type);
+    void Register(EndpointId ep_id, EEndpointRole ep_role, const string& access_code, bool with_token=false, ServiceType svc_type=0);
+    void GetInfo(bool is_details, EndpointId ep_id=0);
+    void ForwardTargets(const vector<EndpointId>& targets);
+    void UnforwardTargets(const vector<EndpointId>& targets);
+    void Subscribe(const vector<EndpointId>& sources, const vector<MessageId>& messages);
+    void Unsubscribe(const vector<EndpointId>& sources, const vector<MessageId>& messages);
+    void Reject(const vector<EndpointId>& sources, const vector<MessageId>& messages);
+    void Unreject(const vector<EndpointId>& sources, const vector<MessageId>& messages);
+    void Publish(const string& data, const vector<EndpointId> targets={});
+    void RequestService(const string& data, ServiceType svc_type);
     void Setup(const string& admin_code, const string& new_admin_code,
             const string& new_access_code, const string& mode);
-    void Kickout(const vector<uint32_t>& targets);
+    void Kickout(const vector<EndpointId>& targets);
     void Reload();
 
     void HandleCommandResult(TcpConnection* conn, CommandMessage* cmdMsg);
@@ -51,7 +51,7 @@ class SCCommandHandler {
     void HandleServiceResult(CommandMessage* cmdMsg, const string& content);
 
     template<typename T>
-    void SubUnsubRejUnrej(ECommand cmd, const vector<uint32_t>& sources, const vector<uint8_t>& messages);
+    void SubUnsubRejUnrej(ECommand cmd, const vector<EndpointId>& sources, const vector<MessageId>& messages);
 
     private:
     SwitchClient* client_;

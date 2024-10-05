@@ -17,13 +17,13 @@ void SCCommandHandler::Echo(const char* content)
     }
 }
 
-void SCCommandHandler::Register(uint32_t ep_id, EEndpointRole ep_role,
-        const string& access_code, bool with_token, uint8_t svc_type)
+void SCCommandHandler::Register(EndpointId ep_id, EEndpointRole ep_role,
+        const string& access_code, bool with_token, ServiceType svc_type)
 {
     CommandRegister reg_cmd;
     reg_cmd.id = ep_id > 0 ? ep_id : client_->GetContext()->endpoint_id;
 
-    reg_cmd.role = (uint8_t)ep_role;
+    reg_cmd.role = (RoleId)ep_role;
     if (! access_code.empty()) {
         reg_cmd.access_code = access_code;
     }
@@ -43,7 +43,7 @@ void SCCommandHandler::Register(uint32_t ep_id, EEndpointRole ep_role,
     }
 }
 
-void SCCommandHandler::GetInfo(bool is_details, uint32_t ep_id)
+void SCCommandHandler::GetInfo(bool is_details, EndpointId ep_id)
 {
     ECommand cmd = ECommand::INFO;
     CommandInfoReq cmd_info_req;
@@ -62,7 +62,7 @@ void SCCommandHandler::GetInfo(bool is_details, uint32_t ep_id)
     }
 }
 
-void SCCommandHandler::ForwardTargets(const vector<uint32_t>& targets)
+void SCCommandHandler::ForwardTargets(const vector<EndpointId>& targets)
 {
     //string content(R"({"targets": [1, 2]})");
     CommandForward cmd_fwd;
@@ -74,7 +74,7 @@ void SCCommandHandler::ForwardTargets(const vector<uint32_t>& targets)
     }
 }
 
-void SCCommandHandler::UnforwardTargets(const vector<uint32_t>& targets)
+void SCCommandHandler::UnforwardTargets(const vector<EndpointId>& targets)
 {
     CommandUnforward cmd_unfwd;
     cmd_unfwd.targets = targets;
@@ -85,28 +85,28 @@ void SCCommandHandler::UnforwardTargets(const vector<uint32_t>& targets)
     }
 }
 
-void SCCommandHandler::Subscribe(const vector<uint32_t>& sources, const vector<uint8_t>& messages)
+void SCCommandHandler::Subscribe(const vector<EndpointId>& sources, const vector<MessageId>& messages)
 {
     SubUnsubRejUnrej<CommandSubscribe>(ECommand::SUB, sources, messages);
 }
 
-void SCCommandHandler::Unsubscribe(const vector<uint32_t>& sources, const vector<uint8_t>& messages)
+void SCCommandHandler::Unsubscribe(const vector<EndpointId>& sources, const vector<MessageId>& messages)
 {
     SubUnsubRejUnrej<CommandUnsubscribe>(ECommand::UNSUB, sources, messages);
 }
 
-void SCCommandHandler::Reject(const vector<uint32_t>& sources, const vector<uint8_t>& messages)
+void SCCommandHandler::Reject(const vector<EndpointId>& sources, const vector<MessageId>& messages)
 {
     SubUnsubRejUnrej<CommandReject>(ECommand::REJECT, sources, messages);
 }
 
-void SCCommandHandler::Unreject(const vector<uint32_t>& sources, const vector<uint8_t>& messages)
+void SCCommandHandler::Unreject(const vector<EndpointId>& sources, const vector<MessageId>& messages)
 {
     SubUnsubRejUnrej<CommandUnreject>(ECommand::UNREJECT, sources, messages);
 }
 
 template<typename T>
-void SCCommandHandler::SubUnsubRejUnrej(ECommand cmd, const vector<uint32_t>& sources, const vector<uint8_t>& messages)
+void SCCommandHandler::SubUnsubRejUnrej(ECommand cmd, const vector<EndpointId>& sources, const vector<MessageId>& messages)
 {
     T cmd_obj;
     cmd_obj.sources = sources;
@@ -118,7 +118,7 @@ void SCCommandHandler::SubUnsubRejUnrej(ECommand cmd, const vector<uint32_t>& so
     }
 }
 
-void SCCommandHandler::Publish(const string& data, const vector<uint32_t> targets)
+void SCCommandHandler::Publish(const string& data, const vector<EndpointId> targets)
 {
     auto cmd = ECommand::PUBLISH;
     string pub_msg_bytes;
@@ -139,7 +139,7 @@ void SCCommandHandler::Publish(const string& data, const vector<uint32_t> target
     }
 }
 
-void SCCommandHandler::RequestService(const string& data, uint8_t svc_type)
+void SCCommandHandler::RequestService(const string& data, ServiceType svc_type)
 {
     ServiceMessage svc_msg;
     svc_msg.svc_type = svc_type;
@@ -171,7 +171,7 @@ void SCCommandHandler::Setup(const string& access_code, const string& new_admin_
     }
 }
 
-void SCCommandHandler::Kickout(const vector<uint32_t>& targets)
+void SCCommandHandler::Kickout(const vector<EndpointId>& targets)
 {
     //string content(R"({"targets": [95]})");
     CommandKickout cmd_kickout;
@@ -233,7 +233,7 @@ void SCCommandHandler::HandleCommandResult(TcpConnection* conn, CommandMessage* 
 {
     ECommand cmd = cmdMsg->Command();
     printf("Command result:\n");
-    printf("cmd: %s(%d)\n", CommandToTag(cmd), uint8_t(cmd));
+    printf("cmd: %s(%d)\n", CommandToTag(cmd), command_t(cmd));
 
     auto resultMsg = cmdMsg->GetResultMessage();
     int8_t errcode = resultMsg->errcode;
@@ -337,7 +337,7 @@ void SCCommandHandler::HandlePublishData(TcpConnection* conn, CommandMessage* cm
     printf("Received forwarding PUBLISH/PUBLISH_2 message:\n");
     ECommand cmd = cmdMsg->Command();
     printf("Command message:\n");
-    printf("cmd: %s(%d)\n", CommandToTag(cmd), uint8_t(cmd));
+    printf("cmd: %s(%d)\n", CommandToTag(cmd), command_t(cmd));
     auto [payload, payload_len] = cmdMsg->Payload();
     printf("payload_len: %d\n", payload_len);
 
@@ -359,7 +359,7 @@ void SCCommandHandler::HandleServiceRequest(TcpConnection* conn, CommandMessage*
     printf("Received SVC reqeust message:\n");
     ECommand cmd = cmdMsg->Command();
     printf("Command message:\n");
-    printf("cmd: %s(%d)\n", CommandToTag(cmd), uint8_t(cmd));
+    printf("cmd: %s(%d)\n", CommandToTag(cmd), command_t(cmd));
     printf("payload_len: %d\n", cmdMsg->PayloadLen());
 
     auto svc_msg = cmdMsg->GetServiceMessage();
@@ -391,7 +391,7 @@ void SCCommandHandler::HandleServiceResult(CommandMessage* cmdMsg, const string&
     printf("Received SVC response message:\n");
     ECommand cmd = cmdMsg->Command();
     printf("Command message:\n");
-    printf("cmd: %s(%d)\n", CommandToTag(cmd), uint8_t(cmd));
+    printf("cmd: %s(%d)\n", CommandToTag(cmd), command_t(cmd));
     printf("payload_len: %d\n", cmdMsg->PayloadLen());
 
     auto svc_msg = cmdMsg->GetServiceMessage();

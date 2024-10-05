@@ -7,6 +7,7 @@
 #include <string>
 #include <memory>
 #include "endpoint_role.h"
+#include "switch_types.h"
 
 using std::map;
 using std::set;
@@ -22,31 +23,31 @@ struct SCContext
     time_t born_time;
     string access_code;
     EEndpointRole role;
-    uint8_t svc_type;
+    ServiceType svc_type;
     bool is_registered;
     string register_errmsg;
-    uint32_t endpoint_id;
+    EndpointId endpoint_id;
     string token;
 
-    set<uint32_t> fwd_targets;
-    set<uint32_t> subs_sources;
-    set<uint32_t> rej_sources;
-    set<uint8_t> subs_messages;
-    set<uint8_t> rej_messages;
+    set<EndpointId> fwd_targets;
+    set<EndpointId> subs_sources;
+    set<EndpointId> rej_sources;
+    set<MessageId> subs_messages;
+    set<MessageId> rej_messages;
 
     SCContext(SwitchClient* server);
     string ToString() const;
 
-    void SetForwardTargets(const vector<uint32_t>& targets);
-    void RemoveForwardTargets(const vector<uint32_t>& targets);
-    void SetSubscribedSources(const vector<uint32_t>& sources);
-    void RemoveSubscribedSources(const vector<uint32_t>& sources);
-    void SetRejectedSources(const vector<uint32_t>& sources);
-    void RemoveRejectedSources(const vector<uint32_t>& sources);
-    void SetSubscribedMessages(const vector<uint8_t>& messages);
-    void RemoveSubscribedMessages(const vector<uint8_t>& messages);
-    void SetRejectedMessages(const vector<uint8_t>& messages);
-    void RemoveRejectedMessages(const vector<uint8_t>& messages);
+    void SetForwardTargets(const vector<EndpointId>& targets);
+    void RemoveForwardTargets(const vector<EndpointId>& targets);
+    void SetSubscribedSources(const vector<EndpointId>& sources);
+    void RemoveSubscribedSources(const vector<EndpointId>& sources);
+    void SetRejectedSources(const vector<EndpointId>& sources);
+    void RemoveRejectedSources(const vector<EndpointId>& sources);
+    void SetSubscribedMessages(const vector<MessageId>& messages);
+    void RemoveSubscribedMessages(const vector<MessageId>& messages);
+    void SetRejectedMessages(const vector<MessageId>& messages);
+    void RemoveRejectedMessages(const vector<MessageId>& messages);
 };
 typedef std::shared_ptr<SCContext> SCContextPtr;
 

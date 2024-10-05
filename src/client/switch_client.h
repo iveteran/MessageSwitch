@@ -1,4 +1,5 @@
 #include <eventloop/el.h>
+#include "switch_types.h"
 
 using namespace evt_loop;
 
@@ -9,13 +10,13 @@ class SCConsole;
 
 class SwitchClient {
 public:
-    SwitchClient(const char* host="localhost", uint16_t port=10000, uint32_t ep_id=0);
+    SwitchClient(const char* host="localhost", uint16_t port=10000, EndpointId ep_id=0);
     SwitchClient(SCOptions* options);
 
     void Cleanup();
     void Exit();
 
-    uint32_t ID() const { return endpoint_id_; }
+    EndpointId ID() const { return endpoint_id_; }
 
     HeaderDescriptionPtr GetMessageHeaderDescription() const {
         return client_ ? client_->GetMessageHeaderDescription() : nullptr;
@@ -42,7 +43,7 @@ protected:
 
 private:
     TcpClient* client_;
-    uint32_t endpoint_id_;
+    EndpointId endpoint_id_;
 
     SCOptions* options_;
     SCContext* context_;

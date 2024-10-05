@@ -1,6 +1,7 @@
 #ifndef _COMMAND_MESSAGES_H
 #define _COMMAND_MESSAGES_H
 
+#include "switch_types.h"
 #include <string>
 #include <vector>
 #include <map>
@@ -11,11 +12,11 @@ using std::vector;
 using std::map;
 
 struct CommandRegister {
-    uint32_t id = 0;
-    uint8_t role;
+    ep_id_t id = 0;
+    role_id_t role;
     string access_code;
     string token;
-    uint8_t svc_type = 0;
+    svc_type_t svc_type = 0;
     string _raw_data;
 
     bool decodeFromJSON(const string& data);
@@ -26,9 +27,9 @@ struct CommandRegister {
 };
 
 struct CommandResultRegister {
-    uint32_t id;
+    ep_id_t id;
     string token;
-    uint8_t role;
+    role_id_t role;
     string _raw_data;
 
     bool decodeFromJSON(const string& data);
@@ -40,7 +41,7 @@ struct CommandResultRegister {
 using CommandResultRegisterPtr = std::shared_ptr<CommandResultRegister>;
 
 struct CommandForward {
-    vector<uint32_t> targets;
+    vector<ep_id_t> targets;
     string _raw_data;
 
     bool decodeFromJSON(const string& data);
@@ -52,8 +53,8 @@ struct CommandForward {
 using CommandUnforward = CommandForward;  // same as CommandForward
 
 struct CommandSubUnsubRejUnrej {
-    vector<uint32_t> sources;
-    vector<uint8_t> messages;
+    vector<ep_id_t> sources;
+    vector<msg_type_t> messages;
     string _raw_data;
 
     bool decodeFromJSON(const string& data);
@@ -70,7 +71,7 @@ using CommandUnreject = CommandSubUnsubRejUnrej;
 
 struct CommandInfoReq {
     bool is_details;
-    uint32_t endpoint_id;
+    ep_id_t endpoint_id;
     string _raw_data;
 
     CommandInfoReq() : is_details(false), endpoint_id(0) {}
@@ -83,7 +84,7 @@ struct CommandInfoReq {
 };
 
 struct CommandInfo {
-    uint32_t id;
+    ep_id_t id;
     time_t uptime;
     string serving_mode;
     string access_code;
@@ -92,24 +93,24 @@ struct CommandInfo {
         uint32_t total;
         uint32_t rx_bytes;
         uint32_t tx_bytes;
-        map<uint32_t, map<string, uint32_t>> eps;  // id -> {uptime, ...}
+        map<ep_id_t, map<string, uint32_t>> eps;  // id -> {uptime, ...}
     } endpoints;
     struct {
         uint32_t total;
-        vector<uint32_t> eps;  // id list
+        vector<ep_id_t> eps;  // id list
     } normal_endpoints;
     struct {
         uint32_t total;
-        vector<uint32_t> eps;  // id list
+        vector<ep_id_t> eps;  // id list
     } admin_endpoints;
     struct {
         uint32_t svc_type_total;
         uint32_t svc_ep_total;
-        map<uint8_t, vector<uint32_t>> eps;  // svc type -> [ep id list]
+        map<svc_type_t, vector<ep_id_t>> eps;  // svc type -> [ep id list]
     } service_endpoints;
     struct {
         uint32_t total;
-        vector<uint32_t> eps;  // id list
+        vector<ep_id_t> eps;  // id list
     } pending_clients;
 
     string _raw_data;
@@ -123,15 +124,15 @@ struct CommandInfo {
 using CommandInfoPtr = std::shared_ptr<CommandInfo>;
 
 struct CommandEndpointInfo {
-    uint32_t id;
+    ep_id_t id;
     time_t uptime;
-    uint8_t role;
-    uint8_t svc_type;
-    vector<uint32_t> fwd_targets;
-    vector<uint32_t> subs_sources;
-    vector<uint32_t> rej_sources;
-    vector<uint8_t> subs_messages;
-    vector<uint8_t> rej_messages;
+    role_id_t role;
+    svc_type_t svc_type;
+    vector<ep_id_t> fwd_targets;
+    vector<ep_id_t> subs_sources;
+    vector<ep_id_t> rej_sources;
+    vector<msg_type_t> subs_messages;
+    vector<msg_type_t> rej_messages;
     uint32_t rx_bytes;
     uint32_t tx_bytes;
 
@@ -162,7 +163,7 @@ struct CommandSetup {
 };
 
 struct CommandKickout {
-    vector<uint32_t> targets;
+    vector<ep_id_t> targets;
     string _raw_data;
 
     bool decodeFromJSON(const string& data);

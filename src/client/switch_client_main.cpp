@@ -24,7 +24,7 @@ int parse_arguments(int argc, char **argv, SCOptionsPtr& options) {
     program.add_argument("-n", "--endpoint_id")
         .help("endpoint id for Switch")
         .default_value(0)
-        .scan<'i', int>();
+        .scan<'i', EndpointId>();
     program.add_argument("-r", "--role")
         .help("endpoint role")
         .default_value("normal");
@@ -47,7 +47,7 @@ int parse_arguments(int argc, char **argv, SCOptionsPtr& options) {
     cout << "> arguments.server_host: " << options->server_host << endl;
     options->server_port = program.get<int>("--server_port");
     cout << "> arguments.server_port: " << options->server_port << endl;
-    options->endpoint_id = program.get<int>("--endpoint_id");
+    options->endpoint_id = program.get<EndpointId>("--endpoint_id");
     cout << "> arguments.endpoint_id: " << options->endpoint_id << endl;
     options->role = program.get<std::string>("--role");
     cout << "> arguments.role: " << options->role << endl;

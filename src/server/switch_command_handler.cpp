@@ -42,7 +42,7 @@ void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
 
     ECommand cmd = cmdMsg->Command();
     printf("[CommandHandler::HandleCommand] id: %d\n", conn->ID());
-    printf("[CommandHandler::HandleCommand] cmd: %s(%d)\n", CommandToTag(cmd), (uint8_t)cmd);
+    printf("[CommandHandler::HandleCommand] cmd: %s(%d)\n", CommandToTag(cmd), (command_t)cmd);
     auto [payload, payload_len] = cmdMsg->Payload();
     printf("[CommandHandler::HandleCommand] payload len: %d\n", payload_len);
     cout << DumpHexWithChars(payload, payload_len, evt_loop::DUMP_MAX_BYTES) << endl;
@@ -121,7 +121,7 @@ void CommandHandler::handleCommand(TcpConnection* conn, const Message* msg)
             handleReload(ep, cmdMsg, msgData);
             break;
         default:
-            fprintf(stderr, "[CommandHandler::HandleCommand] Error: Unsupported command: %s(%d)\n", CommandToTag(cmd), (uint8_t)cmd);
+            fprintf(stderr, "[CommandHandler::HandleCommand] Error: Unsupported command: %s(%d)\n", CommandToTag(cmd), (command_t)cmd);
             break;
     }
 }

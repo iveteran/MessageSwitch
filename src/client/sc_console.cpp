@@ -220,12 +220,12 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
 
     cmd_ap.add_argument("--id")
         .help("the endpoint id of Switch client")
-        .scan<'i', uint32_t>()
+        .scan<'i', EndpointId>()
         .required()
         .default_value(client_->ID());
     cmd_ap.add_argument("--role")
         .help("the role of Switch client, values: 1: normal, 2: admin, 3: service")
-        .scan<'i', int>()
+        .scan<'i', RoleId>()
         .required()
         .default_value(1);
     cmd_ap.add_argument("--access_code")
@@ -236,7 +236,7 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
         .flag();
     cmd_ap.add_argument("--svc_type")
         .help("the service type, only used for role is Service")
-        .scan<'i', uint8_t>()
+        .scan<'i', ServiceType>()
         .default_value(0);
 
     try {
@@ -250,10 +250,10 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
         return 1;
     }
 
-    int ep_id = cmd_ap.get<uint32_t>("--id");
+    EndpointId ep_id = cmd_ap.get<EndpointId>("--id");
 
-    int role = cmd_ap.get<int>("--role");
-    if (role < 1 || role > 3) {
+    RoleId role = cmd_ap.get<RoleId>("--role");
+    if (role == (RoleId)EEndpointRole::Undefined || role >= (RoleId)EEndpointRole::COUNT) {
         Console::Instance()->put_line("Wrong argument! the role must be given");
         return -1;
     }
@@ -273,9 +273,9 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
     }
 
     bool with_token = cmd_ap.get<bool>("--with_token");
-    uint8_t svc_type = 0;
+    ServiceType svc_type = 0;
     if (cmd_ap.is_used("--svc_type")) {
-        svc_type = cmd_ap.get<uint8_t>("--svc_type");
+        svc_type = cmd_ap.get<ServiceType>("--svc_type");
     }
 
     cmd_handler_->Register(ep_id, EEndpointRole(role), access_code, with_token, svc_type);
@@ -292,7 +292,7 @@ int SCConsole::handleConsoleCommand_GetInfo(const vector<string>& argv)
         .flag();
     cmd_ap.add_argument("--endpoint")
         .help("only to get the information of specified endpoint, to get self stats if not specified")
-        .scan<'i', int>()
+        .scan<'i', int32_t>()
         .default_value(-1)
         .nargs(argparse::nargs_pattern::optional);
 
@@ -308,9 +308,9 @@ int SCConsole::handleConsoleCommand_GetInfo(const vector<string>& argv)
     }
 
     bool is_details = cmd_ap.get<bool>("--is_details");
-    uint32_t ep_id = 0;
+    EndpointId ep_id = 0;
     if (cmd_ap.is_used("--endpoint")) {
-        int _ep_id = cmd_ap.get<int>("--endpoint");
+        int32_t _ep_id = cmd_ap.get<EndpointId>("--endpoint");
         if (_ep_id == -1) {
             ep_id = client_->GetContext()->endpoint_id;  // use self endpoint id
         } else {
@@ -344,7 +344,7 @@ int SCConsole::handleConsoleCommand_SetTargets(const vector<string>& argv, const
 
     cmd_ap.add_argument("--targets")
         .help(help)
-        .scan<'i', uint32_t>()
+        .scan<'i', EndpointId>()
         .nargs(argparse::nargs_pattern::at_least_one);
 
     try {
@@ -358,7 +358,7 @@ int SCConsole::handleConsoleCommand_SetTargets(const vector<string>& argv, const
         return 1;
     }
 
-    auto targets = cmd_ap.get<vector<uint32_t>>("--targets");
+    auto targets = cmd_ap.get<vector<EndpointId>>("--targets");
     if (targets.empty()) {
         Console::Instance()->put_line("Wrong argument! the --targets must be more than one value");
         return -1;
@@ -410,13 +410,13 @@ int SCConsole::handleConsoleCommand_SubUnsubRejUnrej(
     snprintf(help, sizeof(help), "Set sources endpoints to %s", desc);
     cmd_ap.add_argument("--sources")
         .help(help)
-        .scan<'i', uint32_t>()
+        .scan<'i', EndpointId>()
         .nargs(argparse::nargs_pattern::at_least_one);
 
     snprintf(help, sizeof(help), "Set messages to %s", desc);
     cmd_ap.add_argument("--messages")
         .help(help)
-        .scan<'i', uint8_t>()
+        .scan<'i', MessageId>()
         .nargs(argparse::nargs_pattern::at_least_one);
 
     try {
@@ -430,8 +430,8 @@ int SCConsole::handleConsoleCommand_SubUnsubRejUnrej(
         return 1;
     }
 
-    auto sources = cmd_ap.get<vector<uint32_t>>("--sources");
-    auto messages = cmd_ap.get<vector<uint8_t>>("--messages");
+    auto sources = cmd_ap.get<vector<EndpointId>>("--sources");
+    auto messages = cmd_ap.get<vector<MessageId>>("--messages");
     if (sources.empty() && messages.empty()) {
         Console::Instance()->put_line("Wrong argument! the --sources or --messages must be more than one element");
         return -1;
@@ -483,7 +483,7 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
         .help("The data reading from file to send");
     cmd_ap.add_argument("--targets")
         .help("The target endpoints to send")
-        .scan<'i', uint32_t>()
+        .scan<'i', EndpointId>()
         .nargs(argparse::nargs_pattern::at_least_one);
 
     try {
@@ -497,9 +497,9 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
         return 1;
     }
 
-    vector<uint32_t> targets;
+    vector<EndpointId> targets;
     if (cmd_ap.is_used("--targets")) {
-        targets = cmd_ap.get<vector<uint32_t>>("--targets");
+        targets = cmd_ap.get<vector<EndpointId>>("--targets");
         if (! targets.empty()) {
             duplicate(targets);
         }
@@ -541,7 +541,7 @@ int SCConsole::handleConsoleCommand_RequestService(const vector<string>& argv)
         .default_value(R"({"foo":"bar"})");
     cmd_ap.add_argument("--svc_type")
         .help("The service type to request")
-        .scan<'i', uint8_t>()
+        .scan<'i', ServiceType>()
         .nargs(argparse::nargs_pattern::at_least_one);
 
     try {
@@ -555,9 +555,9 @@ int SCConsole::handleConsoleCommand_RequestService(const vector<string>& argv)
         return 1;
     }
 
-    uint8_t svc_type = 0;
+    ServiceType svc_type = 0;
     if (cmd_ap.is_used("--svc_type")) {
-        svc_type = cmd_ap.get<uint8_t>("--svc_type");
+        svc_type = cmd_ap.get<ServiceType>("--svc_type");
     }
     string data;
     if (cmd_ap.is_used("--data")) {
@@ -625,7 +625,7 @@ int SCConsole::handleConsoleCommand_Kickout(const vector<string>& argv)
 
     cmd_ap.add_argument("--targets")
         .help("Kickout endpoints with specify targets")
-        .scan<'i', uint32_t>()
+        .scan<'i', EndpointId>()
         .nargs(argparse::nargs_pattern::at_least_one);
 
     try {
@@ -639,7 +639,7 @@ int SCConsole::handleConsoleCommand_Kickout(const vector<string>& argv)
         return 1;
     }
 
-    auto targets = cmd_ap.get<vector<uint32_t>>("--targets");
+    auto targets = cmd_ap.get<vector<EndpointId>>("--targets");
     if (targets.empty()) {
         Console::Instance()->put_line("Wrong argument! the --targets must be more than one value");
         return -1;

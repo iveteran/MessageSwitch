@@ -81,7 +81,7 @@ bool CommandForward::decodeFromJSON(const string& data) {
     if (!params["targets"].is_array()) {
         return false;
     }
-    targets = params["targets"].template get<std::vector<uint32_t>>();
+    targets = params["targets"].template get<std::vector<ep_id_t>>();
     return true;
 }
 
@@ -99,10 +99,10 @@ bool CommandSubUnsubRejUnrej::decodeFromJSON(const string& data) {
     json params = json::parse(_raw_data);
 
     if (params["sources"].is_array()) {
-        sources = params["sources"].template get<std::vector<uint32_t>>();
+        sources = params["sources"].template get<std::vector<ep_id_t>>();
     }
     if (params["messages"].is_array()) {
-        messages = params["messages"].template get<std::vector<uint8_t>>();
+        messages = params["messages"].template get<std::vector<msg_type_t>>();
     }
     if (sources.empty() && messages.empty()) {
         return false;
@@ -268,19 +268,19 @@ bool CommandEndpointInfo::decodeFromJSON(const string& data) {
     }
 
     if (params.contains("fwd_targets") && params["fwd_targets"].is_array()) {
-        fwd_targets = params["fwd_targets"].template get<std::vector<uint32_t>>();
+        fwd_targets = params["fwd_targets"].template get<std::vector<ep_id_t>>();
     }
     if (params.contains("subs_sources") && params["subs_sources"].is_array()) {
-        subs_sources = params["subs_sources"].template get<std::vector<uint32_t>>();
+        subs_sources = params["subs_sources"].template get<std::vector<ep_id_t>>();
     }
     if (params.contains("rej_sources") && params["rej_sources"].is_array()) {
-        rej_sources = params["rej_sources"].template get<std::vector<uint32_t>>();
+        rej_sources = params["rej_sources"].template get<std::vector<ep_id_t>>();
     }
     if (params.contains("subs_messages") && params["subs_messages"].is_array()) {
-        subs_messages = params["subs_messages"].template get<std::vector<uint8_t>>();
+        subs_messages = params["subs_messages"].template get<std::vector<msg_type_t>>();
     }
     if (params.contains("rej_messages") && params["rej_messages"].is_array()) {
-        rej_messages = params["rej_messages"].template get<std::vector<uint8_t>>();
+        rej_messages = params["rej_messages"].template get<std::vector<msg_type_t>>();
     }
 
     if (params.contains("rx_bytes")) {
@@ -363,7 +363,7 @@ bool CommandKickout::decodeFromJSON(const string& data) {
     json params = json::parse(_raw_data);
 
     if (params.contains("targets") && params["targets"].is_array()) {
-        targets = params["targets"].template get<std::vector<uint32_t>>();
+        targets = params["targets"].template get<std::vector<ep_id_t>>();
     }
     return true;
 }

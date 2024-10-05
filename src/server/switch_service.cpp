@@ -406,7 +406,7 @@ SwitchService::kickout_endpoint(const CommandKickout& cmd_kickout)
 
 EndpointId SwitchService::allocate_endpoint_id()
 {
-    uint32_t ep_id = generate_random_integer();
+    EndpointId ep_id = generate_random_integer();
     // to find out the generated ep_id whether exists
     auto context = switch_server_->GetContext();
     while (context->endpoints.find(ep_id) != context->endpoints.end()) {

@@ -1,6 +1,7 @@
 #ifndef _SWITCH_MESSAGE_H_
 #define _SWITCH_MESSAGE_H_
 
+#include "switch_types.h"
 #include <cstdint>
 #include <cstring>
 #include <utility>
@@ -12,7 +13,10 @@ namespace evt_loop {
 }
 using evt_loop::Message;
 
-enum class ECommand : uint8_t {
+using command_t = uint8_t;
+using payload_size_t = uint16_t;
+
+enum class ECommand : command_t {
     UNDEFINED,
     ECHO,
     REG,
@@ -37,24 +41,23 @@ enum class ECommand : uint8_t {
 };
 const char* CommandToTag(ECommand cmd);
 
-using payload_size_t = uint16_t;
-
 // for CommandMessage.cmd equals ECommand::SVC
 #pragma pack(1)
 struct ServiceMessage {
-    uint8_t svc_type = 0;   // service type, used for service routing, 0: all, others defined by Services
-    uint16_t svc_cmd = 0;   // defined by Services
-    uint32_t sess_id = 0;   // session id of request/response
-    uint32_t source  = 0;   // requester id (endpoint id)
+    svc_type_t svc_type = 0;   // service type, used for service routing, 0: all, others defined by Services
+    msg_type_t svc_cmd  = 0;   // defined by Services
+    uint32_t   sess_id  = 0;   // session id of request/response
+    ep_id_t    source   = 0;   // requester id (endpoint id)
 };
 #pragma pack()
 
 // for CommandMessage.cmd equals ECommand::PUBLISH_2
 #pragma pack(1)
 struct PublishingMessage {
-    uint32_t source    = 0;     // source endpoint id
-    uint16_t n_targets = 0;     // number of targets
-    uint32_t targets[0];        // more than one element
+    msg_type_t msg_type  = 0;
+    ep_id_t    source    = 0;     // source endpoint id
+    uint16_t   n_targets = 0;     // number of targets
+    ep_id_t    targets[0];        // more than one element
 };
 #pragma pack()
 
@@ -69,7 +72,7 @@ struct ResultMessage {
 struct CommandMessage {
     private:
     // Fields
-    uint8_t cmd_ = 0;           // ECommand
+    command_t cmd_ = 0;         // ECommand
     struct {
         uint8_t unused:5 = 0;
         uint8_t codec:2 = 0;    // 2 bits, codec of above layer, 0: undefined, 1: json, 2: protobuf, 3: unused
@@ -81,8 +84,8 @@ struct CommandMessage {
     public:
     // Member methods
     ECommand Command() const { return (ECommand)cmd_; }
-    void SetCommand(ECommand cmd) { cmd_ = (uint8_t)cmd; }
-    void SetCommand(uint8_t cmd) { cmd_ = cmd; }
+    void SetCommand(ECommand cmd) { cmd_ = (command_t)cmd; }
+    void SetCommand(command_t cmd) { cmd_ = cmd; }
 
     void SetResponseFlag() { flag_.req_rsp = 1; }
     bool HasResponseFlag() const { return flag_.req_rsp; }

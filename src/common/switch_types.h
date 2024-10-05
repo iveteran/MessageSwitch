@@ -3,7 +3,7 @@
 
 #include <string>
 
-enum class EServingMode {
+enum class EServingMode : uint8_t {
     Undefined,
     Normal,
     Proxy,
@@ -13,15 +13,23 @@ enum class EServingMode {
 const char* ServingModeToTag(EServingMode mode);
 EServingMode TagToServingMode(const std::string& mode_str);
 
-enum class EProxyMode {
+enum class EProxyMode : uint8_t {
     Undefined,
     Random,
     RoundRobin,
     Hash,
 };
 
-using EndpointId = uint32_t;
-using ServiceType = uint8_t;
-using MessageId = uint8_t;
+using ep_id_t = uint32_t;
+using EndpointId = ep_id_t;
+
+using role_id_t = uint8_t;
+using RoleId = role_id_t;
+
+using svc_type_t = uint8_t;
+using ServiceType = svc_type_t;
+
+using msg_type_t = uint16_t;
+using MessageId = msg_type_t;
 
 #endif  // _SWITCH_TYPES_H

@@ -6,7 +6,7 @@
 #include "sc_options.h"
 #include "sc_context.h"
 
-SwitchClient::SwitchClient(const char* host, uint16_t port, uint32_t ep_id) :
+SwitchClient::SwitchClient(const char* host, uint16_t port, EndpointId ep_id) :
     client_(nullptr), endpoint_id_(ep_id)
 {
     InitClient(host, port);

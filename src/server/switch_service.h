@@ -2,6 +2,7 @@
 #define _SWITCH_SERVICE_H
 
 #include "command_messages.h"
+#include "switch_types.h"
 #include <tuple>
 
 using std::tuple;
@@ -36,7 +37,7 @@ public:
     tuple<int, string> kickout_endpoint(const CommandKickout& cmd_kickout);
 
 private:
-    uint32_t allocate_endpoint_id();
+    EndpointId allocate_endpoint_id();
     string generate_token(Endpoint* ep);
     void kickout_endpoint(Endpoint* ep);
 

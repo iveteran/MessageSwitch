@@ -29,7 +29,7 @@ class SwitchServer
     {
         return server_->GetMessageHeaderDescription()->is_payload_len_including_self;
     }
-    uint32_t NodeId() const { return node_id_; }
+    EndpointId NodeId() const { return node_id_; }
     OptionsPtr GetOptions() const { return options_; }
     SwitchContextPtr GetContext() const { return context_; }
     SwitchServicePtr GetService() const { return service_; }
@@ -46,7 +46,7 @@ class SwitchServer
 
     private:
     TcpServerPtr server_;
-    uint32_t node_id_;
+    EndpointId node_id_;
     OptionsPtr options_;
     SwitchContextPtr context_;
     SwitchServicePtr service_;

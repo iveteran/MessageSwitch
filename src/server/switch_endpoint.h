@@ -61,7 +61,7 @@ private:
     string              token_;
     TcpConnection*      conn_;
     time_t              born_time_;
-    uint8_t             svc_type_;           // service type, if role is Service
+    ServiceType         svc_type_;           // service type, if role is Service
 
     set<EndpointId>     fwd_targets_;
 
