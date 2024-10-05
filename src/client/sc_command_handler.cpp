@@ -299,7 +299,9 @@ void SCCommandHandler::HandleRegisterResult(CommandMessage* cmdMsg, const string
     if (! reg_result.token.empty()) {
         context->token = reg_result.token;
     }
-    context->role = (EEndpointRole)reg_result.role;
+    if (reg_result.role > 0) {
+        context->role = (EEndpointRole)reg_result.role;
+    }
 }
 
 void SCCommandHandler::HandleGetInfoResult(CommandMessage* cmdMsg, const string& data)

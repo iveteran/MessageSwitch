@@ -27,7 +27,7 @@ string SCContext::ToString() const
     ss << "is_connected: " << (switch_client->IsConnected() ? "true" : "false") << ", ";
     ss << "access_code: " << access_code << ", ";
     ss << "role: " << EndpointRoleToTag(role) << ", ";
-    ss << "svc_type: " << ServiceType(svc_type) << ", ";
+    ss << "svc_type: " << int(svc_type) << ", ";
     ss << "is_registered: " << is_registered << ", ";
     ss << "register_errmsg: " << register_errmsg << ", ";
     ss << "token: " << token << ", ";
