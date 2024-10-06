@@ -487,7 +487,8 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
         .nargs(argparse::nargs_pattern::at_least_one);
     cmd_ap.add_argument("--msg_type")
         .help("The message type of data")
-        .scan<'i', int>();
+        .scan<'i', int>()
+        .nargs(1);
 
     try {
         cmd_ap.parse_args(argv);
@@ -549,7 +550,7 @@ int SCConsole::handleConsoleCommand_RequestService(const vector<string>& argv)
     cmd_ap.add_argument("--svc_type")
         .help("The service type to request")
         .scan<'i', ServiceType>()
-        .nargs(argparse::nargs_pattern::at_least_one);
+        .nargs(1);
     cmd_ap.add_argument("--svc_cmd")
         .help("The service command to request")
         .scan<'i', MessageId>()
@@ -566,6 +567,10 @@ int SCConsole::handleConsoleCommand_RequestService(const vector<string>& argv)
         return 1;
     }
 
+    string data;
+    if (cmd_ap.is_used("--data")) {
+        data = cmd_ap.get<string>("--data");
+    }
     ServiceType svc_type = 0;
     if (cmd_ap.is_used("--svc_type")) {
         svc_type = cmd_ap.get<ServiceType>("--svc_type");
@@ -573,10 +578,6 @@ int SCConsole::handleConsoleCommand_RequestService(const vector<string>& argv)
     MessageId svc_cmd = 0;
     if (cmd_ap.is_used("--svc_cmd")) {
         svc_cmd = cmd_ap.get<MessageId>("--svc_cmd");
-    }
-    string data;
-    if (cmd_ap.is_used("--data")) {
-        data = cmd_ap.get<string>("--data");
     }
 
     cmd_handler_->RequestService(data, svc_type, svc_cmd);
