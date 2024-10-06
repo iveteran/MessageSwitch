@@ -192,6 +192,14 @@ SwitchService::get_stats(const CommandInfoReq& cmd_info_req)
     for (auto [_, svc_eps] : context->service_endpoints) {
         cmd_info->service_endpoints.svc_ep_total += svc_eps.size();
     }
+
+    cmd_info->message_subscribers.msg_type_total = context->message_subscribers.size();
+    set<EndpointId> msg_eps_set;
+    for (auto [_, msg_eps] : context->message_subscribers) {
+        msg_eps_set.insert(msg_eps.begin(), msg_eps.end());
+    }
+    cmd_info->message_subscribers.msg_ep_total = msg_eps_set.size();
+
     cmd_info->pending_clients.total = context->pending_clients.size();
 
     if (cmd_info_req.is_details) {
@@ -207,6 +215,11 @@ SwitchService::get_stats(const CommandInfoReq& cmd_info_req)
         for (auto [svc_type, ep_set] : context->service_endpoints) {
             for (auto ep : ep_set) {
                 cmd_info->service_endpoints.eps[svc_type].push_back(ep->Id());
+            }
+        }
+        for (auto [msg_type, ep_id_set] : context->message_subscribers) {
+            for (auto ep_id : ep_id_set) {
+                cmd_info->message_subscribers.eps[msg_type].push_back(ep_id);
             }
         }
     }
@@ -291,6 +304,21 @@ SwitchService::subscribe(Endpoint* ep, const CommandSubscribe& cmd_sub)
     if (!cmd_sub.messages.empty()) {
         ep->SubscribeMessages(cmd_sub.messages);
     }
+
+    for (auto msg_type : cmd_sub.messages) {
+        auto context = switch_server_->GetContext();
+        auto iter = context->message_subscribers.find(msg_type);
+        if (iter != context->message_subscribers.end()) {
+            auto& ep_set = iter->second;
+            ep_set.insert(ep->Id());
+        } else {
+            set<EndpointId> ep_set;
+            ep_set.insert(ep->Id());
+            context->message_subscribers[msg_type] = ep_set;
+        }
+        //context->message_subscribers[msg_type].insert(ep->Id());
+    }
+
     return { 0, "" };
 }
 
@@ -309,6 +337,19 @@ SwitchService::unsubscribe(Endpoint* ep, const CommandUnsubscribe& cmd_unsub)
     if (!cmd_unsub.messages.empty()) {
         ep->UnsubscribeMessages(cmd_unsub.messages);
     }
+
+    for (auto msg_type : cmd_unsub.messages) {
+        auto context = switch_server_->GetContext();
+        auto iter = context->message_subscribers.find(msg_type);
+        if (iter != context->message_subscribers.end()) {
+            auto& ep_set = iter->second;
+            ep_set.erase(ep->Id());
+            if (ep_set.empty()) {
+                context->message_subscribers.erase(iter);
+            }
+        }
+    }
+
     return { 0, "" };
 }
 

@@ -107,6 +107,11 @@ struct CommandInfo {
         map<svc_type_t, vector<ep_id_t>> eps;  // svc type -> [ep id list]
     } service_endpoints;
     struct {
+        uint32_t msg_type_total = 0;
+        uint32_t msg_ep_total = 0;
+        map<msg_type_t, vector<ep_id_t>> eps;  // msg type -> [ep id list]
+    } message_subscribers;
+    struct {
         uint32_t total = 0;
         vector<ep_id_t> eps;  // id list
     } pending_clients;

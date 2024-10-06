@@ -118,13 +118,14 @@ void SCCommandHandler::SubUnsubRejUnrej(ECommand cmd, const vector<EndpointId>& 
     }
 }
 
-void SCCommandHandler::Publish(const string& data, const vector<EndpointId> targets)
+void SCCommandHandler::Publish(const string& data, const vector<EndpointId> targets, MessageId msg_type)
 {
     auto cmd = ECommand::PUBLISH;
     string pub_msg_bytes;
-    if (! targets.empty()) {
+    if (! targets.empty() || msg_type > 0) {
         cmd = ECommand::PUBLISH_2;
         PublishingMessage pub_msg;
+        pub_msg.msg_type = msg_type;
         pub_msg.source = client_->GetContext()->endpoint_id;
         pub_msg.n_targets = targets.size();
 

@@ -202,6 +202,15 @@ bool CommandInfo::decodeFromJSON(const string& data) {
         //    service_endpoints.eps.push_back(v);
         //}
     }
+    if (params.contains("message_subscribers")) {
+        auto params_message_subscribers = params["message_subscribers"];
+        message_subscribers.msg_type_total = params_message_subscribers["msg_type_total"];
+        message_subscribers.msg_ep_total = params_message_subscribers["msg_ep_total"];
+        message_subscribers.eps = params_message_subscribers["eps"];
+        //for (auto v : params_message_subscribers["eps"]) {
+        //    message_subscribers.eps.push_back(v);
+        //}
+    }
     if (params.contains("pending_clients")) {
         auto params_pending_clients = params["pending_clients"];
         pending_clients.total = params_pending_clients["total"];
@@ -237,6 +246,7 @@ string CommandInfo::encodeToJSON() {
     if (! admin_endpoints.eps.empty()) {
         rsp["admin_endpoints"]["eps"] = admin_endpoints.eps;
     }
+
     rsp["service_endpoints"]["svc_type_total"] = service_endpoints.svc_type_total;
     rsp["service_endpoints"]["svc_ep_total"] = service_endpoints.svc_ep_total;
     //if (! service_endpoints.eps.empty()) {
@@ -245,6 +255,16 @@ string CommandInfo::encodeToJSON() {
     for (auto [svc_type, ep_set] : service_endpoints.eps) {
         rsp["service_endpoints"]["eps"][std::to_string(svc_type)] = ep_set;
     }
+
+    rsp["message_subscribers"]["msg_type_total"] = message_subscribers.msg_type_total;
+    rsp["message_subscribers"]["msg_ep_total"] = message_subscribers.msg_ep_total;
+    //if (! message_subscribers.eps.empty()) {
+    //    rsp["message_subscribers"]["eps"] = message_subscribers.eps;
+    //}
+    for (auto [msg_type, ep_set] : message_subscribers.eps) {
+        rsp["message_subscribers"]["eps"][std::to_string(msg_type)] = ep_set;
+    }
+
     rsp["pending_clients"]["total"] = pending_clients.total;
 
     return rsp.dump();

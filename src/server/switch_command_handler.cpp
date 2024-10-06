@@ -343,6 +343,21 @@ int CommandHandler::handlePublishDataToTargets(EndpointPtr ep, const CommandMess
             }
             targets.push_back(target_ep);
         }
+    } else if (! context_->message_subscribers.empty()) {
+        auto iter = context_->message_subscribers.find(msg_type);
+        if (iter != context_->message_subscribers.end()) {
+            auto ep_set = iter->second;
+            for (auto ep_id : ep_set) {
+                auto iter2 = context_->endpoints.find(ep_id);
+                if (iter2 != context_->endpoints.end()) {
+                    auto target_ep = iter2->second;
+                    if (! service_->is_forwarding_allowed(ep.get(), target_ep.get(), msg_type)) {
+                        continue;
+                    }
+                    targets.push_back(target_ep);
+                }
+            }
+        }
     } else {
         return handlePublishData(ep, cmdMsg, data);
     }

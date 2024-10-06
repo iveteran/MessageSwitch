@@ -30,7 +30,7 @@ class SCCommandHandler {
     void Unsubscribe(const vector<EndpointId>& sources, const vector<MessageId>& messages);
     void Reject(const vector<EndpointId>& sources, const vector<MessageId>& messages);
     void Unreject(const vector<EndpointId>& sources, const vector<MessageId>& messages);
-    void Publish(const string& data, const vector<EndpointId> targets={});
+    void Publish(const string& data, const vector<EndpointId> targets={}, MessageId msg_type=0);
     void RequestService(const string& data, ServiceType svc_type);
     void Setup(const string& admin_code, const string& new_admin_code,
             const string& new_access_code, const string& mode);

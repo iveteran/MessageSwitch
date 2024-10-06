@@ -26,6 +26,8 @@ struct SwitchContext
     //map<EndpointId, EndpointPtr>    proxy_endpoints;
     //map<EndpointId, EndpointPtr>    rproxy_endpoints;
 
+    map<MessageId, set<EndpointId>>    message_subscribers;
+
     time_t born_time;
     string access_code = DEFAULT_ACCESS_TOKEN;
     string admin_code = DEFAULT_ADMIN_TOKEN;

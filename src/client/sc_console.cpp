@@ -485,6 +485,9 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
         .help("The target endpoints to send")
         .scan<'i', EndpointId>()
         .nargs(argparse::nargs_pattern::at_least_one);
+    cmd_ap.add_argument("--msg_type")
+        .help("The message type of data")
+        .scan<'i', int>();
 
     try {
         cmd_ap.parse_args(argv);
@@ -504,11 +507,15 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
             duplicate(targets);
         }
     }
+    MessageId msg_type = 0;
+    if (cmd_ap.is_used("--msg_type")) {
+        msg_type = cmd_ap.get<int>("--msg_type");
+    }
 
     string data, data_file;
     if (cmd_ap.is_used("--data")) {
         data = cmd_ap.get<string>("--data");
-        cmd_handler_->Publish(data, targets);
+        cmd_handler_->Publish(data, targets, msg_type);
     } else {
         if (cmd_ap.is_used("--file")) {
             data_file = cmd_ap.get<string>("--file");
@@ -516,7 +523,7 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
             auto rd_done_cb = [&](int status, const string& data) {
                 printf(">>> read done, status: %d, size: %ld\n", status, data.size());
 
-                cmd_handler_->Publish(data, targets);
+                cmd_handler_->Publish(data, targets, msg_type);
             };
 
             bool success = AIO.async_read(data_file.c_str(), O_RDONLY, rd_done_cb);
