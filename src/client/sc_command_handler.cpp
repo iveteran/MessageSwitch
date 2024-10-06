@@ -1,10 +1,12 @@
 #include "sc_command_handler.h"
 #include <cassert>
+#include <limits.h>
 #include <eventloop/tcp_connection.h>
 #include "command_messages.h"
 #include "switch_client.h"
 #include "sc_context.h"
 #include "utils/time.h"
+#include "utils/random.h"
 
 using namespace evt_loop;
 
@@ -140,12 +142,12 @@ void SCCommandHandler::Publish(const string& data, const vector<EndpointId> targ
     }
 }
 
-void SCCommandHandler::RequestService(const string& data, ServiceType svc_type)
+void SCCommandHandler::RequestService(const string& data, ServiceType svc_type, MessageId svc_cmd, uint32_t sess_id)
 {
     ServiceMessage svc_msg;
     svc_msg.svc_type = svc_type;
-    svc_msg.svc_cmd = 1;
-    svc_msg.sess_id = 10;
+    svc_msg.svc_cmd = svc_cmd;
+    svc_msg.sess_id = sess_id > 0 ? sess_id : generate_random_integer(1, INT_MAX);
     svc_msg.source = client_->GetContext()->endpoint_id;
     //svc_msg.svc_type = svc_type > 0 ? svc_type : client_->GetContext()->svc_type;
     string svc_msg_bytes((char*)&svc_msg, sizeof(svc_msg));
