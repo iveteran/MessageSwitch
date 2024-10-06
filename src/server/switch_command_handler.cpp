@@ -333,8 +333,8 @@ int CommandHandler::handlePublishDataToTargets(EndpointPtr ep, const CommandMess
     if (pub_msg->n_targets > 0) {
         for (int i=0; i<pub_msg->n_targets; i++) {
             auto ep_id = pub_msg->targets[i];
-            auto iter = context_->normal_endpoints.find(ep_id);
-            if (iter == context_->normal_endpoints.end()) {
+            auto iter = context_->endpoints.find(ep_id);
+            if (iter == context_->endpoints.end()) {
                 continue;
             }
             auto target_ep = iter->second;
