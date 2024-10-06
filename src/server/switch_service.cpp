@@ -188,10 +188,15 @@ SwitchService::get_stats(const CommandInfoReq& cmd_info_req)
     cmd_info->endpoints.tx_bytes = tx_bytes;
     cmd_info->admin_endpoints.total = context->admin_endpoints.size();
     cmd_info->normal_endpoints.total = context->normal_endpoints.size();
+
     cmd_info->service_endpoints.svc_type_total = context->service_endpoints.size();
+    set<EndpointId> svc_eps_set;
     for (auto [_, svc_eps] : context->service_endpoints) {
-        cmd_info->service_endpoints.svc_ep_total += svc_eps.size();
+        for (auto ep : svc_eps) {
+            svc_eps_set.insert(ep->Id());
+        }
     }
+    cmd_info->service_endpoints.svc_ep_total = svc_eps_set.size();
 
     cmd_info->message_subscribers.msg_type_total = context->message_subscribers.size();
     set<EndpointId> msg_eps_set;
