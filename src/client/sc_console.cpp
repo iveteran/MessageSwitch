@@ -297,7 +297,8 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
     }
 
     bool with_token = cmd_ap.get<bool>("--with_token");
-    ServiceType svc_type = 0;
+
+    ServiceType svc_type = client_->GetContext()->svc_type;
     if (cmd_ap.is_used("--svc_type")) {
         svc_type = cmd_ap.get<int>("--svc_type");
     }

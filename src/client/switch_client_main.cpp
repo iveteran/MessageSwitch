@@ -29,6 +29,10 @@ int parse_arguments(int argc, char **argv, SCOptionsPtr& options) {
         .help("endpoint role, 0: undefined, 1: normal, 2: admin, 3: service")
         .default_value(1)
         .scan<'i', int>();
+    program.add_argument("-t", "--svc_type")
+        .help("service type, if role is service, 0: undefined")
+        .default_value(0)
+        .scan<'i', int>();
     program.add_argument("-l", "--logfile")
         .help("log file, default is STDOUT");
     program.add_argument("-a", "--access_code")
@@ -52,6 +56,8 @@ int parse_arguments(int argc, char **argv, SCOptionsPtr& options) {
     cout << "> arguments.endpoint_id: " << options->endpoint_id << endl;
     options->role = program.get<int>("--role");
     cout << "> arguments.role: " << options->role << endl;
+    options->svc_type = program.get<int>("--svc_type");
+    cout << "> arguments.svc_type: " << options->svc_type << endl;
 
     if (program.is_used("--access_code")) {
         options->access_code = program.get<std::string>("--access_code");
@@ -108,6 +114,12 @@ int parse_configuration(const string& config_file, SCOptionsPtr& options) {
             auto role = client_config.at("role").as_integer();
             cout << "> config.client.mode: " << role << endl;
             options->role = role;
+        }
+
+        if (client_config.contains("svc_type")) {
+            auto svc_type = client_config.at("svc_type").as_integer();
+            cout << "> config.client.svc_type: " << svc_type << endl;
+            options->svc_type = svc_type;
         }
 
         if (client_config.contains("access_code")) {

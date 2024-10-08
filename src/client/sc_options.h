@@ -17,6 +17,7 @@ struct SCOptions
     uint32_t    endpoint_id;
     string      access_code = DEFAULT_ACCESS_TOKEN;
     uint8_t     role = DEFAULT_ROLE;
+    uint16_t    svc_type;               // if role is Service, 0: serve all service
     string      logfile;
     string      config_file;
 
@@ -29,6 +30,7 @@ struct SCOptions
         ss << "endpoint_id: " << endpoint_id << ", ";
         ss << "access_code: " << access_code << ", ";
         ss << "role: " << role << ", ";
+        ss << "svc_type: " << svc_type << ", ";
         ss << "logfile: " << logfile << ", ";
         ss << "config_file: " << config_file << ", ";
         ss << "}";

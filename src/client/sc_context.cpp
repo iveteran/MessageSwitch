@@ -15,6 +15,7 @@ SCContext::SCContext(SwitchClient* client) :
     if (options->role >= (uint8_t)EEndpointRole::Undefined && options->role < (uint8_t)EEndpointRole::COUNT) {
         role = (EEndpointRole)options->role;
     }
+    svc_type = options->svc_type;
 }
 
 string SCContext::ToString() const
