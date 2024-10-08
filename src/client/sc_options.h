@@ -18,6 +18,7 @@ struct SCOptions
     string      access_code = DEFAULT_ACCESS_TOKEN;
     uint8_t     role = DEFAULT_ROLE;
     uint16_t    svc_type;               // if role is Service, 0: serve all service
+    bool        enable_console = false;
     string      logfile;
     string      config_file;
 
@@ -31,6 +32,7 @@ struct SCOptions
         ss << "access_code: " << access_code << ", ";
         ss << "role: " << role << ", ";
         ss << "svc_type: " << svc_type << ", ";
+        ss << "enable_console: " << enable_console << ", ";
         ss << "logfile: " << logfile << ", ";
         ss << "config_file: " << config_file << ", ";
         ss << "}";

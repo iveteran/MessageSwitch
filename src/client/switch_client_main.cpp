@@ -33,6 +33,9 @@ int parse_arguments(int argc, char **argv, SCOptionsPtr& options) {
         .help("service type, if role is service, 0: undefined")
         .default_value(0)
         .scan<'i', int>();
+    program.add_argument("-c", "--enable_console")
+        .help("enable console")
+        .flag();
     program.add_argument("-l", "--logfile")
         .help("log file, default is STDOUT");
     program.add_argument("-a", "--access_code")
@@ -59,18 +62,23 @@ int parse_arguments(int argc, char **argv, SCOptionsPtr& options) {
     options->svc_type = program.get<int>("--svc_type");
     cout << "> arguments.svc_type: " << options->svc_type << endl;
 
+    if (program.is_used("--enable_console")) {
+        options->enable_console = true;
+    }
+    cout << "> arguments.enable_console: " << options->enable_console << endl;
+
     if (program.is_used("--access_code")) {
         options->access_code = program.get<std::string>("--access_code");
-        cout << "> arguments.access_code: " << options->access_code << endl;
     }
+    cout << "> arguments.access_code: " << options->access_code << endl;
     if (program.is_used("--logfile")) {
         options->logfile = program.get<std::string>("--logfile");
-        cout << "> arguments.logfile: " << options->logfile << endl;
     }
+    cout << "> arguments.logfile: " << options->logfile << endl;
     if (program.is_used("--config")) {
         options->config_file = program.get<std::string>("--config");
-        cout << "> arguments.config: " << options->config_file << endl;
     }
+    cout << "> arguments.config: " << options->config_file << endl;
 
     return 0;
 }
@@ -126,6 +134,12 @@ int parse_configuration(const string& config_file, SCOptionsPtr& options) {
             auto access_code = client_config.at("access_code").as_string();
             cout << "> config.client.access_code: " << access_code << endl;
             options->access_code = access_code;
+        }
+
+        if (client_config.contains("enable_console")) {
+            auto enable_console = client_config.at("enable_console").as_boolean();
+            cout << "> config.client.enable_console: " << enable_console << endl;
+            options->enable_console = enable_console;
         }
     }
 

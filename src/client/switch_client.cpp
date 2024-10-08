@@ -6,8 +6,8 @@
 #include "sc_options.h"
 #include "sc_context.h"
 
-SwitchClient::SwitchClient(const char* host, uint16_t port, EndpointId ep_id) :
-    client_(nullptr), endpoint_id_(ep_id)
+SwitchClient::SwitchClient(const char* host, uint16_t port, EndpointId ep_id, bool enable_console)
+    : client_(nullptr), endpoint_id_(ep_id), enable_console_(enable_console), console_(nullptr)
 {
     InitClient(host, port);
     InitComponents();
@@ -15,12 +15,13 @@ SwitchClient::SwitchClient(const char* host, uint16_t port, EndpointId ep_id) :
 
 }
 
-SwitchClient::SwitchClient(SCOptions* options) :
-    client_(nullptr), endpoint_id_(0), options_(options)
+SwitchClient::SwitchClient(SCOptions* options)
+    : client_(nullptr), endpoint_id_(0), options_(options), console_(nullptr)
 {
     if (options->endpoint_id > 0) {
         endpoint_id_ = options->endpoint_id;
     }
+    enable_console_ = options->enable_console;
 
     InitClient(options->server_host.c_str(), options->server_port);
     InitComponents();
@@ -29,13 +30,14 @@ SwitchClient::SwitchClient(SCOptions* options) :
 
 void SwitchClient::Cleanup()
 {
-    console_->Destory();
+    if (console_) {
+        console_->Destory();
+        delete console_;
+        console_ = nullptr;
+    }
 
     delete cmd_handler_;
     cmd_handler_ = nullptr;
-
-    delete console_;
-    console_ = nullptr;
 
     delete context_;
     context_ = nullptr;
@@ -56,8 +58,10 @@ void SwitchClient::InitComponents()
     cout << "Context: " << context_->ToString() << endl;
 
     cmd_handler_ = new SCCommandHandler(this);
-    console_ = new SCConsole(this, cmd_handler_);
-    console_->registerCommands();
+    if (enable_console_) {
+        console_ = new SCConsole(this, cmd_handler_);
+        console_->registerCommands();
+    }
 }
 
 void SwitchClient::InitClient(const char* host, uint16_t port)

@@ -10,7 +10,8 @@ class SCConsole;
 
 class SwitchClient {
 public:
-    SwitchClient(const char* host="localhost", uint16_t port=10000, EndpointId ep_id=0);
+    SwitchClient(const char* host="localhost", uint16_t port=10000,
+            EndpointId ep_id=0, bool enable_console=false);
     SwitchClient(SCOptions* options);
 
     void Cleanup();
@@ -44,6 +45,7 @@ protected:
 private:
     TcpClient* client_;
     EndpointId endpoint_id_;
+    bool enable_console_;
 
     SCOptions* options_;
     SCContext* context_;
