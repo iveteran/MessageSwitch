@@ -11,6 +11,9 @@
 #include <argparse/argparse.hpp>
 #include <signal.h>
 
+#define PUT_LINE Console::Instance()->put_line
+#define REGISTER_COMMAND Console::Instance()->registerCommand
+
 using namespace evt_loop;
 
 template<typename T>
@@ -33,97 +36,97 @@ void SCConsole::Destory()
 
 void SCConsole::registerCommands()
 {
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "exit",
             "Exit Switch client",
             std::bind(&SCConsole::handleConsoleCommand_Exit, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "reconnect",
             "Reconnect to Switch server",
             std::bind(&SCConsole::handleConsoleCommand_Reconnect, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "heartbeat",
             "Enable or disable connection heartbeat to Switch server",
             std::bind(&SCConsole::handleConsoleCommand_Heartbeat, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "options",
             "Show options of Switch client",
             std::bind(&SCConsole::handleConsoleCommand_Options, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "status",
             "Show status of Switch client",
             std::bind(&SCConsole::handleConsoleCommand_Status, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "ss_echo",
             "Send echo command to Switch server",
             std::bind(&SCConsole::handleConsoleCommand_Echo, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "ss_register",
             "Register Switch client",
             std::bind(&SCConsole::handleConsoleCommand_Register, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "ss_info",
             "Get information of Switch",
             std::bind(&SCConsole::handleConsoleCommand_GetInfo, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "ss_publish",
             "Simulate to send custom data to Switch server",
             std::bind(&SCConsole::handleConsoleCommand_Publish, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "ss_req_svc",
             "Request service from Switch server",
             std::bind(&SCConsole::handleConsoleCommand_RequestService, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "ss_fwd",
             "Send forwarding targets command by Switch server",
             std::bind(&SCConsole::handleConsoleCommand_ForwardTargets, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "ss_unfwd",
             "Send unforwarding targets command by Switch server",
             std::bind(&SCConsole::handleConsoleCommand_UnforwardTargets, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "ss_sub",
             "Send subscribe command by Switch server",
             std::bind(&SCConsole::handleConsoleCommand_Subscribe, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "ss_unsub",
             "Send unsubscribe command by Switch server",
             std::bind(&SCConsole::handleConsoleCommand_Unsubscribe, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "ss_reject",
             "Send reject command by Switch server",
             std::bind(&SCConsole::handleConsoleCommand_Reject, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "ss_unrej",
             "Send unreject command by Switch server",
             std::bind(&SCConsole::handleConsoleCommand_Unreject, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "ss_setup",
             "Send setup command to Switch server",
             std::bind(&SCConsole::handleConsoleCommand_Setup, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "ss_kickout",
             "Send kickout comamnd to Switch server",
             std::bind(&SCConsole::handleConsoleCommand_Kickout, this, std::placeholders::_1)
             );
-    Console::Instance()->registerCommand(
+    REGISTER_COMMAND(
             "ss_reload",
             "Send reload command to Switch server",
             std::bind(&SCConsole::handleConsoleCommand_Reload, this, std::placeholders::_1)
@@ -174,7 +177,7 @@ int SCConsole::handleConsoleCommand_Heartbeat(const vector<string>& argv)
     } else if (cmd_ap.is_used("--off")) {
         client_->DisableHeartbeat();
     } else {
-        Console::Instance()->put_line("Status: ", (client_->IsHeartbeatEnabled() ? "enabled" : "disabled"));
+        PUT_LINE("Status: ", (client_->IsHeartbeatEnabled() ? "enabled" : "disabled"));
     }
 
     return 0;
@@ -183,7 +186,7 @@ int SCConsole::handleConsoleCommand_Heartbeat(const vector<string>& argv)
 int SCConsole::handleConsoleCommand_Options(const vector<string>& argv)
 {
     auto options = client_->GetOptions();
-    Console::Instance()->put_line("options: ", options->ToString());
+    PUT_LINE("options: ", options->ToString());
     return 0;
 }
 
@@ -192,9 +195,9 @@ int SCConsole::handleConsoleCommand_Status(const vector<string>& argv)
     // 1. context
     // 2. connection status
     // 3. register status
-    Console::Instance()->put_line("context: ", client_->GetContext()->ToString());
-    Console::Instance()->put_line("is connected: ", client_->IsConnected() ? "yes" : "no");
-    Console::Instance()->put_line("is registered: ", client_->GetContext()->is_registered ? "yes" : "no");
+    PUT_LINE("context: ", client_->GetContext()->ToString());
+    PUT_LINE("is connected: ", client_->IsConnected() ? "yes" : "no");
+    PUT_LINE("is registered: ", client_->GetContext()->is_registered ? "yes" : "no");
     return 0;
 }
 
@@ -254,7 +257,7 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
 
     RoleId role = cmd_ap.get<int>("--role");
     if (role == (RoleId)EEndpointRole::Undefined || role >= (RoleId)EEndpointRole::COUNT) {
-        Console::Instance()->put_line("Wrong argument! the role must be given");
+        PUT_LINE("Wrong argument! the role must be given");
         return -1;
     }
 
@@ -268,7 +271,7 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
     }
 
     if (access_code.empty()) {
-        Console::Instance()->put_line("Wrong argument! --access_code is required");
+        PUT_LINE("Wrong argument! --access_code is required");
         return -1;
     }
 
@@ -360,7 +363,7 @@ int SCConsole::handleConsoleCommand_SetTargets(const vector<string>& argv, const
 
     auto targets = cmd_ap.get<vector<EndpointId>>("--targets");
     if (targets.empty()) {
-        Console::Instance()->put_line("Wrong argument! the --targets must be more than one value");
+        PUT_LINE("Wrong argument! the --targets must be more than one value");
         return -1;
     }
     duplicate(targets);
@@ -433,7 +436,7 @@ int SCConsole::handleConsoleCommand_SubUnsubRejUnrej(
     auto sources = cmd_ap.get<vector<EndpointId>>("--sources");
     auto messages = cmd_ap.get<vector<MessageId>>("--messages");
     if (sources.empty() && messages.empty()) {
-        Console::Instance()->put_line("Wrong argument! the --sources or --messages must be more than one element");
+        PUT_LINE("Wrong argument! the --sources or --messages must be more than one element");
         return -1;
     }
 
@@ -618,7 +621,7 @@ int SCConsole::handleConsoleCommand_Setup(const vector<string>& argv)
         if (cmd_ap.is_used("--access_code")) {
             access_code = cmd_ap.get<string>("--acccess_code");
         } else {
-            Console::Instance()->put_line("Wrong argument! Must given admin code for setting new admin code");
+            PUT_LINE("Wrong argument! Must given admin code for setting new admin code");
             return -1;
         }
     }
@@ -626,7 +629,7 @@ int SCConsole::handleConsoleCommand_Setup(const vector<string>& argv)
         new_mode = cmd_ap.get<string>("--mode");
     }
     if (new_admin_code.empty() && new_access_code.empty() && new_mode.empty()) {
-        Console::Instance()->put_line("Wrong argument! missing required argument(s)");
+        PUT_LINE("Wrong argument! missing required argument(s)");
         return -1;
     }
 
@@ -657,7 +660,7 @@ int SCConsole::handleConsoleCommand_Kickout(const vector<string>& argv)
 
     auto targets = cmd_ap.get<vector<EndpointId>>("--targets");
     if (targets.empty()) {
-        Console::Instance()->put_line("Wrong argument! the --targets must be more than one value");
+        PUT_LINE("Wrong argument! the --targets must be more than one value");
         return -1;
     }
     duplicate(targets);
