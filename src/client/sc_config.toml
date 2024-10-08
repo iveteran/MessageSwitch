@@ -10,5 +10,5 @@ port = 10101
 
 [client]
 endpoint_id = 2
-role = "normal"
+role = 1  # 0: undefined, 1: normal, 2: admin, 3: service
 access_code = "hello_world"

@@ -12,8 +12,8 @@ SCContext::SCContext(SwitchClient* client) :
     if (! options->access_code.empty()) {
         access_code = options->access_code;
     }
-    if (! options->role.empty()) {
-        role = TagToEndpointRole(options->role);
+    if (options->role >= (uint8_t)EEndpointRole::Undefined && options->role < (uint8_t)EEndpointRole::COUNT) {
+        role = (EEndpointRole)options->role;
     }
 }
 

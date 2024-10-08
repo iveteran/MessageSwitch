@@ -26,8 +26,9 @@ int parse_arguments(int argc, char **argv, SCOptionsPtr& options) {
         .default_value(0)
         .scan<'i', int>();
     program.add_argument("-r", "--role")
-        .help("endpoint role")
-        .default_value("normal");
+        .help("endpoint role, 0: undefined, 1: normal, 2: admin, 3: service")
+        .default_value(1)
+        .scan<'i', int>();
     program.add_argument("-l", "--logfile")
         .help("log file, default is STDOUT");
     program.add_argument("-a", "--access_code")
@@ -49,7 +50,7 @@ int parse_arguments(int argc, char **argv, SCOptionsPtr& options) {
     cout << "> arguments.server_port: " << options->server_port << endl;
     options->endpoint_id = program.get<int>("--endpoint_id");
     cout << "> arguments.endpoint_id: " << options->endpoint_id << endl;
-    options->role = program.get<std::string>("--role");
+    options->role = program.get<int>("--role");
     cout << "> arguments.role: " << options->role << endl;
 
     if (program.is_used("--access_code")) {
@@ -104,7 +105,7 @@ int parse_configuration(const string& config_file, SCOptionsPtr& options) {
         }
 
         if (client_config.contains("role")) {
-            auto role = client_config.at("role").as_string();
+            auto role = client_config.at("role").as_integer();
             cout << "> config.client.mode: " << role << endl;
             options->role = role;
         }

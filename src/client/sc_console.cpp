@@ -273,10 +273,13 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
 
     EndpointId ep_id = cmd_ap.get<EndpointId>("--id");
 
-    RoleId role = cmd_ap.get<int>("--role");
-    if (role == (RoleId)EEndpointRole::Undefined || role >= (RoleId)EEndpointRole::COUNT) {
-        PUT_LINE("Wrong argument! the role must be given");
-        return -1;
+    EEndpointRole role = client_->GetContext()->role;
+    if (cmd_ap.is_used("--role")) {
+        role = (EEndpointRole)cmd_ap.get<int>("--role");
+        if (role >= EEndpointRole::COUNT) {
+            PUT_LINE("Wrong argument! the role must be given");
+            return -1;
+        }
     }
 
     string access_code;

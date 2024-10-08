@@ -6,7 +6,7 @@
 #include <sstream>
 
 #define DEFAULT_ACCESS_TOKEN "Hello World"
-#define DEFAULT_ROLE "normal"
+#define DEFAULT_ROLE 1 // 0: Undefined, 1: normal, 2: admin, 3: service
 
 using std::string;
 
@@ -16,7 +16,7 @@ struct SCOptions
     uint16_t    server_port;
     uint32_t    endpoint_id;
     string      access_code = DEFAULT_ACCESS_TOKEN;
-    string      role = DEFAULT_ROLE;
+    uint8_t     role = DEFAULT_ROLE;
     string      logfile;
     string      config_file;
 

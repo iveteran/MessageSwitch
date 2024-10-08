@@ -34,6 +34,9 @@ void SCCommandHandler::Register(EndpointId ep_id, EEndpointRole ep_role,
     }
     reg_cmd.svc_type = (ServiceType)svc_type;
 
+    // change service type and/or endpoint role
+    client_->GetContext()->role = ep_role;
+
     auto content = reg_cmd.encodeToJSON();
     size_t sent_bytes = SendCommandMessage(ECommand::REG, content);
 
