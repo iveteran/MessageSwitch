@@ -5,7 +5,6 @@
 #include "command_messages.h"
 #include "switch_client.h"
 #include "sc_context.h"
-#include "utils/time.h"
 #include "utils/random.h"
 
 using namespace evt_loop;
@@ -33,9 +32,7 @@ void SCCommandHandler::Register(EndpointId ep_id, EEndpointRole ep_role,
     if (with_token && !token.empty()) {
         reg_cmd.token = token;
     }
-    reg_cmd.svc_type = svc_type;
-    client_->GetContext()->svc_type = svc_type;
-    client_->GetContext()->role = ep_role;
+    reg_cmd.svc_type = (ServiceType)svc_type;
 
     auto content = reg_cmd.encodeToJSON();
     size_t sent_bytes = SendCommandMessage(ECommand::REG, content);
@@ -240,16 +237,22 @@ void SCCommandHandler::HandleCommandResult(TcpConnection* conn, CommandMessage* 
 
     auto resultMsg = cmdMsg->GetResultMessage();
     int8_t errcode = resultMsg->errcode;
-    const char* content = resultMsg->data;
     printf("errcode: %d\n", errcode);
 
+    const char* content = cmdMsg->GetResultMessageContent();
     size_t content_len = cmdMsg->GetResultMessageContentSize();
     printf("content len: %ld\n", content_len);
     if (errcode == 0) {
         printf("content: %s\n", content);
         //cout << DumpHexWithChars(content, content_len, evt_loop::DUMP_MAX_BYTES) << endl;
+        if (cmd_success_handler_cb_) {
+            cmd_success_handler_cb_(cmd, content, content_len);
+        }
     } else {
         printf("error message: %s\n", content);
+        if (cmd_fail_handler_cb_) {
+            cmd_fail_handler_cb_(cmd, content, content_len);
+        }
     }
 
     switch (cmd)
@@ -272,9 +275,15 @@ void SCCommandHandler::HandleCommandResult(TcpConnection* conn, CommandMessage* 
                 HandleGetEndpointInfoResult(cmdMsg, content);
             }
             break;
+        case ECommand::PUBLISH:
+        case ECommand::PUBLISH_2:
+            if (errcode == 0) {
+                HandlePublishingResult(cmdMsg);
+            }
+            break;
         case ECommand::SVC:
             if (errcode == 0) {
-                HandleServiceResult(cmdMsg, content);
+                HandleServiceResult(cmdMsg);
             }
             break;
         default:
@@ -292,9 +301,6 @@ void SCCommandHandler::HandleRegisterResult(CommandMessage* cmdMsg, const string
     } else {
         assert(false && "Unsupported message codec");
     }
-    cout << "endpoint id: " << reg_result.id << endl;
-    cout << "token: " << reg_result.token << endl;
-    cout << "role: " << reg_result.role << endl;
 
     auto context = client_->GetContext();
     context->is_registered = true;
@@ -304,6 +310,10 @@ void SCCommandHandler::HandleRegisterResult(CommandMessage* cmdMsg, const string
     }
     if (reg_result.role > 0) {
         context->role = (EEndpointRole)reg_result.role;
+    }
+
+    if (reg_result_handler_cb_) {
+        reg_result_handler_cb_(&reg_result);
     }
 }
 
@@ -317,10 +327,10 @@ void SCCommandHandler::HandleGetInfoResult(CommandMessage* cmdMsg, const string&
     } else {
         assert(false && "Unsupported message codec");
     }
-    printf("> cmd_info.uptime: %s\n", readable_seconds_delta(cmd_info.uptime).c_str());
-    printf("> cmd_info.endpoints.total: %d\n", cmd_info.endpoints.total);
-    printf("> cmd_info.endpoints.rx_bytes: %d\n", cmd_info.endpoints.rx_bytes);
-    printf("> cmd_info.admin_endpoints.total: %d\n", cmd_info.admin_endpoints.total);
+
+    if (info_result_handler_cb_) {
+        info_result_handler_cb_(&cmd_info);
+    }
 }
 
 void SCCommandHandler::HandleGetEndpointInfoResult(CommandMessage* cmdMsg, const string& data)
@@ -333,7 +343,10 @@ void SCCommandHandler::HandleGetEndpointInfoResult(CommandMessage* cmdMsg, const
     } else {
         assert(false && "Unsupported message codec");
     }
-    printf("> cmd_ep_info.uptime: %s\n", readable_seconds_delta(cmd_ep_info.uptime).c_str());
+
+    if (ep_info_result_handler_cb_) {
+        ep_info_result_handler_cb_(&cmd_ep_info);
+    }
 }
 
 // handle the data that published from other endpoints
@@ -345,6 +358,7 @@ void SCCommandHandler::HandlePublishData(TcpConnection* conn, CommandMessage* cm
     printf("cmd: %s(%d)\n", CommandToTag(cmd), command_t(cmd));
     auto [payload, payload_len] = cmdMsg->Payload();
     printf("payload_len: %d\n", payload_len);
+    cout << DumpHexWithChars(payload, payload_len, evt_loop::DUMP_MAX_BYTES) << endl;
 
     auto pub_msg = cmdMsg->GetPublishingMessage();
     if (pub_msg) {
@@ -356,9 +370,21 @@ void SCCommandHandler::HandlePublishData(TcpConnection* conn, CommandMessage* cm
         printf("\n");
     }
 
-    cout << DumpHexWithChars(payload, payload_len, evt_loop::DUMP_MAX_BYTES) << endl;
+    if (pub_data_handler_cb_) {
+        pub_data_handler_cb_(pub_msg, payload, payload_len);
+    }
 }
 
+void SCCommandHandler::HandlePublishingResult(CommandMessage* cmdMsg)
+{
+    const char* content = cmdMsg->GetResultMessageContent();
+    size_t content_len = cmdMsg->GetResultMessageContentSize();
+    if (pub_result_handler_cb_) {
+        pub_result_handler_cb_(content, content_len);
+    }
+}
+
+// this method method will be used for the endpoint as Service role
 void SCCommandHandler::HandleServiceRequest(TcpConnection* conn, CommandMessage* cmdMsg)
 {
     printf("Received SVC reqeust message:\n");
@@ -376,8 +402,16 @@ void SCCommandHandler::HandleServiceRequest(TcpConnection* conn, CommandMessage*
     }
 
     ResultMessage result_msg;
-    result_msg.errcode = 0;
-    string rsp_payload(R"({"svc": "result"})");
+    string rsp_payload;
+
+    if (svc_req_handler_cb_) {
+        auto [errcode, rsp_data] = svc_req_handler_cb_(svc_msg);
+        result_msg.errcode = errcode;
+        rsp_payload = rsp_data;
+    } else {
+        result_msg.errcode = 0;
+        rsp_payload = R"({"svc_result": "do nothing"})";
+    }
 
     cmdMsg->SetResponseFlag();
     cmdMsg->SetPayloadLen(sizeof(ServiceMessage) + sizeof(ResultMessage) + rsp_payload.size());
@@ -387,17 +421,15 @@ void SCCommandHandler::HandleServiceRequest(TcpConnection* conn, CommandMessage*
     conn->Send((char*)svc_msg, sizeof(ServiceMessage));
     conn->Send((char*)&result_msg, sizeof(result_msg));
     conn->Send(rsp_payload);
-
-    // TODO: handle service request, handle by svc_msg->svc_cmd
 }
 
-void SCCommandHandler::HandleServiceResult(CommandMessage* cmdMsg, const string& content)
+// service response
+void SCCommandHandler::HandleServiceResult(CommandMessage* cmdMsg)
 {
     printf("Received SVC response message:\n");
     ECommand cmd = cmdMsg->Command();
     printf("Command message:\n");
     printf("cmd: %s(%d)\n", CommandToTag(cmd), command_t(cmd));
-    printf("payload_len: %d\n", cmdMsg->PayloadLen());
 
     auto svc_msg = cmdMsg->GetServiceMessage();
     if (svc_msg) {
@@ -405,5 +437,11 @@ void SCCommandHandler::HandleServiceResult(CommandMessage* cmdMsg, const string&
         printf("svc cmd: %d\n", svc_msg->svc_cmd);
         printf("sess_id: %d\n", svc_msg->sess_id);
         printf("source: %d\n", svc_msg->source);
+    }
+
+    const char* content = cmdMsg->GetResultMessageContent();
+    size_t content_len = cmdMsg->GetResultMessageContentSize();
+    if (svc_req_result_handler_cb_) {
+        svc_req_result_handler_cb_(svc_msg, content, content_len);
     }
 }

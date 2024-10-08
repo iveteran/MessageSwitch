@@ -14,6 +14,10 @@ using std::vector;
 class SwitchClient;
 class SCCommandHandler;
 
+class CommandResultRegister;
+class CommandInfo;
+class CommandEndpointInfo;
+
 class SCConsole {
     public:
     SCConsole(SwitchClient* client, SCCommandHandler* cmd_handler);
@@ -49,6 +53,16 @@ class SCConsole {
     using SubUnsubRejUnrejCommandCallback = std::function<void (const vector<EndpointId>&, const vector<MessageId>&)>;
     int handleConsoleCommand_SubUnsubRejUnrej(const vector<string>& argv, const char* desc,
             const SubUnsubRejUnrejCommandCallback& cmd_handler_callback);
+
+
+    void onCommandSuccess(ECommand cmd, const char* content, size_t content_len);
+    void onCommandFail(ECommand cmd, const char* content, size_t content_len);
+
+    void onRegisterResult(const CommandResultRegister* reg_result);
+    void onGetInfoResult(const CommandInfo* cmd_info);
+    void onGetEndpointInfoResult(const CommandEndpointInfo* cmd_ep_info);
+    void onPublishingResult(const char* data, size_t data_len);
+    void onRequestServiceResult(const ServiceMessage* svc_msg, const char* data, size_t data_len);
 
     private:
     SwitchClient* client_;
