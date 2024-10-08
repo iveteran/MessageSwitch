@@ -136,6 +136,11 @@ size_t CommandMessage::GetResultMessageContentSize() const
         return 0;
     }
 }
+const char* CommandMessage::GetResultMessageContent() const
+{
+    auto result_msg = GetResultMessage();
+    return result_msg ? result_msg->data : nullptr;
+}
 
 // Convert to network message with header of CommandMessage
 Message*

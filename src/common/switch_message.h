@@ -116,6 +116,7 @@ struct CommandMessage {
     const ServiceMessage* GetServiceMessage() const;
     const ResultMessage* GetResultMessage() const;
     size_t GetResultMessageContentSize() const;
+    const char* GetResultMessageContent() const;
     Message* ConvertToNetworkMessage(bool isMsgPayloadLengthIncludingSelf);
 
     // Static methods
