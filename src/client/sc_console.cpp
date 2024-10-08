@@ -154,7 +154,7 @@ void SCConsole::registerCommands()
 int SCConsole::handleConsoleCommand_Exit(const vector<string>& argv)
 {
     //raise(SIGINT);  // send self an INT signal
-    client_->Exit();
+    client_->Stop();
     return 0;
 }
 

@@ -15,7 +15,8 @@ public:
     SwitchClient(SCOptions* options);
 
     void Cleanup();
-    void Exit();
+    void Stop();
+    void Start();
 
     EndpointId ID() const { return endpoint_id_; }
 

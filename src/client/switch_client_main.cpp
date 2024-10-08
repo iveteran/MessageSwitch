@@ -173,10 +173,10 @@ int main(int argc, char **argv) {
           [&](SignalHandler* sh, uint32_t signo) {
             printf("Shutdown\n");
             // clean and exit
-            switch_client.Exit();
+            switch_client.Stop();
           });
 
-  EV_Singleton->StartLoop();
+  switch_client.Start();
 
   return 0;
 }

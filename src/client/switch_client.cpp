@@ -46,10 +46,15 @@ void SwitchClient::Cleanup()
     client_ = nullptr;
 }
 
-void SwitchClient::Exit()
+void SwitchClient::Stop()
 {
     Cleanup();
     EV_Singleton->StopLoop();
+}
+
+void SwitchClient::Start()
+{
+    EV_Singleton->StartLoop();
 }
 
 void SwitchClient::InitComponents()
