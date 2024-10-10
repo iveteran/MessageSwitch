@@ -233,6 +233,20 @@ size_t SCCommandHandler::SendCommandMessage(TcpConnection* conn, ECommand cmd, c
     return sent_bytes;
 }
 
+void SCCommandHandler::HandleCommandMessage(TcpConnection* conn, CommandMessage* cmdMsg)
+{
+    if (cmdMsg->HasResponseFlag()) {
+        HandleCommandResult(conn, cmdMsg);
+    } else {
+        if (cmdMsg->Command() == ECommand::PUBLISH ||
+                cmdMsg->Command() == ECommand::PUBLISH_2) {
+            HandlePublishData(conn, cmdMsg);
+        } else if (cmdMsg->Command() == ECommand::SVC) {
+            HandleServiceRequest(conn, cmdMsg);
+        }
+    }
+}
+
 void SCCommandHandler::HandleCommandResult(TcpConnection* conn, CommandMessage* cmdMsg)
 {
     ECommand cmd = cmdMsg->Command();

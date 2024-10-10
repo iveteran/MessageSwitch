@@ -772,5 +772,5 @@ void SCConsole::onCommandSuccess(ECommand cmd, const char* content, size_t conte
 void SCConsole::onCommandFail(ECommand cmd, const char* content, size_t content_len)
 {
     PUT_LINE("* ", CommandToTag(cmd), ": Failured");
-    PUT_LINE("* errmsg: ", content);
+    PUT_LINE("* Error: ", content);
 }

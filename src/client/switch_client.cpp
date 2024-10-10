@@ -101,16 +101,7 @@ void SwitchClient::OnMessageRecvd(TcpConnection* conn, const Message* msg)
     auto cmdMsg = CommandMessage::FromNetworkMessage(msg,
             client_->GetMessageHeaderDescription()->is_payload_len_including_self);
 
-    if (cmdMsg->HasResponseFlag()) {
-        cmd_handler_->HandleCommandResult(conn, cmdMsg);
-    } else {
-        if (cmdMsg->Command() == ECommand::PUBLISH ||
-                cmdMsg->Command() == ECommand::PUBLISH_2) {
-            cmd_handler_->HandlePublishData(conn, cmdMsg);
-        } else if (cmdMsg->Command() == ECommand::SVC) {
-            cmd_handler_->HandleServiceRequest(conn, cmdMsg);
-        }
-    }
+    cmd_handler_->HandleCommandMessage(conn, cmdMsg);
 }
 
 void SwitchClient::OnConnectionCreated(TcpConnection* conn)

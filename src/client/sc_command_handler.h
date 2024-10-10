@@ -58,6 +58,7 @@ class SCCommandHandler {
     void Kickout(const vector<EndpointId>& targets);
     void Reload();
 
+    void HandleCommandMessage(TcpConnection* conn, CommandMessage* cmdMsg);
     void HandleCommandResult(TcpConnection* conn, CommandMessage* cmdMsg);
     void HandlePublishData(TcpConnection* conn, CommandMessage* cmdMsg);
     void HandleServiceRequest(TcpConnection* conn, CommandMessage* cmdMsg);
