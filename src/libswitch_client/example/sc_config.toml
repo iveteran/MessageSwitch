@@ -1,0 +1,16 @@
+# This is a TOML document
+
+title = "Configuration of Message Switch client"
+
+logfile = "switch_client.log"
+
+[server]
+host = "0.0.0.0"
+port = 10101
+
+[client]
+endpoint_id = 0  # 0: server generating
+role = 3  # 1: normal, 2: admin, 3: service
+svc_type = 1
+access_code = "GOE works"
+enable_console = true
