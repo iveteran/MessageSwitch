@@ -2,10 +2,13 @@
 #include "command_messages.h"
 #include "sc_command_handler.h"
 
+static const char* MOD_NAME = "msg_handler";
+
 void SCMessageHandlers::SetupHandlers()
 {
     // handle received data from published of other endpoints
     cmd_handler_->SetPublishingDataHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCMessageHandlers::OnPublishingData,
                 this,
@@ -16,6 +19,7 @@ void SCMessageHandlers::SetupHandlers()
 
     // handle response of publishing data by self
     cmd_handler_->SetPublishingResultHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCMessageHandlers::OnPublishingResult,
                 this,
@@ -26,6 +30,7 @@ void SCMessageHandlers::SetupHandlers()
 
     // for service mode, handle service request (with service command)
     cmd_handler_->SetServiceRequestHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCMessageHandlers::OnServiceCommand,
                 this,

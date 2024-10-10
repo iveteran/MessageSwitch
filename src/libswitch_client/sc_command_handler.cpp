@@ -263,13 +263,17 @@ void SCCommandHandler::HandleCommandResult(TcpConnection* conn, CommandMessage* 
     if (errcode == 0) {
         printf("content: %s\n", content);
         //cout << DumpHexWithChars(content, content_len, evt_loop::DUMP_MAX_BYTES) << endl;
-        if (cmd_success_handler_cb_) {
-            cmd_success_handler_cb_(cmd, content, content_len);
+        for (auto [_, cb] : cmd_success_handler_cbs_) {
+            if (cb) {
+                cb(cmd, content, content_len);
+            }
         }
     } else {
         printf("error message: %s\n", content);
-        if (cmd_fail_handler_cb_) {
-            cmd_fail_handler_cb_(cmd, content, content_len);
+        for (auto [_, cb] : cmd_fail_handler_cbs_) {
+            if (cb) {
+                cb(cmd, content, content_len);
+            }
         }
     }
 
@@ -330,8 +334,10 @@ void SCCommandHandler::HandleRegisterResult(CommandMessage* cmdMsg, const string
         context->role = (EEndpointRole)reg_result.role;
     }
 
-    if (reg_result_handler_cb_) {
-        reg_result_handler_cb_(&reg_result);
+    for (auto [_, cb] : reg_result_handler_cbs_) {
+        if (cb) {
+            cb(&reg_result);
+        }
     }
 }
 
@@ -346,8 +352,10 @@ void SCCommandHandler::HandleGetInfoResult(CommandMessage* cmdMsg, const string&
         assert(false && "Unsupported message codec");
     }
 
-    if (info_result_handler_cb_) {
-        info_result_handler_cb_(&cmd_info);
+    for (auto [_, cb] : info_result_handler_cbs_) {
+        if (cb) {
+            cb(&cmd_info);
+        }
     }
 }
 
@@ -362,8 +370,10 @@ void SCCommandHandler::HandleGetEndpointInfoResult(CommandMessage* cmdMsg, const
         assert(false && "Unsupported message codec");
     }
 
-    if (ep_info_result_handler_cb_) {
-        ep_info_result_handler_cb_(&cmd_ep_info);
+    for (auto [_, cb] : ep_info_result_handler_cbs_) {
+        if (cb) {
+            cb(&cmd_ep_info);
+        }
     }
 }
 
@@ -388,8 +398,10 @@ void SCCommandHandler::HandlePublishData(TcpConnection* conn, CommandMessage* cm
         printf("\n");
     }
 
-    if (pub_data_handler_cb_) {
-        pub_data_handler_cb_(pub_msg, payload, payload_len);
+    for (auto [_, cb] : pub_data_handler_cbs_) {
+        if (cb) {
+            cb(pub_msg, payload, payload_len);
+        }
     }
 }
 
@@ -398,8 +410,10 @@ void SCCommandHandler::HandlePublishingResult(CommandMessage* cmdMsg)
     auto result_msg = cmdMsg->GetResultMessage();
     const char* content = cmdMsg->GetResultMessageContent();
     size_t content_len = cmdMsg->GetResultMessageContentSize();
-    if (pub_result_handler_cb_) {
-        pub_result_handler_cb_(result_msg, content, content_len);
+    for (auto [_, cb] : pub_result_handler_cbs_) {
+        if (cb) {
+            cb(result_msg, content, content_len);
+        }
     }
 }
 
@@ -425,10 +439,14 @@ void SCCommandHandler::HandleServiceRequest(TcpConnection* conn, CommandMessage*
     ResultMessage result_msg;
     string rsp_payload;
 
-    if (svc_req_handler_cb_) {
-        auto [errcode, rsp_data] = svc_req_handler_cb_(svc_msg, payload, payload_len);
-        result_msg.errcode = errcode;
-        rsp_payload = rsp_data;
+    if (! svc_req_handler_cbs_.empty()) {
+        for (auto [_, cb] : svc_req_handler_cbs_) {
+            if (cb) {
+                auto [errcode, rsp_data] = cb(svc_msg, payload, payload_len);
+                result_msg.errcode = errcode;
+                rsp_payload = rsp_data;
+            }
+        }
     } else {
         result_msg.errcode = 0;
         rsp_payload = R"({"svc_result": "do nothing"})";
@@ -462,7 +480,9 @@ void SCCommandHandler::HandleServiceResult(CommandMessage* cmdMsg)
 
     const char* content = cmdMsg->GetResultMessageContent();
     size_t content_len = cmdMsg->GetResultMessageContentSize();
-    if (svc_req_result_handler_cb_) {
-        svc_req_result_handler_cb_(svc_msg, content, content_len);
+    for (auto [_, cb] : svc_req_result_handler_cbs_) {
+        if (cb) {
+            cb(svc_msg, content, content_len);
+        }
     }
 }

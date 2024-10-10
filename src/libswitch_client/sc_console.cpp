@@ -18,6 +18,8 @@
 
 using namespace evt_loop;
 
+static const char* MOD_NAME = "console";
+
 template<typename T>
 void duplicate(vector<T>& v) {
     set<T> s(v.begin(), v.end());
@@ -32,6 +34,7 @@ SCConsole::SCConsole(SwitchClient* client, SCCommandHandler* cmd_handler) :
     Console::Initialize(prompt, output_prompt);
 
     cmd_handler_->SetCommandSuccessHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCConsole::onCommandSuccess,
                 this,
@@ -40,6 +43,7 @@ SCConsole::SCConsole(SwitchClient* client, SCCommandHandler* cmd_handler) :
                 std::placeholders::_3
                 ));
     cmd_handler_->SetCommandFailHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCConsole::onCommandFail,
                 this,
@@ -306,6 +310,7 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
     }
 
     cmd_handler_->SetRegisterResultHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCConsole::onRegisterResult,
                 this,
@@ -357,11 +362,13 @@ int SCConsole::handleConsoleCommand_GetInfo(const vector<string>& argv)
     }
 
     cmd_handler_->SetInfoResultHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCConsole::onGetInfoResult,
                 this,
                 std::placeholders::_1));
     cmd_handler_->SetEndpointInfoResultHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCConsole::onGetEndpointInfoResult,
                 this,
@@ -578,6 +585,7 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
     }
 
     cmd_handler_->SetPublishingResultHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCConsole::onPublishingResult,
                 this,
@@ -658,6 +666,7 @@ int SCConsole::handleConsoleCommand_RequestService(const vector<string>& argv)
     }
 
     cmd_handler_->SetServiceRequestResultHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCConsole::onRequestServiceResult,
                 this,

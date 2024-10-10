@@ -6,9 +6,11 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <functional>
 using std::string;
 using std::vector;
+using std::map;
 
 namespace evt_loop {
     class TcpConnection;
@@ -64,32 +66,32 @@ class SCCommandHandler {
     void HandlePublishData(TcpConnection* conn, CommandMessage* cmdMsg);
     void HandleServiceRequest(TcpConnection* conn, CommandMessage* cmdMsg);
 
-    void SetCommandSuccessHandlerCallback(const CommandSuccessHandlerCallback& cb) {
-        cmd_success_handler_cb_ = cb;
+    void SetCommandSuccessHandlerCallback(const char* caller, const CommandSuccessHandlerCallback& cb) {
+        cmd_success_handler_cbs_[caller] = cb;
     }
-    void SetCommandFailHandlerCallback(const CommandFailHandlerCallback& cb) {
-        cmd_fail_handler_cb_ = cb;
+    void SetCommandFailHandlerCallback(const char* caller, const CommandFailHandlerCallback& cb) {
+        cmd_fail_handler_cbs_[caller] = cb;
     }
-    void SetRegisterResultHandlerCallback(const RegisterResultHandlerCallback& cb) {
-        reg_result_handler_cb_ = cb;
+    void SetRegisterResultHandlerCallback(const char* caller, const RegisterResultHandlerCallback& cb) {
+        reg_result_handler_cbs_[caller] = cb;
     }
-    void SetInfoResultHandlerCallback(const InfoResultHandlerCallback& cb) {
-        info_result_handler_cb_ = cb;
+    void SetInfoResultHandlerCallback(const char* caller, const InfoResultHandlerCallback& cb) {
+        info_result_handler_cbs_[caller] = cb;
     }
-    void SetEndpointInfoResultHandlerCallback(const EndpointInfoResultHandlerCallback& cb) {
-        ep_info_result_handler_cb_ = cb;
+    void SetEndpointInfoResultHandlerCallback(const char* caller, const EndpointInfoResultHandlerCallback& cb) {
+        ep_info_result_handler_cbs_[caller] = cb;
     }
-    void SetPublishingDataHandlerCallback(const PublishingDataHandlerCallback& cb) {
-        pub_data_handler_cb_ = cb;
+    void SetPublishingDataHandlerCallback(const char* caller, const PublishingDataHandlerCallback& cb) {
+        pub_data_handler_cbs_[caller] = cb;
     }
-    void SetPublishingResultHandlerCallback(const PublishingResultHandlerCallback& cb) {
-        pub_result_handler_cb_ = cb;
+    void SetPublishingResultHandlerCallback(const char* caller, const PublishingResultHandlerCallback& cb) {
+        pub_result_handler_cbs_[caller] = cb;
     }
-    void SetServiceRequestHandlerCallback(const ServiceRequestHandlerCallback& cb) {
-        svc_req_handler_cb_ = cb;
+    void SetServiceRequestHandlerCallback(const char* caller, const ServiceRequestHandlerCallback& cb) {
+        svc_req_handler_cbs_[caller] = cb;
     }
-    void SetServiceRequestResultHandlerCallback(const ServiceRequestResultHandlerCallback& cb) {
-        svc_req_result_handler_cb_ = cb;
+    void SetServiceRequestResultHandlerCallback(const char* caller, const ServiceRequestResultHandlerCallback& cb) {
+        svc_req_result_handler_cbs_[caller] = cb;
     }
 
     private:
@@ -110,18 +112,18 @@ class SCCommandHandler {
     SwitchClient* client_;
     bool is_payload_len_including_self_;
 
-    CommandSuccessHandlerCallback       cmd_success_handler_cb_;
-    CommandFailHandlerCallback          cmd_fail_handler_cb_;
+    map<const char*, CommandSuccessHandlerCallback>       cmd_success_handler_cbs_;
+    map<const char*, CommandFailHandlerCallback>          cmd_fail_handler_cbs_;
 
-    RegisterResultHandlerCallback       reg_result_handler_cb_;
-    InfoResultHandlerCallback           info_result_handler_cb_;
-    EndpointInfoResultHandlerCallback   ep_info_result_handler_cb_;
+    map<const char*, RegisterResultHandlerCallback>       reg_result_handler_cbs_;
+    map<const char*, InfoResultHandlerCallback>           info_result_handler_cbs_;
+    map<const char*, EndpointInfoResultHandlerCallback>   ep_info_result_handler_cbs_;
 
-    PublishingDataHandlerCallback       pub_data_handler_cb_;
-    PublishingResultHandlerCallback     pub_result_handler_cb_;
+    map<const char*, PublishingDataHandlerCallback>       pub_data_handler_cbs_;
+    map<const char*, PublishingResultHandlerCallback>     pub_result_handler_cbs_;
 
-    ServiceRequestHandlerCallback       svc_req_handler_cb_;
-    ServiceRequestResultHandlerCallback svc_req_result_handler_cb_;
+    map<const char*, ServiceRequestHandlerCallback>       svc_req_handler_cbs_;
+    map<const char*, ServiceRequestResultHandlerCallback> svc_req_result_handler_cbs_;
 };
 
 #endif // _SC_COMMAND_HANDLER_H

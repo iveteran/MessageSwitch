@@ -2,6 +2,8 @@
 #include "command_messages.h"
 #include "sc_command_handler.h"
 
+static const char* MOD_NAME = "msg_handler";
+
 void SCMessageHandlers::Register(EndpointId ep_id, EEndpointRole ep_role, const string& access_code,
         bool with_token, ServiceType svc_type)
 {
@@ -22,6 +24,7 @@ void SCMessageHandlers::SetupHandlers()
 {
     // handle successful result of requests 
     cmd_handler_->SetCommandSuccessHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCMessageHandlers::OnCommandSuccess,
                 this,
@@ -32,6 +35,7 @@ void SCMessageHandlers::SetupHandlers()
 
     // handle failed result of requests 
     cmd_handler_->SetCommandFailHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCMessageHandlers::OnCommandFail,
                 this,
@@ -42,6 +46,7 @@ void SCMessageHandlers::SetupHandlers()
 
     // handle response of registering self
     cmd_handler_->SetRegisterResultHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCMessageHandlers::OnRegisterResult,
                 this,
@@ -50,6 +55,7 @@ void SCMessageHandlers::SetupHandlers()
 
     // handle received data from published of other endpoints
     cmd_handler_->SetPublishingDataHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCMessageHandlers::OnPublishingData,
                 this,
@@ -60,6 +66,7 @@ void SCMessageHandlers::SetupHandlers()
 
     // handle response of publishing data by self
     cmd_handler_->SetPublishingResultHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCMessageHandlers::OnPublishingResult,
                 this,
@@ -70,6 +77,7 @@ void SCMessageHandlers::SetupHandlers()
 
     // handle response of service request by self
     cmd_handler_->SetServiceRequestResultHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCMessageHandlers::OnServiceRequestResult,
                 this,
@@ -80,6 +88,7 @@ void SCMessageHandlers::SetupHandlers()
 
     // for service mode, handle service request (with service command)
     cmd_handler_->SetServiceRequestHandlerCallback(
+            MOD_NAME,
             std::bind(
                 &SCMessageHandlers::OnServiceCommand,
                 this,
