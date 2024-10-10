@@ -62,7 +62,7 @@ void SwitchClient::InitComponents()
     context_ = new SCContext(this);
     cout << "Context: " << context_->ToString() << endl;
 
-    cmd_handler_ = new SCCommandHandler(this);
+    cmd_handler_ = new SCCommandHandler(this, GetMessageHeaderDescription()->is_payload_len_including_self);
     if (enable_console_) {
         console_ = new SCConsole(this, cmd_handler_);
         console_->registerCommands();

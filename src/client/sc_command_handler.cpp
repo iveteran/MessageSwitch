@@ -211,7 +211,7 @@ size_t SCCommandHandler::SendCommandMessage(TcpConnection* conn, ECommand cmd, c
     cmdMsg.SetCommand(cmd);
     cmdMsg.SetToJSON();
     cmdMsg.SetPayloadLen(payload.size() + hdr_ext.size());
-    cmdMsg.ConvertToNetworkMessage(client_->GetMessageHeaderDescription()->is_payload_len_including_self);
+    cmdMsg.ConvertToNetworkMessage(is_payload_len_including_self_);
     cout << "Send command message bytes size: " << sizeof(cmdMsg) << endl;
     cout << "Send command message bytes:" << endl;
     cout << DumpHex(string((char*)&cmdMsg, sizeof(cmdMsg))) << endl;
@@ -436,7 +436,7 @@ void SCCommandHandler::HandleServiceRequest(TcpConnection* conn, CommandMessage*
 
     cmdMsg->SetResponseFlag();
     cmdMsg->SetPayloadLen(sizeof(ServiceMessage) + sizeof(ResultMessage) + rsp_payload.size());
-    cmdMsg->ConvertToNetworkMessage(client_->GetMessageHeaderDescription()->is_payload_len_including_self);
+    cmdMsg->ConvertToNetworkMessage(is_payload_len_including_self_);
 
     conn->Send(cmdMsg->Data(), cmdMsg->HeaderSize());
     conn->Send((char*)svc_msg, sizeof(ServiceMessage));

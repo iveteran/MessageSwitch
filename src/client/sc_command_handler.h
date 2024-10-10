@@ -19,7 +19,6 @@ class CommandMessage;
 class CommandInfo;
 class CommandEndpointInfo;
 class CommandResultRegister;
-class ResultMessage;
 class PublishingMessage;
 class ServiceMessage;
 
@@ -40,7 +39,9 @@ using ServiceRequestResultHandlerCallback = std::function<void (const ServiceMes
 
 class SCCommandHandler {
     public:
-    SCCommandHandler(SwitchClient* client) : client_(client) {}
+    SCCommandHandler(SwitchClient* client, bool is_payload_len_including_self)
+        : client_(client), is_payload_len_including_self_(is_payload_len_including_self)
+    {}
 
     void Echo(const char* content);
     void Register(EndpointId ep_id, EEndpointRole ep_role, const string& access_code, bool with_token=false, ServiceType svc_type=0);
@@ -107,6 +108,7 @@ class SCCommandHandler {
 
     private:
     SwitchClient* client_;
+    bool is_payload_len_including_self_;
 
     CommandSuccessHandlerCallback       cmd_success_handler_cb_;
     CommandFailHandlerCallback          cmd_fail_handler_cb_;
