@@ -19,6 +19,7 @@ class CommandMessage;
 class CommandInfo;
 class CommandEndpointInfo;
 class CommandResultRegister;
+class ResultMessage;
 class PublishingMessage;
 class ServiceMessage;
 
@@ -32,9 +33,9 @@ using InfoResultHandlerCallback = std::function<void (const CommandInfo*)>;
 using EndpointInfoResultHandlerCallback = std::function<void (const CommandEndpointInfo*)>;
 
 using PublishingDataHandlerCallback = std::function<void (const PublishingMessage*, const char*, size_t)>;
-using PublishingResultHandlerCallback = std::function<void (const char*, size_t)>;
+using PublishingResultHandlerCallback = std::function<void (const ResultMessage*, const char*, size_t)>;
 
-using ServiceRequestHandlerCallback = std::function<std::pair<int, string> (const ServiceMessage*)>;
+using ServiceRequestHandlerCallback = std::function<std::pair<int, string> (const ServiceMessage*, const char*, size_t)>;
 using ServiceRequestResultHandlerCallback = std::function<void (const ServiceMessage*, const char*, size_t)>;
 
 class SCCommandHandler {

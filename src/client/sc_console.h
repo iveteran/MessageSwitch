@@ -61,7 +61,7 @@ class SCConsole {
     void onRegisterResult(const CommandResultRegister* reg_result);
     void onGetInfoResult(const CommandInfo* cmd_info);
     void onGetEndpointInfoResult(const CommandEndpointInfo* cmd_ep_info);
-    void onPublishingResult(const char* data, size_t data_len);
+    void onPublishingResult(const ResultMessage* result_msg, const char* data, size_t data_len);
     void onRequestServiceResult(const ServiceMessage* svc_msg, const char* data, size_t data_len);
 
     private:

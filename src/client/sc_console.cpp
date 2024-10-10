@@ -580,7 +580,8 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
                 &SCConsole::onPublishingResult,
                 this,
                 std::placeholders::_1,
-                std::placeholders::_2));
+                std::placeholders::_2,
+                std::placeholders::_3));
 
     string data, data_file;
     if (cmd_ap.is_used("--data")) {
@@ -608,7 +609,7 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
 
     return 0;
 }
-void SCConsole::onPublishingResult(const char* data, size_t data_len)
+void SCConsole::onPublishingResult(const ResultMessage* result_msg, const char* data, size_t data_len)
 {
     PUT_LINE("* data length: ", data_len);
     PUT_LINE("* data: ", data);  // it's string?

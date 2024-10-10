@@ -381,10 +381,11 @@ void SCCommandHandler::HandlePublishData(TcpConnection* conn, CommandMessage* cm
 
 void SCCommandHandler::HandlePublishingResult(CommandMessage* cmdMsg)
 {
+    auto result_msg = cmdMsg->GetResultMessage();
     const char* content = cmdMsg->GetResultMessageContent();
     size_t content_len = cmdMsg->GetResultMessageContentSize();
     if (pub_result_handler_cb_) {
-        pub_result_handler_cb_(content, content_len);
+        pub_result_handler_cb_(result_msg, content, content_len);
     }
 }
 
@@ -395,7 +396,9 @@ void SCCommandHandler::HandleServiceRequest(TcpConnection* conn, CommandMessage*
     ECommand cmd = cmdMsg->Command();
     printf("Command message:\n");
     printf("cmd: %s(%d)\n", CommandToTag(cmd), command_t(cmd));
-    printf("payload_len: %d\n", cmdMsg->PayloadLen());
+
+    auto [payload, payload_len] = cmdMsg->Payload();
+    printf("payload_len: %d\n", payload_len);
 
     auto svc_msg = cmdMsg->GetServiceMessage();
     if (svc_msg) {
@@ -409,7 +412,7 @@ void SCCommandHandler::HandleServiceRequest(TcpConnection* conn, CommandMessage*
     string rsp_payload;
 
     if (svc_req_handler_cb_) {
-        auto [errcode, rsp_data] = svc_req_handler_cb_(svc_msg);
+        auto [errcode, rsp_data] = svc_req_handler_cb_(svc_msg, payload, payload_len);
         result_msg.errcode = errcode;
         rsp_payload = rsp_data;
     } else {
