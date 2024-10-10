@@ -13,6 +13,7 @@
 #include <signal.h>
 
 #define PUT_LINE Console::Instance()->put_line
+#define PUT_LINE_P Console::Instance()->put_line_p
 #define REGISTER_COMMAND Console::Instance()->registerCommand
 
 using namespace evt_loop;
@@ -27,7 +28,8 @@ SCConsole::SCConsole(SwitchClient* client, SCCommandHandler* cmd_handler) :
     client_(client), cmd_handler_(cmd_handler)
 {
     const char* prompt = "SC> ";
-    Console::Initialize(prompt);
+    const char* output_prompt = "* ";
+    Console::Initialize(prompt, output_prompt);
 
     cmd_handler_->SetCommandSuccessHandlerCallback(
             std::bind(
@@ -313,9 +315,9 @@ int SCConsole::handleConsoleCommand_Register(const vector<string>& argv)
 }
 void SCConsole::onRegisterResult(const CommandResultRegister* reg_result)
 {
-    PUT_LINE("* endpoint id: ", reg_result->id);
-    PUT_LINE("* token: ", reg_result->token);
-    PUT_LINE("* role: ", EndpointRoleToTag((EEndpointRole)reg_result->role));
+    PUT_LINE_P("endpoint id: ", reg_result->id);
+    PUT_LINE_P("token: ", reg_result->token);
+    PUT_LINE_P("role: ", EndpointRoleToTag((EEndpointRole)reg_result->role));
 }
 
 int SCConsole::handleConsoleCommand_GetInfo(const vector<string>& argv)
@@ -369,18 +371,18 @@ int SCConsole::handleConsoleCommand_GetInfo(const vector<string>& argv)
 }
 void SCConsole::onGetInfoResult(const CommandInfo* cmd_info)
 {
-    PUT_LINE("* cmd_info.uptime: ", readable_seconds_delta(cmd_info->uptime));
-    PUT_LINE("* cmd_info.endpoints.total: ", cmd_info->endpoints.total);
-    PUT_LINE("* cmd_info.endpoints.rx_bytes: ", cmd_info->endpoints.rx_bytes);
-    PUT_LINE("* cmd_info.admin_endpoints.total: ", cmd_info->admin_endpoints.total);
-    PUT_LINE("* ...");
+    PUT_LINE_P("cmd_info.uptime: ", readable_seconds_delta(cmd_info->uptime));
+    PUT_LINE_P("cmd_info.endpoints.total: ", cmd_info->endpoints.total);
+    PUT_LINE_P("cmd_info.endpoints.rx_bytes: ", cmd_info->endpoints.rx_bytes);
+    PUT_LINE_P("cmd_info.admin_endpoints.total: ", cmd_info->admin_endpoints.total);
+    PUT_LINE_P("...");
 }
 void SCConsole::onGetEndpointInfoResult(const CommandEndpointInfo* cmd_ep_info)
 {
-    PUT_LINE("* cmd_ep_info.uptime: ", readable_seconds_delta(cmd_ep_info->uptime));
-    PUT_LINE("* cmd_ep_info.id: ", cmd_ep_info->id);
-    PUT_LINE("* cmd_ep_info.role: ", EndpointRoleToTag((EEndpointRole)cmd_ep_info->role));
-    PUT_LINE("* ...");
+    PUT_LINE_P("cmd_ep_info.uptime: ", readable_seconds_delta(cmd_ep_info->uptime));
+    PUT_LINE_P("cmd_ep_info.id: ", cmd_ep_info->id);
+    PUT_LINE_P("cmd_ep_info.role: ", EndpointRoleToTag((EEndpointRole)cmd_ep_info->role));
+    PUT_LINE_P("...");
 }
 
 int SCConsole::handleConsoleCommand_ForwardTargets(const vector<string>& argv)
@@ -611,8 +613,8 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
 }
 void SCConsole::onPublishingResult(const ResultMessage* result_msg, const char* data, size_t data_len)
 {
-    PUT_LINE("* data length: ", data_len);
-    PUT_LINE("* data: ", data);  // it's string?
+    PUT_LINE_P("data length: ", data_len);
+    PUT_LINE_P("data: ", data);  // it's string?
 }
 
 int SCConsole::handleConsoleCommand_RequestService(const vector<string>& argv)
@@ -669,13 +671,13 @@ int SCConsole::handleConsoleCommand_RequestService(const vector<string>& argv)
 void SCConsole::onRequestServiceResult(const ServiceMessage* svc_msg, const char* data, size_t data_len)
 {
     if (svc_msg) {
-        PUT_LINE("* svc type: ", (int)svc_msg->svc_type);
-        PUT_LINE("* svc cmd: ", svc_msg->svc_cmd);
-        PUT_LINE("* sess_id: ", svc_msg->sess_id);
-        PUT_LINE("* source: ", svc_msg->source);
+        PUT_LINE_P("svc type: ", (int)svc_msg->svc_type);
+        PUT_LINE_P("svc cmd: ", svc_msg->svc_cmd);
+        PUT_LINE_P("sess_id: ", svc_msg->sess_id);
+        PUT_LINE_P("source: ", svc_msg->source);
     }
-    PUT_LINE("* data length: ", data_len);
-    PUT_LINE("* data: ", data);  // it's string?
+    PUT_LINE_P("data length: ", data_len);
+    PUT_LINE_P("data: ", data);  // it's string?
 }
 
 int SCConsole::handleConsoleCommand_Setup(const vector<string>& argv)
@@ -766,11 +768,11 @@ int SCConsole::handleConsoleCommand_Reload(const vector<string>& argv)
 
 void SCConsole::onCommandSuccess(ECommand cmd, const char* content, size_t content_len)
 {
-    PUT_LINE("* ", CommandToTag(cmd), ": Successful");
+    PUT_LINE_P(CommandToTag(cmd), ": Successful");
 }
 
 void SCConsole::onCommandFail(ECommand cmd, const char* content, size_t content_len)
 {
-    PUT_LINE("* ", CommandToTag(cmd), ": Failured");
-    PUT_LINE("* Error: ", content);
+    PUT_LINE_P(CommandToTag(cmd), ": Failured");
+    PUT_LINE_P("Error: ", content);
 }
