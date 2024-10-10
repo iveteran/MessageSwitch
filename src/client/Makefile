@@ -5,6 +5,7 @@ ThirdParty = $(ROOT)/thirdparty
 
 CPPFLAGS = -g -Wall -std=c++20 # -DUSE_SELECT
 CXXFLAGS = -I../common \
+		   -I../libswitch_client \
 		   -I$(ThirdParty)/EventLoop/include \
            -I$(ThirdParty)/json/include \
            -I$(ThirdParty)/argparse/include \
@@ -13,6 +14,7 @@ CXXFLAGS = -I../common \
 LDFLAGS = 
 
 DEP_LIBS += \
+			../libswitch_client/libswitch_client.a \
 			../common/libswitch_common.a \
            $(ThirdParty)/EventLoop/core/libel.a \
            $(ThirdParty)/EventLoop/extensions/console/libel_console.a -lreadline \

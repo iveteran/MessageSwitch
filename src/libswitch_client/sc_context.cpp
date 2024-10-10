@@ -4,6 +4,7 @@
 #include "sc_options.h"
 #include "sc_context.h"
 #include "switch_client.h"
+#include "sc_peer.h"
 
 SCContext::SCContext(SwitchClient* client) :
     switch_client(client), born_time(evt_loop::Now()), svc_type(0), is_registered(false), endpoint_id(0)
@@ -20,7 +21,7 @@ SCContext::SCContext(SwitchClient* client) :
 
 string SCContext::ToString() const
 {
-    auto msg_hdr_desc = switch_client->GetMessageHeaderDescription();
+    auto msg_hdr_desc = switch_client->GetPeer()->GetMessageHeaderDescription();
     std::stringstream ss;
     ss << "{";
     ss << "born_time: " << std::put_time(localtime(&born_time), "%Y-%m-%d %I:%M:%S") << ", ";

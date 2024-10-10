@@ -9,6 +9,8 @@ host = "0.0.0.0"
 port = 10101
 
 [client]
-endpoint_id = 2
+endpoint_id = 0  # 0: server generating
 role = 1  # 0: undefined, 1: normal, 2: admin, 3: service
+svc_type = 1
 access_code = "hello_world"
+enable_console = true

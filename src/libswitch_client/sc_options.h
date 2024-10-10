@@ -5,9 +5,6 @@
 #include <memory>
 #include <sstream>
 
-#define DEFAULT_ACCESS_TOKEN "Hello World"
-#define DEFAULT_ROLE 1 // 0: Undefined, 1: normal, 2: admin, 3: service
-
 using std::string;
 
 struct SCOptions
@@ -15,8 +12,8 @@ struct SCOptions
     string      server_host;
     uint16_t    server_port;
     uint32_t    endpoint_id;
-    string      access_code = DEFAULT_ACCESS_TOKEN;
-    uint8_t     role = DEFAULT_ROLE;
+    string      access_code;
+    uint8_t     role = 0;               // EEndpointRole::{Normal, Service, Admin};
     uint16_t    svc_type;               // if role is Service, 0: serve all service
     bool        enable_console = false;
     string      logfile;

@@ -317,7 +317,7 @@ void SCConsole::onRegisterResult(const CommandResultRegister* reg_result)
 {
     PUT_LINE_P("endpoint id: ", reg_result->id);
     PUT_LINE_P("token: ", reg_result->token);
-    PUT_LINE_P("role: ", EndpointRoleToTag((EEndpointRole)reg_result->role));
+    PUT_LINE_P("role: ", reg_result->role > 0 ? EndpointRoleToTag((EEndpointRole)reg_result->role) : "");
 }
 
 int SCConsole::handleConsoleCommand_GetInfo(const vector<string>& argv)

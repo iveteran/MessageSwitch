@@ -1,4 +1,5 @@
 #include "switch_client.h"
+#include "sc_message_handlers.h"
 #include "argparse/argparse.hpp"
 #include "toml.hpp"
 #include "sc_options.h"
@@ -175,6 +176,9 @@ int main(int argc, char **argv) {
             // clean and exit
             switch_client.Stop();
           });
+
+  SCMessageHandlers msg_handlers(switch_client.GetCommandHandler());
+  msg_handlers.SetupHandlers();
 
   switch_client.Start();
 

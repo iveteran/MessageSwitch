@@ -3,39 +3,34 @@
 
 using namespace evt_loop;
 
-class SCOptions;
-class SCContext;
-class SCCommandHandler;
-class SCConsole;
+class CommandMessage;
 
-class SwitchClient {
+using MessageCallback = std::function<void (TcpConnection*, CommandMessage*)>;
+using ConnectedCallback = std::function<void ()>;
+using ClosedCallback = std::function<void ()>;
+
+class SCPeer {
 public:
-    SwitchClient(const char* host="localhost", uint16_t port=10000,
-            EndpointId ep_id=0, bool enable_console=false);
-    SwitchClient(SCOptions* options);
-
-    void Cleanup();
-    void Stop();
-    void Start();
-
-    EndpointId ID() const { return endpoint_id_; }
+    SCPeer(const char* host="localhost", uint16_t port=10000);
+    ~SCPeer();
 
     HeaderDescriptionPtr GetMessageHeaderDescription() const {
         return client_ ? client_->GetMessageHeaderDescription() : nullptr;
     }
     TcpConnectionPtr Connection() { return client_ ? client_->Connection() : nullptr; }
     bool IsConnected() const { return client_ && client_->IsConnected(); }
+    bool Connect() { return Reconnect(); }
     bool Reconnect() { return client_->IsConnected() ? false : client_->Connect(); }
     void EnableHeartbeat() { client_->EnableHeartbeat(); }
     void DisableHeartbeat() { client_->DisableHeartbeat(); }
     bool IsHeartbeatEnabled() { return client_->IsHeartbeatEnabled(); }
 
-    SCOptions* GetOptions() const { return options_; }
-    SCContext* GetContext() const { return context_; }
+    void SetConnectedCallback(const ConnectedCallback& cb);
+    void SetClosedCallback(const ClosedCallback& cb);
+    void SetMessageCallback(const MessageCallback& cb);
 
 protected:
-    void InitComponents();
-    void InitClient(const char* host, uint16_t port);
+    void Init(const char* host, uint16_t port);
 
     void OnMessageRecvd(TcpConnection* conn, const Message* msg);
     void OnConnectionCreated(TcpConnection* conn);
@@ -45,11 +40,7 @@ protected:
 
 private:
     TcpClient* client_;
-    EndpointId endpoint_id_;
-    bool enable_console_;
-
-    SCOptions* options_;
-    SCContext* context_;
-    SCCommandHandler* cmd_handler_;
-    SCConsole* console_;
+    MessageCallback msg_cb_;
+    ConnectedCallback connected_cb_;
+    ClosedCallback closed_cb_;
 };
