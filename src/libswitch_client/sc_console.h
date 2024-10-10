@@ -20,7 +20,7 @@ class CommandEndpointInfo;
 
 class SCConsole {
     public:
-    SCConsole(SwitchClient* client, SCCommandHandler* cmd_handler);
+    SCConsole(SwitchClient* client, SCCommandHandler* cmd_handler, const char* sub_prompt=nullptr);
     void Destory();
 
     void registerCommands();

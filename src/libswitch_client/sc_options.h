@@ -16,6 +16,7 @@ struct SCOptions
     uint8_t     role = 0;               // EEndpointRole::{Normal, Service, Admin};
     uint16_t    svc_type;               // if role is Service, 0: serve all service
     bool        enable_console = false;
+    string      console_sub_prompt;
     string      logfile;
     string      config_file;
 
@@ -30,6 +31,7 @@ struct SCOptions
         ss << "role: " << role << ", ";
         ss << "svc_type: " << svc_type << ", ";
         ss << "enable_console: " << enable_console << ", ";
+        ss << "console_sub_prompt: " << console_sub_prompt << ", ";
         ss << "logfile: " << logfile << ", ";
         ss << "config_file: " << config_file << ", ";
         ss << "}";

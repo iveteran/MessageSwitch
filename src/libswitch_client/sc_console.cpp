@@ -26,10 +26,15 @@ void duplicate(vector<T>& v) {
     v.assign(s.begin(), s.end());
 }
 
-SCConsole::SCConsole(SwitchClient* client, SCCommandHandler* cmd_handler) :
+SCConsole::SCConsole(SwitchClient* client, SCCommandHandler* cmd_handler, const char* sub_prompt) :
     client_(client), cmd_handler_(cmd_handler)
 {
     const char* prompt = "SC> ";
+    char tmpstr[32];
+    if (sub_prompt && strlen(sub_prompt) > 0) {
+        snprintf(tmpstr, sizeof(tmpstr), "SC|%s> ", sub_prompt);
+        prompt = tmpstr;
+    }
     const char* output_prompt = "* ";
     Console::Initialize(prompt, output_prompt);
 

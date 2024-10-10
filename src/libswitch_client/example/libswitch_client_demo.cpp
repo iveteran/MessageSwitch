@@ -29,6 +29,9 @@ int parse_arguments(int argc, char **argv, SCOptionsPtr& options) {
     program.add_argument("-c", "--enable_console")
         .help("enable console")
         .flag();
+    program.add_argument("-t", "--console_sub_prompt")
+        .help("sub prompt of console")
+        .default_value("");
     program.add_argument("-l", "--logfile")
         .help("log file, default is STDOUT");
     program.add_argument("-a", "--access_code")
@@ -59,6 +62,9 @@ int parse_arguments(int argc, char **argv, SCOptionsPtr& options) {
         options->enable_console = true;
     }
     cout << "> arguments.enable_console: " << options->enable_console << endl;
+
+    options->console_sub_prompt = program.get<std::string>("--console_sub_prompt");
+    cout << "> arguments.console_sub_prompt: " << options->console_sub_prompt << endl;
 
     if (program.is_used("--access_code")) {
         options->access_code = program.get<std::string>("--access_code");
@@ -133,6 +139,12 @@ int parse_configuration(const string& config_file, SCOptionsPtr& options) {
             auto enable_console = client_config.at("enable_console").as_boolean();
             cout << "> config.client.enable_console: " << enable_console << endl;
             options->enable_console = enable_console;
+        }
+
+        if (client_config.contains("console_sub_prompt")) {
+            auto console_sub_prompt = client_config.at("console_sub_prompt").as_string();
+            cout << "> config.client.console_sub_prompt: " << console_sub_prompt << endl;
+            options->console_sub_prompt = console_sub_prompt;
         }
     }
 

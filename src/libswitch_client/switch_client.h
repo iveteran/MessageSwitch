@@ -12,7 +12,8 @@ class SCConsole;
 class SwitchClient {
 public:
     SwitchClient(const char* host="localhost", uint16_t port=10000,
-            EndpointId ep_id=0, bool enable_console=false);
+            EndpointId ep_id=0, bool enable_console=false,
+            const char* console_sub_prompt=nullptr);
     SwitchClient(SCOptions* options);
 
     void Cleanup();
@@ -40,12 +41,13 @@ protected:
     void OnPeerClosed();
 
 private:
-    SCPeer* peer_;
+    SCPeer* peer_ = nullptr;
     EndpointId endpoint_id_;
     bool enable_console_;
 
-    SCOptions* options_;
-    SCContext* context_;
-    SCCommandHandler* cmd_handler_;
-    SCConsole* console_;
+    SCOptions* options_ = nullptr;
+    SCContext* context_ = nullptr;
+    SCCommandHandler* cmd_handler_ = nullptr;
+    SCConsole* console_ = nullptr;
+    string console_sub_prompt_;
 };

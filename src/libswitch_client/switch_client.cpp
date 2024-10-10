@@ -7,8 +7,10 @@
 #include "sc_context.h"
 #include "sc_peer.h"
 
-SwitchClient::SwitchClient(const char* host, uint16_t port, EndpointId ep_id, bool enable_console)
-    : peer_(nullptr), endpoint_id_(ep_id), enable_console_(enable_console), console_(nullptr)
+SwitchClient::SwitchClient(const char* host, uint16_t port, EndpointId ep_id,
+        bool enable_console, const char* console_sub_prompt)
+    : endpoint_id_(ep_id), enable_console_(enable_console),
+    console_sub_prompt_(console_sub_prompt)
 {
     peer_ = new SCPeer(host, port);
     CreateComponents();
@@ -22,6 +24,7 @@ SwitchClient::SwitchClient(SCOptions* options)
         endpoint_id_ = options->endpoint_id;
     }
     enable_console_ = options->enable_console; 
+    console_sub_prompt_ = options->console_sub_prompt;
 
     peer_ = new SCPeer(options->server_host.c_str(), options->server_port);
     peer_->SetClosedCallback(std::bind(&SwitchClient::OnPeerClosed, this));
@@ -75,7 +78,7 @@ void SwitchClient::CreateComponents()
 
     cmd_handler_ = new SCCommandHandler(this, peer_->GetMessageHeaderDescription()->is_payload_len_including_self);
     if (enable_console_) {
-        console_ = new SCConsole(this, cmd_handler_);
+        console_ = new SCConsole(this, cmd_handler_, console_sub_prompt_.c_str());
         console_->registerCommands();
     }
 }
