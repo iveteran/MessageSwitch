@@ -5,6 +5,8 @@
 #include <memory>
 #include <sstream>
 
+#define N_A "N/A"
+
 using std::string;
 
 struct SCOptions
@@ -37,6 +39,16 @@ struct SCOptions
         ss << "}";
         return ss.str();
     }
+
+    int ParseFromArgumentsOrConfigFile(int argc, char* argv[],
+            const char* progrom_version = N_A,
+            const char* program_build_date = N_A,
+            const char* program_copyright = N_A);
+    int ParseArguments(int argc, char *argv[],
+            const char* progrom_version = N_A,
+            const char* program_build_date = N_A,
+            const char* program_copyright = N_A);
+    int ParseConfiguration(const string& config_file);
 };
 using SCOptionsPtr = std::shared_ptr<SCOptions>;
 
