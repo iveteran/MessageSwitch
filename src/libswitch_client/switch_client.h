@@ -33,6 +33,7 @@ public:
     SCContext* GetContext() const { return context_; }
     SCPeer* GetPeer() const { return peer_; }
     SCCommandHandler* GetCommandHandler() const { return cmd_handler_; }
+    SCConsole* GetConsole() const { return console_; }
 
 protected:
     void CreateComponents();

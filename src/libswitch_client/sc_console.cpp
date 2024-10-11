@@ -7,14 +7,9 @@
 #include "sc_context.h"
 #include "switch_client.h"
 #include "utils/time.h"
-#include <eventloop/extensions/console.h>
 #include <eventloop/extensions/aio_wrapper.h>
 #include <argparse/argparse.hpp>
-#include <signal.h>
-
-#define PUT_LINE Console::Instance()->put_line
-#define PUT_LINE_P Console::Instance()->put_line_p
-#define REGISTER_COMMAND Console::Instance()->registerCommand
+#include "el_console_helper.h"
 
 using namespace evt_loop;
 
