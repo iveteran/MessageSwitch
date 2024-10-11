@@ -1,5 +1,5 @@
 #include "switch_client.h"
-#include "sc_message_handlers.h"
+#include "demo_message_handlers.h"
 #include "demo_console_commands.h"
 #include "demo_options.h"
 #include "sc_options.h"
@@ -24,7 +24,7 @@ int main(int argc, char **argv)
             sc.Stop();
           });
 
-  SCMessageHandlers msg_handlers(sc.GetCommandHandler());
+  DemoMessageHandlers msg_handlers(sc.GetCommandHandler());
   msg_handlers.SetupHandlers();
 
   DemoConsoleCommands console_cmds(sc.GetConsole(), &demo_options);

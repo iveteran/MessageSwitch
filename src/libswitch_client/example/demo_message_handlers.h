@@ -1,5 +1,5 @@
-#ifndef _SC_MESSAGE_HANDLERS_H
-#define _SC_MESSAGE_HANDLERS_H
+#ifndef _DEMO_MESSAGE_HANDLERS_H
+#define _DEMO_MESSAGE_HANDLERS_H
 
 #include "switch_message.h"
 #include "endpoint_role.h"
@@ -15,9 +15,9 @@ class CommandResultRegister;
 class PublishingMessage;
 class ServiceMessage;
 
-class SCMessageHandlers {
+class DemoMessageHandlers {
 public:
-    SCMessageHandlers(SCCommandHandler* cmd_handler)
+    DemoMessageHandlers(SCCommandHandler* cmd_handler)
         : cmd_handler_(cmd_handler)
     {}
 
@@ -42,4 +42,4 @@ private:
     SCCommandHandler* cmd_handler_;
 };
 
-#endif  // _SC_MESSAGE_HANDLERS_H
+#endif  // _DEMO_MESSAGE_HANDLERS_H
