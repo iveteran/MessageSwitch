@@ -1,10 +1,33 @@
 #include "sc_options.h"
+#include <sstream>
 #include <argparse/argparse.hpp>
 #include <toml.hpp>
 #include <iostream>
 
 using std::cout;
 using std::endl;
+
+string SCOptions::ToString() const {
+    std::stringstream ss;
+    ss << "{";
+    ss << "server_host: " << server_host << ", ";
+    ss << "server_port: " << server_port << ", ";
+    ss << "endpoint_id: " << endpoint_id << ", ";
+    ss << "access_code: " << access_code << ", ";
+    ss << "role: " << role << ", ";
+    ss << "svc_type: " << svc_type << ", ";
+    ss << "enable_console: " << enable_console << ", ";
+    ss << "console_sub_prompt: " << console_sub_prompt << ", ";
+    ss << "logfile: " << logfile << ", ";
+    ss << "config_file: " << config_file << ", ";
+    ss << "}";
+    return ss.str();
+}
+
+void SCOptions::AddSubOptions(SCOptionsBase* sub_options)
+{
+    sub_options_list_.push_back(sub_options);
+}
 
 int SCOptions::ParseFromArgumentsOrConfigFile(int argc, char* argv[],
         const char* progrom_version,
@@ -79,6 +102,10 @@ int SCOptions::ParseArguments(int argc, char *argv[],
     program.add_argument("-f", "--config")
         .help("configuration file");
 
+    for (auto sub_options : sub_options_list_) {
+        sub_options->AddArguments(program);
+    }
+
     try {
         program.parse_args(argc, argv);
     } catch (const std::exception& err) {
@@ -118,6 +145,10 @@ int SCOptions::ParseArguments(int argc, char *argv[],
         config_file = program.get<std::string>("--config");
     }
     cout << "> arguments.config: " << config_file << endl;
+
+    for (auto sub_options : sub_options_list_) {
+        sub_options->ReadArguments(program);
+    }
 
     return 0;
 }
@@ -176,6 +207,10 @@ int SCOptions::ParseConfiguration(const string& _config_file)
             console_sub_prompt = client_config.at("console_sub_prompt").as_string();
             cout << "> config.client.console_sub_prompt: " << console_sub_prompt << endl;
         }
+    }
+
+    for (auto sub_options : sub_options_list_) {
+        sub_options->ParseConfiguration(config);
     }
 
     return 0;
