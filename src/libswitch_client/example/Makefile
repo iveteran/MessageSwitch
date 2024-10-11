@@ -6,6 +6,8 @@ ThirdParty = $(ROOT)/thirdparty
 CPPFLAGS = -g -Wall -std=c++20 # -DUSE_SELECT
 CXXFLAGS = -I$(ROOT)/src/common \
 		   -I$(ThirdParty)/EventLoop/include \
+           -I$(ThirdParty)/argparse/include \
+           -I$(ThirdParty)/toml11/include \
            -I..
 
 LDFLAGS = 

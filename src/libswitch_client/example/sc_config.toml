@@ -15,3 +15,6 @@ svc_type = 1
 access_code = "GOE works"
 enable_console = true
 console_sub_prompt = "demo"
+
+[demo]
+dummy_field = 99
