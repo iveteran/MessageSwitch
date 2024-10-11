@@ -1,0 +1,17 @@
+# This is a TOML document
+
+title = "Configuration of Message Watcher"
+
+logfile = "message_watcher.log"
+
+[server]
+host = "0.0.0.0"
+port = 10101
+
+[client]
+endpoint_id = 0  # 0: server generating
+role = 1  # 1: normal, 2: admin, 3: service
+svc_type = 0
+access_code = "hello_world"
+enable_console = true
+console_sub_prompt = "watcher"
