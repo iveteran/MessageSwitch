@@ -597,24 +597,22 @@ int SCConsole::handleConsoleCommand_Publish(const vector<string>& argv)
     if (cmd_ap.is_used("--data")) {
         data = cmd_ap.get<string>("--data");
         cmd_handler_->Publish(data, targets, msg_type);
-    } else {
-        if (cmd_ap.is_used("--file")) {
-            data_file = cmd_ap.get<string>("--file");
+    } else if (cmd_ap.is_used("--file")) {
+        data_file = cmd_ap.get<string>("--file");
 
-            auto rd_done_cb = [&](int status, const string& data) {
-                printf(">>> read done, status: %d, size: %ld\n", status, data.size());
+        auto rd_done_cb = [&](int status, const string& data) {
+            printf(">>> read done, status: %d, size: %ld\n", status, data.size());
 
-                cmd_handler_->Publish(data, targets, msg_type);
-            };
+            cmd_handler_->Publish(data, targets, msg_type);
+        };
 
-            bool success = AIO.async_read(data_file.c_str(), O_RDONLY, rd_done_cb);
-            if (!success) {
-                printf("error: read failed\n");
-            }
-        } else {
-            PUT_LINE("Wrong argument! --data or --file must be given one");
-            return -1;
+        bool success = AIO.async_read(data_file.c_str(), O_RDONLY, rd_done_cb);
+        if (!success) {
+            printf("error: read failed\n");
         }
+    } else {
+        PUT_LINE("Wrong argument! --data or --file must be given one");
+        return -1;
     }
 
     return 0;
