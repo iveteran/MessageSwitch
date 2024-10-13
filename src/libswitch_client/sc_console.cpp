@@ -630,6 +630,8 @@ int SCConsole::handleConsoleCommand_RequestService(const vector<string>& argv)
     cmd_ap.add_argument("--data")
         .help("The data to send")
         .default_value(R"({"foo":"bar"})");
+    cmd_ap.add_argument("--file")
+        .help("The data reading from file to send");
     cmd_ap.add_argument("--svc_type")
         .help("The service type to request")
         .scan<'i', ServiceType>()
@@ -650,10 +652,6 @@ int SCConsole::handleConsoleCommand_RequestService(const vector<string>& argv)
         return 1;
     }
 
-    string data;
-    if (cmd_ap.is_used("--data")) {
-        data = cmd_ap.get<string>("--data");
-    }
     ServiceType svc_type = 0;
     if (cmd_ap.is_used("--svc_type")) {
         svc_type = cmd_ap.get<ServiceType>("--svc_type");
@@ -671,7 +669,27 @@ int SCConsole::handleConsoleCommand_RequestService(const vector<string>& argv)
                 std::placeholders::_1,
                 std::placeholders::_2,
                 std::placeholders::_3));
-    cmd_handler_->RequestService(data, svc_type, svc_cmd);
+
+    if (cmd_ap.is_used("--data")) {
+        string data = cmd_ap.get<string>("--data");
+        cmd_handler_->RequestService(data, svc_type, svc_cmd);
+    } else if (cmd_ap.is_used("--file")) {
+        string data_file = cmd_ap.get<string>("--file");
+
+        auto rd_done_cb = [&](int status, const string& data) {
+            printf(">>> read file done, status: %d, size: %ld\n", status, data.size());
+
+            cmd_handler_->RequestService(data, svc_type, svc_cmd);
+        };
+
+        bool success = AIO.async_read(data_file.c_str(), O_RDONLY, rd_done_cb);
+        if (!success) {
+            printf("error: read failed\n");
+        }
+    } else {
+        PUT_LINE("Wrong argument! --data or --file must be given one");
+        return -1;
+    }
 
     return 0;
 }
